@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="background_color">#606060</color>
-    <color name="text_light_color">#EEEEEE</color>
-    <color name="text_middle_color">#BBBBBB</color>
-    <color name="text_dark_color">#909090</color>
-    <color name="action_bar_color">#404040</color>
+
     <style name="ActionBarStyle"
         parent="android:Widget.Holo.ActionBar.Solid">
         <item name="android:background">@color/action_bar_color</item>

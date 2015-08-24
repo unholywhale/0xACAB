@@ -16,6 +16,7 @@ import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -102,7 +103,7 @@ public class ArtistFragment extends ListFragment {
             AudioListModel audioItem = new AudioListModel(artist, album, title, data, duration, trackNumber, year, albumId, bitmap);
             audioList.add(audioItem);
         }
-        AudioListAdapter adapter = new AudioListAdapter(getActivity(), R.layout.fragment_artist_list_item, audioList);
+        AudioListAdapter adapter = new AudioListAdapter(getActivity(), R.layout.fragment_artist_list_item, R.layout.fragment_artist_list_header, audioList);
         setListAdapter(adapter);
 
         return view;
@@ -145,14 +146,33 @@ public class ArtistFragment extends ListFragment {
     static class AudioListAdapter extends ArrayAdapter<AudioListModel> {
 
         Context context;
-        int layoutResourceId;
+        int layoutItemResourceId, layoutHeaderResourceId;
         ArrayList<AudioListModel> rows = null;
 
-        public AudioListAdapter(Context context, int layoutResourceId, ArrayList<AudioListModel> rows) {
-            super(context, layoutResourceId, rows);
+        public AudioListAdapter(Context context, int layoutItemResourceId, int layoutHeaderResourceId, ArrayList<AudioListModel> rows) {
+            super(context, layoutItemResourceId, rows);
             this.context = context;
-            this.layoutResourceId = layoutResourceId;
+            this.layoutItemResourceId = layoutItemResourceId;
+            this.layoutHeaderResourceId = layoutHeaderResourceId;
             this.rows = rows;
+        }
+
+        private AudioListHolder getHeaderHolder(View row) {
+            AudioListHolder holder = new AudioListHolder();
+            holder.headerText = (TextView) row.findViewById(R.id.artist_header_text);
+            holder.headerSeparator = row.findViewById(R.id.artist_header_separator);
+            holder.isHeader = true;
+            return holder;
+        }
+
+        private AudioListHolder getItemHolder(View row) {
+            AudioListHolder holder = new AudioListHolder();
+            holder.title = (TextView) row.findViewById(R.id.track_title);
+            holder.trackDuration = (TextView) row.findViewById(R.id.track_duration);
+            holder.trackNumber = (TextView) row.findViewById(R.id.track_number);
+            holder.dividerDuration = row.findViewById(R.id.divider_duration);
+            holder.isHeader = false;
+            return holder;
         }
 
         @Override
@@ -160,40 +180,41 @@ public class ArtistFragment extends ListFragment {
             View row = convertView;
             AudioListHolder holder = null;
 
+            AudioListModel audioItem = rows.get(position);
+            LayoutInflater inflater = ((Activity) context).getLayoutInflater();
             if (row == null) {
-                LayoutInflater inflater = ((Activity) context).getLayoutInflater();
-                row = inflater.inflate(layoutResourceId, parent, false);
-
-                holder = new AudioListHolder();
-                holder.title = (TextView) row.findViewById(R.id.track_title);
-                holder.trackDuration = (TextView) row.findViewById(R.id.track_duration);
-                holder.trackNumber = (TextView) row.findViewById(R.id.track_number);
-                holder.dividerDuration = row.findViewById(R.id.divider_duration);
-                holder.container = (LinearLayout) row.findViewById(R.id.artist_list_item_layout);
+                if (audioItem.isAlbum) {
+                    row = inflater.inflate(layoutHeaderResourceId, parent, false);
+                    holder = getHeaderHolder(row);
+                } else {
+                    row = inflater.inflate(layoutItemResourceId, parent, false);
+                    holder = getItemHolder(row);
+                }
                 row.setTag(holder);
             } else {
                 holder = (AudioListHolder) row.getTag();
+                if (holder.isHeader && !audioItem.isAlbum) {
+                    row = inflater.inflate(layoutItemResourceId, parent, false);
+                    holder = getItemHolder(row);
+                    row.setTag(holder);
+                } else if (!holder.isHeader && audioItem.isAlbum) {
+                    row = inflater.inflate(layoutHeaderResourceId, parent, false);
+                    holder = getHeaderHolder(row);
+                    row.setTag(holder);
+                }
             }
 
-            AudioListModel audioItem = rows.get(position);
             if (audioItem.isAlbum) {
                 if (audioItem.getYear() != 0) {
-                    holder.title.setText(audioItem.getAlbum() + " - " + audioItem.getYear().toString());
+                    holder.headerText.setText(audioItem.getAlbum() + " - " + audioItem.getYear().toString());
                 } else {
-                    holder.title.setText(audioItem.getAlbum());
+                    holder.headerText.setText(audioItem.getAlbum());
                 }
-                holder.title.setTypeface(holder.title.getTypeface(), Typeface.BOLD);
-                holder.trackDuration.setText("");
-                holder.dividerDuration.setVisibility(View.INVISIBLE);
-                holder.container.removeView(holder.trackNumber);
             } else {
-                if (holder.container.findViewById(R.id.track_number) == null) {
-                    holder.container.addView(holder.trackNumber, 0);
-                }
                 holder.trackNumber.setText(audioItem.getNumber().toString());
                 holder.title.setText(audioItem.getTitle());
-                holder.title.setTypeface(Typeface.defaultFromStyle(Typeface.NORMAL));
-                holder.dividerDuration.setVisibility(View.VISIBLE);
+                //holder.title.setTypeface(Typeface.defaultFromStyle(Typeface.NORMAL));
+                //holder.dividerDuration.setVisibility(View.VISIBLE);
                 if (audioItem.getDuration() == 0) {
                     holder.trackDuration.setText("");
                 } else {
@@ -206,8 +227,9 @@ public class ArtistFragment extends ListFragment {
         }
 
         static class AudioListHolder {
-            CheckBox checked;
-            LinearLayout container;
+            Boolean isHeader;
+            TextView headerText;
+            View headerSeparator;
             TextView title;
             View dividerDuration;
             TextView trackDuration;
