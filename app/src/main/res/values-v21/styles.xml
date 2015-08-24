@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="background_color">#606060</color>
+    <color name="text_light_color">#EEEEEE</color>
+    <color name="text_middle_color">#BBBBBB</color>
+    <color name="text_dark_color">#909090</color>
+    <color name="action_bar_color">#404040</color>
+    <style name="ActionBarStyle"
+        parent="android:Widget.Holo.ActionBar.Solid">
+        <item name="android:background">@color/action_bar_color</item>
+    </style>
+    <style name="AppTheme" parent="android:Theme.Holo">
+        <item name="android:actionBarStyle">@style/ActionBarStyle</item>
+        <item name="android:windowBackground">@color/background_color</item>
+        <item name="android:textColor">@color/text_light_color</item>
+    </style>
+
+    <style name="HorizontalDivider">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">1dp</item>
+        <item name="android:background">?android:attr/listDivider</item>
+    </style>
+    <style name="VerticalDivider">
+        <item name="android:layout_width">1dp</item>
+        <item name="android:layout_height">30dp</item>
+        <item name="android:layout_gravity">center_vertical</item>
+        <item name="android:background">?android:attr/listDivider</item>
+    </style>
+</resources>
