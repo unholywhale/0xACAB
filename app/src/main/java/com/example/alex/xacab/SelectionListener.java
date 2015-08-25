@@ -7,6 +7,6 @@ import android.view.View;
  */
 public interface SelectionListener {
     void onItemSelected(View item);
-    void onArtistItemSelected(View item);
+    void onArtistItemSelected(AudioListModel item);
     void onLibraryItemSelected(View item);
 }

@@ -7,13 +7,13 @@ public class AudioListModel {
 
     private String artist, album, title, data;
 
-    private Integer duration, year, number;
+    private int duration, year, number;
 
-    private long albumId;
+    private long albumId, trackId;
 
     private Bitmap albumArt;
     public boolean isAlbum;
-    public AudioListModel(String artist, String album, String title, String data, Integer duration, Integer number, Integer year, long albumId, Bitmap albumArt) {
+    public AudioListModel(String artist, String album, String title, String data, int duration, int number, int year, long albumId, long trackId) {
         this.artist = artist;
         this.album = album;
         this.title = title;
@@ -22,10 +22,10 @@ public class AudioListModel {
         this.number = number;
         this.year = year;
         this.albumId = albumId;
-        this.albumArt = albumArt;
+        this.trackId = trackId;
         this.isAlbum = false;
     }
-    public AudioListModel(String artist, String album, Integer year, long albumId, Bitmap albumArt) {
+    public AudioListModel(String artist, String album, int year, long albumId, Bitmap albumArt) {
         this.artist = artist;
         this.album = album;
         this.year = year;
@@ -66,27 +66,27 @@ public class AudioListModel {
         this.data = data;
     }
 
-    public Integer getDuration() {
+    public int getDuration() {
         return duration;
     }
 
-    public void setDuration(Integer duration) {
+    public void setDuration(int duration) {
         this.duration = duration;
     }
 
-    public Integer getNumber() {
+    public int getNumber() {
         return number;
     }
 
-    public void setNumber(Integer number) {
+    public void setNumber(int number) {
         this.number = number;
     }
 
-    public Integer getYear() {
+    public int getYear() {
         return year;
     }
 
-    public void setYear(Integer year) {
+    public void setYear(int year) {
         this.year = year;
     }
 
@@ -98,11 +98,13 @@ public class AudioListModel {
         this.albumId = albumId;
     }
 
-    public Bitmap getAlbumArt() {
-        return albumArt;
+    public long getTrackId() {
+        return trackId;
     }
 
-    public void setAlbumArt(Bitmap albumArt) {
-        this.albumArt = albumArt;
+    public void setTrackId(long trackId) {
+        this.trackId = trackId;
     }
+
+
 }

@@ -2,13 +2,16 @@ package com.example.alex.xacab;
 
 import android.app.Activity;
 import android.app.FragmentTransaction;
+import android.content.Context;
 import android.content.Intent;
 import android.media.MediaPlayer;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 /**
  * @TODO: Handle orientation change
@@ -19,8 +22,10 @@ import android.widget.TextView;
 public class MainActivity extends Activity implements SelectionListener {
 
     public final static String[] LIST_SAMPLE = { "First item", "Second item", "Third item" };
+    protected Context context;
     private MediaPlayer mediaPlayer = new MediaPlayer();
     private Intent musicServiceIntent;
+    private QueueDB db;
     public final static String INTENT_EXTRA = "SONG_SOURCE";
     private LibraryFragment mLibraryFragment;
     private ArtistFragment mArtistFragment;
@@ -30,7 +35,7 @@ public class MainActivity extends Activity implements SelectionListener {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        db = new QueueDB(this);
         musicServiceIntent = new Intent(getApplicationContext(), MusicService.class);
         //mLibraryFragment = (LibraryFragment) getFragmentManager().findFragmentById(R.id.fragment_library);
         //mArtistFragment = (ArtistFragment) getFragmentManager().findFragmentById(R.id.fragment_artist_list_item);
@@ -62,7 +67,24 @@ public class MainActivity extends Activity implements SelectionListener {
     }
 
     @Override
-    public void onArtistItemSelected(View item) {
+    public void onArtistItemSelected(AudioListModel item) {
+        new AddToQueueTask().execute(item);
+    }
+
+    private class AddToQueueTask extends AsyncTask<AudioListModel, Void, String> {
+
+        @Override
+        protected String doInBackground(AudioListModel... params) {
+            AudioListModel item = params[0];
+            db.addToQueue(item);
+            String res = item.getArtist() + " - " + item.getTitle();
+            return res;
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            Toast.makeText(getApplicationContext(), result, Toast.LENGTH_SHORT).show();
+        }
 
     }
 
@@ -86,9 +108,9 @@ public class MainActivity extends Activity implements SelectionListener {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        /*if (id == R.id.action_settings) {
             return true;
-        }
+        }*/
 
         return super.onOptionsItemSelected(item);
     }

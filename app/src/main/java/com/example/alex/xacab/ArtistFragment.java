@@ -72,10 +72,10 @@ public class ArtistFragment extends ListFragment {
             String album = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM));
             String title = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE));
             String data = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA));
-            Integer duration = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION));
-            Integer year = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.YEAR));
-            Long albumId = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID));
-
+            int duration = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION));
+            int year = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.YEAR));
+            long albumId = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID));
+            long trackId = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID));
 /*
             Uri artworkUri = Uri.parse("content://media/external/audio/albumart");
             Uri albumArtUri = ContentUris.withAppendedId(artworkUri, albumId);
@@ -100,7 +100,7 @@ public class ArtistFragment extends ListFragment {
                 trackNumber = 0;
             }
             trackNumber++;
-            AudioListModel audioItem = new AudioListModel(artist, album, title, data, duration, trackNumber, year, albumId, bitmap);
+            AudioListModel audioItem = new AudioListModel(artist, album, title, data, duration, trackNumber, year, albumId, trackId);
             audioList.add(audioItem);
         }
         AudioListAdapter adapter = new AudioListAdapter(getActivity(), R.layout.fragment_artist_list_item, R.layout.fragment_artist_list_header, audioList);
@@ -139,7 +139,7 @@ public class ArtistFragment extends ListFragment {
         if (null != mListener) {
             // Notify the active callbacks interface (the activity, if the
             // fragment is attached to one) that an item has been selected.
-            mListener.onArtistItemSelected(v);
+            mListener.onArtistItemSelected(audioList.get(position));
         }
     }
 
@@ -206,12 +206,12 @@ public class ArtistFragment extends ListFragment {
 
             if (audioItem.isAlbum) {
                 if (audioItem.getYear() != 0) {
-                    holder.headerText.setText(audioItem.getAlbum() + " - " + audioItem.getYear().toString());
+                    holder.headerText.setText(audioItem.getAlbum() + " - " + String.valueOf(audioItem.getYear()));
                 } else {
                     holder.headerText.setText(audioItem.getAlbum());
                 }
             } else {
-                holder.trackNumber.setText(audioItem.getNumber().toString());
+                holder.trackNumber.setText(String.valueOf(audioItem.getNumber()));
                 holder.title.setText(audioItem.getTitle());
                 //holder.title.setTypeface(Typeface.defaultFromStyle(Typeface.NORMAL));
                 //holder.dividerDuration.setVisibility(View.VISIBLE);
