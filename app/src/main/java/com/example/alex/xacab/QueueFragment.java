@@ -1,7 +1,13 @@
 package com.example.alex.xacab;
 
 import android.app.Activity;
+import android.app.LoaderManager;
+import android.content.Context;
+import android.content.CursorLoader;
+import android.content.Loader;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.ListFragment;
 import android.os.Environment;
@@ -9,10 +15,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.CursorAdapter;
 import android.widget.ListView;
+import android.widget.SimpleCursorAdapter;
+import android.widget.TextView;
 
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -21,10 +31,11 @@ import java.util.List;
  * Activities containing this fragment MUST implement the {SelectionListener}
  * interface.
  */
-public class QueueFragment extends ListFragment {
+public class QueueFragment extends ListFragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
 
     private SelectionListener mListener;
+    private final static int QUEUE_LOADER = 1;
 
     public static QueueFragment newInstance(String param1, String param2) {
         QueueFragment fragment = new QueueFragment();
@@ -33,6 +44,15 @@ public class QueueFragment extends ListFragment {
         return fragment;
     }
 
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        String[] columns = AudioListModel.getColumns();
+        getLoaderManager().initLoader(QUEUE_LOADER, null, this);
+
+        setListAdapter(new QueueAdapter(getActivity().getApplicationContext(), null, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER));
+    }
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -45,9 +65,35 @@ public class QueueFragment extends ListFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_queue, null);
 
+
         /*setListAdapter(new ArrayAdapter<File>(getActivity(),
                 android.R.layout.simple_list_item_1, android.R.id.text1, getItems()));*/
         return view;
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        String[] columns = AudioListModel.getColumns();
+        return null;
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+
+    }
+
+    private class GetQueueTask extends AsyncTask<Void, Void, ArrayList<AudioListModel>> {
+
+
+        @Override
+        protected ArrayList<AudioListModel> doInBackground(Void... params) {
+            return null;
+        }
     }
 
 
@@ -86,7 +132,32 @@ public class QueueFragment extends ListFragment {
         if (null != mListener) {
             // Notify the active callbacks interface (the activity, if the
             // fragment is attached to one) that an item has been selected.
-            mListener.onItemSelected(v);
+            mListener.onQueueItemSelected();
+        }
+    }
+
+    static class QueueAdapter extends CursorAdapter {
+
+        public QueueAdapter(Context context, Cursor c, int flag) {
+            super(context, c, flag);
+        }
+
+        @Override
+        public View newView(Context context, Cursor cursor, ViewGroup parent) {
+            return null;
+        }
+
+        @Override
+        public void bindView(View view, Context context, Cursor cursor) {
+            if (cursor != null) {
+                TextView title = (TextView) view.findViewById(R.id.queue_title);
+                TextView artist = (TextView) view.findViewById(R.id.queue_artist);
+                TextView duration = (TextView) view.findViewById(R.id.queue_duration);
+
+                title.setText(cursor.getString(cursor.getColumnIndexOrThrow("title")));
+                artist.setText(cursor.getString(cursor.getColumnIndexOrThrow("artist")));
+                duration.setText(MusicUtils.makeTimeString(context, cursor.getLong(cursor.getColumnIndexOrThrow("duration"))));
+            }
         }
     }
 

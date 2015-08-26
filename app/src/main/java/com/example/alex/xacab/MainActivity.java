@@ -25,7 +25,7 @@ public class MainActivity extends Activity implements SelectionListener {
     protected Context context;
     private MediaPlayer mediaPlayer = new MediaPlayer();
     private Intent musicServiceIntent;
-    private QueueDB db;
+    public QueueDB db;
     public final static String INTENT_EXTRA = "SONG_SOURCE";
     private LibraryFragment mLibraryFragment;
     private ArtistFragment mArtistFragment;
@@ -99,6 +99,18 @@ public class MainActivity extends Activity implements SelectionListener {
         transaction.commit();
     }
 
+    @Override
+    public void onQueueItemSelected() {
+
+    }
+
+    public void openQueueFragment() {
+        FragmentTransaction transaction = getFragmentManager().beginTransaction();
+        QueueFragment queueFragment = new QueueFragment();
+        transaction.replace(R.id.main_activity_container, queueFragment);
+        transaction.addToBackStack(null);
+        transaction.commit();
+    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -107,6 +119,9 @@ public class MainActivity extends Activity implements SelectionListener {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
+        if (id == R.id.action_queue) {
+            openQueueFragment();
+        }
         //noinspection SimplifiableIfStatement
         /*if (id == R.id.action_settings) {
             return true;

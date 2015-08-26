@@ -1,7 +1,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/queue_list_item_layout"
     android:layout_width="match_parent"
-    android:layout_height="40dp">
+    android:layout_height="72dp">
 
     <!--<View
         android:id="@+id/queue_list_separator"
@@ -9,7 +9,31 @@
         android:layout_height="1dp"
         android:background="?android:attr/listDivider"/>-->
     <TextView
-        android:id="@+id/queue_item_text"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:id="@+id/queue_title"
+        android:textSize="16sp"
+        android:maxLines="1"
+        android:paddingTop="16dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="72dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ellipsize="end" />
+    <TextView
+        android:id="@+id/queue_artist"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="16dp"
+        android:layout_below="@id/queue_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:id="@+id/queue_duration"
+        android:layout_alignParentEnd="true"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
 </RelativeLayout>

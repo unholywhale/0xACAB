@@ -9,4 +9,5 @@ public interface SelectionListener {
     void onItemSelected(View item);
     void onArtistItemSelected(AudioListModel item);
     void onLibraryItemSelected(View item);
+    void onQueueItemSelected(/* ... */);
 }

@@ -34,6 +34,22 @@ public class AudioListModel {
         this.isAlbum = true;
     }
 
+    public static String[] getColumns() {
+        String[] columns = new String[] {
+                "artist",
+                "album",
+                "title",
+                "data",
+                "duration",
+                "number",
+                "year",
+                "album_id",
+                "track_id"
+        };
+
+        return columns;
+    }
+
     public String getArtist() {
         return artist;
     }
