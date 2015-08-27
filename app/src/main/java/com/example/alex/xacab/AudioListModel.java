@@ -44,7 +44,9 @@ public class AudioListModel {
                 "number",
                 "year",
                 "album_id",
-                "track_id"
+                "track_id",
+                "_id"
+
         };
 
         return columns;

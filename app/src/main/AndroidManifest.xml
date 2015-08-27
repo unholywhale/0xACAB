@@ -29,8 +29,8 @@
             android:name=".QueueProvider"
             android:authorities="com.example.alex.xacab.provider"
             android:enabled="true"
-            android:exported="false" >
-        </provider>
+            android:multiprocess="true"
+            android:exported="false"/>
     </application>
 
 </manifest>

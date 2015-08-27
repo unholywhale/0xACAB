@@ -36,6 +36,7 @@ public class QueueFragment extends ListFragment implements LoaderManager.LoaderC
 
     private SelectionListener mListener;
     private final static int QUEUE_LOADER = 1;
+    private QueueAdapter adapter;
 
     public static QueueFragment newInstance(String param1, String param2) {
         QueueFragment fragment = new QueueFragment();
@@ -50,8 +51,8 @@ public class QueueFragment extends ListFragment implements LoaderManager.LoaderC
 
         String[] columns = AudioListModel.getColumns();
         getLoaderManager().initLoader(QUEUE_LOADER, null, this);
-
-        setListAdapter(new QueueAdapter(getActivity().getApplicationContext(), null, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER));
+        adapter = new QueueAdapter(getActivity().getApplicationContext(), null, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
+        setListAdapter(adapter);
     }
 
     /**
@@ -74,17 +75,18 @@ public class QueueFragment extends ListFragment implements LoaderManager.LoaderC
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         String[] columns = AudioListModel.getColumns();
-        return null;
+        CursorLoader cursorLoader = new CursorLoader(getActivity(), QueueProvider.CONTENT_URI, columns, null, null, null);
+        return cursorLoader;
     }
 
     @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-
+    public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+        adapter.swapCursor(cursor);
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-
+        adapter.swapCursor(null);
     }
 
     private class GetQueueTask extends AsyncTask<Void, Void, ArrayList<AudioListModel>> {
@@ -144,7 +146,8 @@ public class QueueFragment extends ListFragment implements LoaderManager.LoaderC
 
         @Override
         public View newView(Context context, Cursor cursor, ViewGroup parent) {
-            return null;
+            View view = LayoutInflater.from(context).inflate(R.layout.fragment_queue_list_item, parent, false);
+            return view;
         }
 
         @Override
@@ -156,7 +159,7 @@ public class QueueFragment extends ListFragment implements LoaderManager.LoaderC
 
                 title.setText(cursor.getString(cursor.getColumnIndexOrThrow("title")));
                 artist.setText(cursor.getString(cursor.getColumnIndexOrThrow("artist")));
-                duration.setText(MusicUtils.makeTimeString(context, cursor.getLong(cursor.getColumnIndexOrThrow("duration"))));
+                duration.setText(MusicUtils.makeTimeString(context, cursor.getInt(cursor.getColumnIndexOrThrow("duration")) / 1000));
             }
         }
     }

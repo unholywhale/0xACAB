@@ -2,11 +2,24 @@ package com.example.alex.xacab;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;
+import android.content.UriMatcher;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 
 public class QueueProvider extends ContentProvider {
+    private static final String AUTHORITY = "com.example.alex.xacab.provider";
+    private static final String DB_BASE_NAME = "queue";
+    public static final int QUEUE = 100;
+    public static final int QUEUE_ID = 110;
+    public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY + "/" + DB_BASE_NAME);
     private QueueDB mDB;
+
+    private static final UriMatcher sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
+    static {
+        sUriMatcher.addURI(AUTHORITY, DB_BASE_NAME, QUEUE);
+        sUriMatcher.addURI(AUTHORITY, DB_BASE_NAME + "/#", QUEUE_ID);
+    }
 
     public QueueProvider() {
     }
@@ -39,8 +52,23 @@ public class QueueProvider extends ContentProvider {
     @Override
     public Cursor query(Uri uri, String[] projection, String selection,
                         String[] selectionArgs, String sortOrder) {
-        // TODO: Implement this to handle query requests from clients.
-        throw new UnsupportedOperationException("Not yet implemented");
+        SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
+        queryBuilder.setTables(QueueDB.TABLE_NAME);
+
+        int uriType = sUriMatcher.match(uri);
+        switch (uriType) {
+            case QUEUE_ID:
+                queryBuilder.appendWhere(QueueDB.KEY_ID + "=" + uri.getLastPathSegment());
+                break;
+            case QUEUE:
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown URI");
+        }
+        Cursor cursor = queryBuilder.query(mDB.getReadableDatabase(),
+                projection, selection, selectionArgs, null, null, sortOrder);
+        cursor.setNotificationUri(getContext().getContentResolver(), uri);
+        return cursor;
     }
 
     @Override
