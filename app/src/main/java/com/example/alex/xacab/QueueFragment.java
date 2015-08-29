@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.CursorLoader;
 import android.content.Loader;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.ListFragment;
@@ -14,10 +13,8 @@ import android.os.Environment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.CursorAdapter;
 import android.widget.ListView;
-import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
 
@@ -36,7 +33,7 @@ public class QueueFragment extends ListFragment implements LoaderManager.LoaderC
 
     private SelectionListener mListener;
     private final static int QUEUE_LOADER = 1;
-    private QueueAdapter adapter;
+    private QueueAdapter mAdapter;
 
     public static QueueFragment newInstance(String param1, String param2) {
         QueueFragment fragment = new QueueFragment();
@@ -49,10 +46,9 @@ public class QueueFragment extends ListFragment implements LoaderManager.LoaderC
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        String[] columns = AudioListModel.getColumns();
         getLoaderManager().initLoader(QUEUE_LOADER, null, this);
-        adapter = new QueueAdapter(getActivity().getApplicationContext(), null, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
-        setListAdapter(adapter);
+        mAdapter = new QueueAdapter(getActivity().getApplicationContext(), null, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
+        setListAdapter(mAdapter);
     }
 
     /**
@@ -81,12 +77,12 @@ public class QueueFragment extends ListFragment implements LoaderManager.LoaderC
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-        adapter.swapCursor(cursor);
+        mAdapter.swapCursor(cursor);
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-        adapter.swapCursor(null);
+        mAdapter.swapCursor(null);
     }
 
     private class GetQueueTask extends AsyncTask<Void, Void, ArrayList<AudioListModel>> {

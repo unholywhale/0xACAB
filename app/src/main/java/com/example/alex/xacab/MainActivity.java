@@ -42,7 +42,7 @@ public class MainActivity extends Activity implements SelectionListener {
         if (savedInstanceState == null) {
             FragmentTransaction transaction = getFragmentManager().beginTransaction();
             transaction.replace(R.id.main_activity_container, new LibraryFragment());
-            transaction.addToBackStack(null);
+            // No need to add to the backstack since it's the first fragment to load
             transaction.commit();
         } else {
 

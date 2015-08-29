@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="header_color">#A1D490</color>
-    <color name="background_color">#606060</color>
+    <color name="header_color">#6bbae5</color>
+    <color name="header_color_bak">#A1D490</color>
+    <color name="background_color">#454545</color>
+    <color name="background_color_back">#606060</color>
     <color name="text_light_color">#EEEEEE</color>
     <color name="text_middle_color">#BBBBBB</color>
     <color name="text_dark_color">#909090</color>

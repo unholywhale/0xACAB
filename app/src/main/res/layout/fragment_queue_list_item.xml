@@ -1,18 +1,19 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/queue_list_item_layout"
     android:layout_width="match_parent"
-    android:layout_height="72dp">
+    android:layout_height="45dp">
 
-    <!--<View
+    <View
         android:id="@+id/queue_list_separator"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="?android:attr/listDivider"/>-->
+        android:layout_alignParentTop="true"
+        android:background="?android:attr/listDivider"/>
     <TextView
         android:id="@+id/queue_title"
         android:textSize="16sp"
         android:maxLines="1"
-        android:paddingTop="16dp"
+        android:textColor="@color/header_color"
         android:paddingStart="16dp"
         android:paddingEnd="72dp"
         android:layout_width="wrap_content"
@@ -22,7 +23,6 @@
         android:id="@+id/queue_artist"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
-        android:paddingBottom="16dp"
         android:layout_below="@+id/queue_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
@@ -33,8 +33,8 @@
         android:layout_centerVertical="true"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
-        android:paddingTop="16dp"
-        android:paddingBottom="16dp"
+
+
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 </RelativeLayout>
