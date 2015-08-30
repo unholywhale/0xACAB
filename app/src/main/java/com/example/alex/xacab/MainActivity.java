@@ -71,19 +71,21 @@ public class MainActivity extends Activity implements SelectionListener {
         new AddToQueueTask().execute(item);
     }
 
-    private class AddToQueueTask extends AsyncTask<AudioListModel, Void, String> {
+    private class AddToQueueTask extends AsyncTask<AudioListModel, Void, Boolean> {
 
         @Override
-        protected String doInBackground(AudioListModel... params) {
+        protected Boolean doInBackground(AudioListModel... params) {
             AudioListModel item = params[0];
-            db.addToQueue(item);
-            String res = item.getArtist() + " - " + item.getTitle();
-            return res;
+            Boolean result = db.addToQueue(item);
+
+            return result;
         }
 
         @Override
-        protected void onPostExecute(String result) {
-            Toast.makeText(getApplicationContext(), result, Toast.LENGTH_SHORT).show();
+        protected void onPostExecute(Boolean result) {
+            if (result == true) {
+
+            }
         }
 
     }

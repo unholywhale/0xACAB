@@ -16,7 +16,7 @@ import java.util.ArrayList;
 public class QueueDB extends SQLiteOpenHelper {
 
     public static final String TABLE_NAME = "queue";
-    public static final int DB_VERSION = 1;
+    public static final int DB_VERSION = 2;
     public static final String KEY_ARTIST = "artist";
     public static final String KEY_ALBUM = "album";
     public static final String KEY_TITLE = "title";
@@ -26,7 +26,7 @@ public class QueueDB extends SQLiteOpenHelper {
     public static final String KEY_YEAR = "year";
     public static final String KEY_ALBUM_ID = "album_id";
     public static final String KEY_TRACK_ID = "track_id";
-    public static final String KEY_ID = "id";
+    public static final String KEY_ID = "_id";
 
     public QueueDB(Context context) {
         super(context, TABLE_NAME, null, DB_VERSION);
@@ -54,7 +54,10 @@ public class QueueDB extends SQLiteOpenHelper {
         this.onCreate(db);
     }
 
-    public void addToQueue(AudioListModel item) {
+    public boolean addToQueue(AudioListModel item) {
+        if (item.isAlbum == true) {
+            return false;
+        }
         SQLiteDatabase db = this.getWritableDatabase();
         try {
             ContentValues values = new ContentValues();
@@ -69,10 +72,12 @@ public class QueueDB extends SQLiteOpenHelper {
             values.put(KEY_TRACK_ID, item.getTrackId());
 
             db.insert(TABLE_NAME, null, values);
+            db.close();
+            return true;
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
             db.close();
+            return false;
         }
     }
 
@@ -101,7 +106,7 @@ public class QueueDB extends SQLiteOpenHelper {
             int year = cursor.getInt(cursor.getColumnIndexOrThrow(KEY_YEAR));
             long albumId = cursor.getLong(cursor.getColumnIndexOrThrow(KEY_ALBUM_ID));
             long trackId = cursor.getLong(cursor.getColumnIndexOrThrow(KEY_TRACK_ID));
-            int _id = cursor.getInt(cursor.getColumnIndexOrThrow("id"));
+            int _id = cursor.getInt(cursor.getColumnIndexOrThrow(KEY_ID));
             queueList.add(new AudioListModel(artist, album, title, data, duration, _id, year, albumId, trackId));
         }
 

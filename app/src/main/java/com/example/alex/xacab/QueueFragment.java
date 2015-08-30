@@ -1,6 +1,7 @@
 package com.example.alex.xacab;
 
 import android.app.Activity;
+import android.app.ListFragment;
 import android.app.LoaderManager;
 import android.content.Context;
 import android.content.CursorLoader;
@@ -8,15 +9,14 @@ import android.content.Loader;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.app.ListFragment;
 import android.os.Environment;
+import android.support.v4.widget.ViewDragHelper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CursorAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
-
 
 import java.io.File;
 import java.util.ArrayList;
@@ -60,8 +60,7 @@ public class QueueFragment extends ListFragment implements LoaderManager.LoaderC
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_queue, null);
-
+        View view = inflater.inflate(R.layout.fragment_queue, container);
 
         /*setListAdapter(new ArrayAdapter<File>(getActivity(),
                 android.R.layout.simple_list_item_1, android.R.id.text1, getItems()));*/
@@ -113,7 +112,7 @@ public class QueueFragment extends ListFragment implements LoaderManager.LoaderC
             mListener = (SelectionListener) activity;
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
-                    + " must implement OnFragmentInteractionListener");
+                    + " must implement SelectionListener");
         }
     }
 
