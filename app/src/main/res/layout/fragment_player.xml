@@ -1,46 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent" android:layout_height="match_parent">
-
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
     <LinearLayout
+        android:id="@+id/player_misc_buttons"
         android:layout_width="match_parent"
-        android:layout_height="64dp"
-        android:layout_alignParentTop="true"></LinearLayout>
-    <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-    <LinearLayout
-        android:id="@+id/player_buttons_container"
+        android:layout_height="0dp"
         android:orientation="horizontal"
-        android:background="#202020"
-        android:layout_width="match_parent"
-        android:layout_height="64dp"
-        android:layout_alignParentBottom="true">
-            <ImageView
-                android:id="@+id/player_previous"
-                android:src="@drawable/ic_action_previous"
-                android:layout_marginStart="50dp"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"/>
-            <ImageView
-                android:id="@+id/player_play"
-                android:src="@drawable/ic_action_play"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"/>
-            <ImageView
-                android:id="@+id/player_next"
-                android:src="@drawable/ic_action_next"
-                android:layout_marginEnd="50dp"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"/>
+        android:layout_weight="1">
+        <ImageView
+            android:id="@+id/player_shuffle"
+            android:src="@drawable/ic_action_shuffle"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="128dp"/>
+        <ImageView
+            android:id="@+id/player_repeat"
+            android:src="@drawable/ic_action_repeat"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:layout_marginStart="128dp"
+            android:layout_marginEnd="16dp"/>
     </LinearLayout>
-    <View
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#505050"
-        android:layout_alignTop="@id/player_buttons_container"/>
+        android:layout_height="0dp"
+        android:layout_weight="1"></LinearLayout>
+    <LinearLayout
+        android:id="@+id/player_info_container"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:layout_weight="8">
 
-</RelativeLayout>
+        <ImageView
+            android:id="@+id/player_info_image"
+            android:src="@drawable/default_album"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"/>
+
+    </LinearLayout>
+
+
+</LinearLayout>
