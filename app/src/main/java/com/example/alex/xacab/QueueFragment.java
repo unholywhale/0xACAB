@@ -18,6 +18,8 @@ import android.widget.CursorAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import org.w3c.dom.Text;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -129,7 +131,7 @@ public class QueueFragment extends ListFragment implements LoaderManager.LoaderC
         if (null != mListener) {
             // Notify the active callbacks interface (the activity, if the
             // fragment is attached to one) that an item has been selected.
-            mListener.onQueueItemSelected();
+            mListener.onQueueItemSelected((TextView) v.findViewById(R.id.queue_data));
         }
     }
 
@@ -151,10 +153,12 @@ public class QueueFragment extends ListFragment implements LoaderManager.LoaderC
                 TextView title = (TextView) view.findViewById(R.id.queue_title);
                 TextView artist = (TextView) view.findViewById(R.id.queue_artist);
                 TextView duration = (TextView) view.findViewById(R.id.queue_duration);
+                TextView data = (TextView) view.findViewById(R.id.queue_data);
 
                 title.setText(cursor.getString(cursor.getColumnIndexOrThrow("title")));
                 artist.setText(cursor.getString(cursor.getColumnIndexOrThrow("artist")));
                 duration.setText(MusicUtils.makeTimeString(context, cursor.getInt(cursor.getColumnIndexOrThrow("duration")) / 1000));
+                data.setText(cursor.getString(cursor.getColumnIndexOrThrow("data")));
             }
         }
     }

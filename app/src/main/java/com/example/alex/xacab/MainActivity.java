@@ -1,7 +1,9 @@
 package com.example.alex.xacab;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.app.FragmentTransaction;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.media.MediaPlayer;
@@ -11,7 +13,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
-import android.widget.Toast;
 
 /**
  * @TODO: Handle orientation change
@@ -21,7 +22,7 @@ import android.widget.Toast;
 
 public class MainActivity extends Activity implements SelectionListener {
 
-    public final static String[] LIST_SAMPLE = { "First item", "Second item", "Third item" };
+    public final static String INTENT_SONG_COMPLETED = "com.example.alex.xacab.SONG_COMPLETED";
     protected Context context;
     private MediaPlayer mediaPlayer = new MediaPlayer();
     private Intent musicServiceIntent;
@@ -29,12 +30,24 @@ public class MainActivity extends Activity implements SelectionListener {
     public final static String INTENT_EXTRA = "SONG_SOURCE";
     private LibraryFragment mLibraryFragment;
     private ArtistFragment mArtistFragment;
+    private ActionBar mActionBar;
     public final String ARTIST_TAG = "artist_tag";
+
+    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction() == INTENT_SONG_COMPLETED) {
+                String receiveValue = MusicService.SONG_COMPLETED;
+            }
+        }
+    };
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        mActionBar = getActionBar();
         db = new QueueDB(this);
         musicServiceIntent = new Intent(getApplicationContext(), MusicService.class);
         //mLibraryFragment = (LibraryFragment) getFragmentManager().findFragmentById(R.id.fragment_library);
@@ -102,11 +115,14 @@ public class MainActivity extends Activity implements SelectionListener {
     }
 
     @Override
-    public void onQueueItemSelected() {
-
+    public void onQueueItemSelected(TextView viewData) {
+        String data = viewData.getText().toString();
+        musicServiceIntent.putExtra(INTENT_EXTRA, data);
+        startService(musicServiceIntent);
     }
 
     public void openQueueFragment() {
+        mActionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
         FragmentTransaction transaction = getFragmentManager().beginTransaction();
         QueueFragment queueFragment = new QueueFragment();
         transaction.replace(R.id.main_activity_container, queueFragment);

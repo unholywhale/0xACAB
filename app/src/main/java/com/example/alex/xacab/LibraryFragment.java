@@ -6,26 +6,36 @@ import android.content.Context;
 import android.content.CursorLoader;
 import android.content.Loader;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.app.ListFragment;
 import android.provider.MediaStore;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CheckBox;
 import android.widget.CursorAdapter;
 import android.widget.ListView;
-import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
-
-import java.util.Comparator;
 
 public class LibraryFragment extends ListFragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private final static int LIBRARY_LOADER = 2;
-    private SelectionListener mListener;
+    private SelectionListener mSelectionListener;
     private LayoutInflater mInflater;
     private LibraryAdapter mAdapter;
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        try {
+            mSelectionListener = (SelectionListener) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString()
+                    + " must implement SelectionListener");
+        }
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -35,10 +45,13 @@ public class LibraryFragment extends ListFragment implements LoaderManager.Loade
         setListAdapter(mAdapter);
     }
 
-    public static LibraryFragment newInstance(String param1, String param2) {
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+
+    }
+
+    public static LibraryFragment newInstance(int libraryTab) {
         LibraryFragment fragment = new LibraryFragment();
-        Bundle args = new Bundle();
-        fragment.setArguments(args);
         return fragment;
     }
 
@@ -56,44 +69,49 @@ public class LibraryFragment extends ListFragment implements LoaderManager.Loade
         return view;
     }
 
+    @Override
+    public void onStop() {
+        super.onStop();
+    }
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        try {
-            mListener = (SelectionListener) activity;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(activity.toString()
-                    + " must implement SelectionListener");
-        }
+    public void onResume() {
+        super.onResume();
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
-        mListener = null;
+        mSelectionListener = null;
     }
+
 
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
         super.onListItemClick(l, v, position, id);
 
-        if (null != mListener) {
+        if (null != mSelectionListener) {
             // Notify the active callbacks interface (the activity, if the
             // fragment is attached to one) that an item has been selected.
-            mListener.onLibraryItemSelected(v);
+            mSelectionListener.onLibraryItemSelected(v);
         }
     }
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        String[] from = new String[] {
+        String [] from;
+        Uri uri;
+        String sortOrder;
+        from = new String[] {
                 MediaStore.Audio.Artists.ARTIST,
                 MediaStore.Audio.Artists.NUMBER_OF_ALBUMS,
                 MediaStore.Audio.Artists.NUMBER_OF_TRACKS,
                 MediaStore.Audio.Artists._ID
         };
-        CursorLoader cursorLoader = new CursorLoader(getActivity(), MediaStore.Audio.Artists.EXTERNAL_CONTENT_URI, from, null, null, MediaStore.Audio.Artists.ARTIST);
+        uri = MediaStore.Audio.Artists.EXTERNAL_CONTENT_URI;
+        sortOrder = MediaStore.Audio.Artists.ARTIST;
+
+        CursorLoader cursorLoader = new CursorLoader(getActivity(), uri, from, null, null, sortOrder);
 
         return cursorLoader;
     }
@@ -116,24 +134,16 @@ public class LibraryFragment extends ListFragment implements LoaderManager.Loade
 
         @Override
         public View newView(Context context, Cursor cursor, ViewGroup parent) {
-            View view = LayoutInflater.from(context).inflate(R.layout.fragment_library_list_item, parent, false);
+            View view = LayoutInflater.from(context).inflate(R.layout.fragment_library_artists_list_item, parent, false);
             return view;
         }
 
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
-            TextView artist  = (TextView) view.findViewById(R.id.library_artist);
-            //TextView numOfAlbums = (TextView) view.findViewById(R.id.library_num_albums);
-            //TextView numOfTracks = (TextView) view.findViewById(R.id.library_num_tracks);
-
-            //String albums = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.ArtistColumns.NUMBER_OF_ALBUMS)) + " albums";
-            //String tracks = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.ArtistColumns.NUMBER_OF_TRACKS)) + " tracks";
-
+            TextView artist = (TextView) view.findViewById(R.id.library_artist);
             artist.setText(cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.ArtistColumns.ARTIST)));
-            //numOfAlbums.setText(albums);
-            //numOfTracks.setText(tracks);
-
         }
     }
-
 }
+
+

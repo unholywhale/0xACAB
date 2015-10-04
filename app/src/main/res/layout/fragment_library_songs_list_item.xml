@@ -6,7 +6,7 @@
               android:layout_height="45dp">
 
     <TextView
-        android:id="@+id/library_artist"
+        android:id="@+id/library_track"
         android:textSize="16sp"
         android:maxLines="1"
         android:textColor="@color/header_color"
@@ -17,7 +17,7 @@
         android:layout_height="wrap_content"
         android:ellipsize="end" />
     <ImageButton
-        android:id="@+id/library_action"
+        android:id="@+id/library_songs_action"
         android:layout_width="48dp"
         android:layout_height="36dp"
         android:src="@drawable/ic_action_options"
