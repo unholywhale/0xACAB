@@ -113,11 +113,4 @@ public class QueueDB extends SQLiteOpenHelper {
         return queueList;
     }
 
-    public void removeFromQueue(long trackId) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        db.delete(TABLE_NAME,
-                KEY_TRACK_ID + " = ?",
-                new String[] {String.valueOf(trackId)});
-        db.close();
-    }
 }

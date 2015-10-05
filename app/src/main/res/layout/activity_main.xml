@@ -18,33 +18,10 @@
     </LinearLayout>
 
 
-    <LinearLayout
+    <RelativeLayout
         android:id="@+id/main_buttons_container"
-        android:orientation="horizontal"
-        android:background="#202020"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
-        <ImageView
-            android:id="@+id/player_previous"
-            android:src="@drawable/ic_action_previous"
-            android:layout_marginStart="50dp"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"/>
-        <ImageView
-            android:id="@+id/player_play"
-            android:src="@drawable/ic_action_play"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"/>
-        <ImageView
-            android:id="@+id/player_next"
-            android:src="@drawable/ic_action_next"
-            android:layout_marginEnd="50dp"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"/>
-    </LinearLayout>
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content">
+    </RelativeLayout>
 
 </LinearLayout>

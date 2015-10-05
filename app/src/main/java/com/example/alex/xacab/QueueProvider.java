@@ -4,8 +4,11 @@ import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.UriMatcher;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
+import android.text.TextUtils;
+import android.util.Log;
 
 public class QueueProvider extends ContentProvider {
     private static final String AUTHORITY = "com.example.alex.xacab.provider";
@@ -26,21 +29,46 @@ public class QueueProvider extends ContentProvider {
 
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
-        // Implement this to handle requests to delete one or more rows.
-        throw new UnsupportedOperationException("Not yet implemented");
+
+        SQLiteDatabase db = mDB.getWritableDatabase();
+        int uriType = sUriMatcher.match(uri);
+        int rowsDeleted = 0;
+        switch (uriType) {
+            case QUEUE_ID:
+                String id = uri.getLastPathSegment();
+                if (TextUtils.isEmpty(selection)) {
+                    rowsDeleted = db.delete(QueueDB.TABLE_NAME, QueueDB.KEY_ID + "=" + id + " and " + selection, selectionArgs);
+                }
+                break;
+            case QUEUE:
+                rowsDeleted = db.delete(QueueDB.TABLE_NAME, selection, selectionArgs);
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown URI");
+        }
+        getContext().getContentResolver().notifyChange(uri, null);
+        return rowsDeleted;
     }
 
     @Override
     public String getType(Uri uri) {
-        // TODO: Implement this to handle requests for the MIME type of the data
-        // at the given URI.
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
     @Override
     public Uri insert(Uri uri, ContentValues values) {
-        // TODO: Implement this to handle requests to insert a new row.
-        throw new UnsupportedOperationException("Not yet implemented");
+        SQLiteDatabase db = mDB.getWritableDatabase();
+        int uriType = sUriMatcher.match(uri);
+        long id = 0;
+        switch(uriType) {
+            case QUEUE:
+                db.insert(QueueDB.TABLE_NAME, null, values);
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown URI");
+        }
+        getContext().getContentResolver().notifyChange(uri, null);
+        return Uri.parse(DB_BASE_NAME + "/" + id);
     }
 
     @Override
@@ -54,7 +82,6 @@ public class QueueProvider extends ContentProvider {
                         String[] selectionArgs, String sortOrder) {
         SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
         queryBuilder.setTables(QueueDB.TABLE_NAME);
-
         int uriType = sUriMatcher.match(uri);
         switch (uriType) {
             case QUEUE_ID:
@@ -74,7 +101,6 @@ public class QueueProvider extends ContentProvider {
     @Override
     public int update(Uri uri, ContentValues values, String selection,
                       String[] selectionArgs) {
-        // TODO: Implement this to handle requests to update one or more rows.
-        throw new UnsupportedOperationException("Not yet implemented");
+        return 0;
     }
 }

@@ -9,27 +9,41 @@ import java.io.IOException;
 
 public class MusicService extends Service implements MediaPlayer.OnPreparedListener {
 
-    public static final String SONG_COMPLETED = "SONG_COMPLETED";
+    public static final String SONG_STATUS = "SONG_STATUS";
+    public static final String SONG_STOPPED = "SONG_STOPPED";
+    public static final String SONG_STARTED = "SONG_STARTED";
     private final String TAG = "MusicService";
     private MediaPlayer mediaPlayer;
     private int mStartID;
     private String currentSong;
+    private Intent mBroadcastIntent;
 
 
     @Override
     public void onCreate() {
         super.onCreate();
 
-
+        mBroadcastIntent = new Intent();
+        mBroadcastIntent.setAction(MainActivity.INTENT_SONG_STATUS);
         mediaPlayer = new MediaPlayer();
         mediaPlayer.setOnPreparedListener(this);
 
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mp) {
-
+                songStopped();
             }
         });
+    }
+
+    private void songStopped() {
+        mBroadcastIntent.putExtra(SONG_STATUS, SONG_STOPPED);
+        sendBroadcast(mBroadcastIntent);
+    }
+
+    private void songStarted() {
+        mBroadcastIntent.putExtra(SONG_STATUS, SONG_STARTED);
+        sendBroadcast(mBroadcastIntent);
     }
 
     @Override
@@ -49,14 +63,16 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
                         currentSong = songSource;
                     } else {
                         mediaPlayer.pause();
+                        songStopped();
                     }
                 } else {
                     if (songSource.equals(currentSong)) {
                         mediaPlayer.start();
+                        songStarted();
                     } else {
+                        mediaPlayer.reset();
                         mediaPlayer.setDataSource(songSource);
-                        mediaPlayer.prepare();
-                        mediaPlayer.start();
+                        mediaPlayer.prepareAsync();
                         currentSong = songSource;
                     }
                 }
@@ -74,19 +90,20 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
             mediaPlayer.stop();
             mediaPlayer.release();
+            songStopped();
 
         }
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        // TODO: Return the communication channel to the service.
-        throw new UnsupportedOperationException("Not yet implemented");
+        return null;
     }
 
     @Override
     public void onPrepared(MediaPlayer mp) {
         mp.start();
+        songStarted();
     }
 
 }

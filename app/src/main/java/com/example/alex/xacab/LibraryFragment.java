@@ -134,7 +134,7 @@ public class LibraryFragment extends ListFragment implements LoaderManager.Loade
 
         @Override
         public View newView(Context context, Cursor cursor, ViewGroup parent) {
-            View view = LayoutInflater.from(context).inflate(R.layout.fragment_library_artists_list_item, parent, false);
+            View view = LayoutInflater.from(context).inflate(R.layout.fragment_library_list_item, parent, false);
             return view;
         }
 

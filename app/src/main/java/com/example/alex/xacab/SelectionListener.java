@@ -10,5 +10,7 @@ public interface SelectionListener {
     void onItemSelected(View item);
     void onArtistItemSelected(AudioListModel item);
     void onLibraryItemSelected(View item);
-    void onQueueItemSelected(TextView data);
+    void onQueueItemSelected(int position);
+    void onQueueFragmentShow();
+    void onQueueFragmentHide();
 }

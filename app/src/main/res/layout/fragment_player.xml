@@ -10,7 +10,7 @@
         android:orientation="horizontal"
         android:layout_weight="1">
         <ImageView
-            android:id="@+id/player_shuffle"
+
             android:src="@drawable/ic_action_shuffle"
             android:layout_width="0dp"
             android:layout_weight="1"
@@ -18,7 +18,7 @@
             android:layout_marginStart="16dp"
             android:layout_marginEnd="128dp"/>
         <ImageView
-            android:id="@+id/player_repeat"
+
             android:src="@drawable/ic_action_repeat"
             android:layout_width="0dp"
             android:layout_weight="1"

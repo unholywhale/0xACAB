@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+    <RelativeLayout
+        android:id="@+id/container_main_buttons"
+        android:background="#202020"
+        android:layout_width="match_parent"
+        android:layout_height="60dp">
+        <TextView
+            android:id="@+id/container_main_info"
+            android:text="Squarepusher - Exjah Nives"
+            android:layout_alignParentStart="true"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:ellipsize="end"/>
+        <ImageView
+            android:id="@+id/player_play"
+            android:src="@drawable/ic_action_play"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:layout_width="80dp"
+            android:layout_height="match_parent"/>
+    </RelativeLayout>
+
+</LinearLayout>

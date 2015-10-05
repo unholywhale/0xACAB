@@ -15,6 +15,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CursorAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -64,9 +65,14 @@ public class QueueFragment extends ListFragment implements LoaderManager.LoaderC
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_queue, null);
 
-        /*setListAdapter(new ArrayAdapter<File>(getActivity(),
-                android.R.layout.simple_list_item_1, android.R.id.text1, getItems()));*/
+        mListener.onQueueFragmentShow();
         return view;
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        mListener.onQueueFragmentHide();
     }
 
     @Override
@@ -84,15 +90,6 @@ public class QueueFragment extends ListFragment implements LoaderManager.LoaderC
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         mAdapter.swapCursor(null);
-    }
-
-    private class GetQueueTask extends AsyncTask<Void, Void, ArrayList<AudioListModel>> {
-
-
-        @Override
-        protected ArrayList<AudioListModel> doInBackground(Void... params) {
-            return null;
-        }
     }
 
 
@@ -131,7 +128,7 @@ public class QueueFragment extends ListFragment implements LoaderManager.LoaderC
         if (null != mListener) {
             // Notify the active callbacks interface (the activity, if the
             // fragment is attached to one) that an item has been selected.
-            mListener.onQueueItemSelected((TextView) v.findViewById(R.id.queue_data));
+            mListener.onQueueItemSelected(position);
         }
     }
 
@@ -150,15 +147,22 @@ public class QueueFragment extends ListFragment implements LoaderManager.LoaderC
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
             if (cursor != null) {
+
                 TextView title = (TextView) view.findViewById(R.id.queue_title);
                 TextView artist = (TextView) view.findViewById(R.id.queue_artist);
                 TextView duration = (TextView) view.findViewById(R.id.queue_duration);
                 TextView data = (TextView) view.findViewById(R.id.queue_data);
+                ImageView playing = (ImageView) view.findViewById(R.id.queue_playing);
 
                 title.setText(cursor.getString(cursor.getColumnIndexOrThrow("title")));
                 artist.setText(cursor.getString(cursor.getColumnIndexOrThrow("artist")));
                 duration.setText(MusicUtils.makeTimeString(context, cursor.getInt(cursor.getColumnIndexOrThrow("duration")) / 1000));
                 data.setText(cursor.getString(cursor.getColumnIndexOrThrow("data")));
+                if (cursor.getPosition() == MainActivity.currentQueuePosition) {
+                    playing.setVisibility(View.VISIBLE);
+                } else {
+                    playing.setVisibility(View.INVISIBLE);
+                }
             }
         }
     }
