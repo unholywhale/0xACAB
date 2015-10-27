@@ -20,7 +20,7 @@
         android:id="@+id/queue_number"
         android:layout_width="32dp"
         android:layout_height="match_parent"
-        android:textSize="20sp"
+        android:textSize="18sp"
         android:layout_marginStart="5dp"
         android:layout_centerVertical="true"
         android:gravity="center_vertical|center_horizontal"/>

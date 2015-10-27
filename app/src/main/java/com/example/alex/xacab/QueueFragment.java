@@ -67,7 +67,7 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_queue, null);
-        //mListener.onQueueFragmentShow();
+        mListener.onQueueFragmentShow();
 
         mList = (ListView) view.findViewById(R.id.queue_list);
 
@@ -89,7 +89,7 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        //mListener.onQueueFragmentHide();
+        mListener.onQueueFragmentHide();
     }
 
 
@@ -177,18 +177,18 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
         public void bindView(View view, Context context, Cursor cursor) {
             if (cursor != null) {
                 QueueHolder holder = (QueueHolder) view.getTag();
-                Integer number = cursor.getInt(cursor.getColumnIndexOrThrow(QueueDB.KEY_ID));
-                //holder.number.setText(number.toString());
+                Integer number = cursor.getInt(cursor.getColumnIndexOrThrow(QueueDB.KEY_SORT));
+                holder.number.setText(number.toString());
                 holder.title.setText(cursor.getString(cursor.getColumnIndexOrThrow(QueueDB.KEY_TITLE)));
                 holder.artist.setText(cursor.getString(cursor.getColumnIndexOrThrow(QueueDB.KEY_ARTIST)));
                 holder.duration.setText(MusicUtils.makeTimeString(context, cursor.getInt(cursor.getColumnIndexOrThrow(QueueDB.KEY_DURATION)) / 1000));
                 holder.data.setText(cursor.getString(cursor.getColumnIndexOrThrow(QueueDB.KEY_DATA)));
                 if (cursor.getPosition() == ((MainActivity) getActivity()).getCurrentQueuePosition()) {
                     holder.playing.setVisibility(View.VISIBLE);
-                    //holder.number.setVisibility(View.VISIBLE);
+                    holder.number.setVisibility(View.INVISIBLE);
                 } else {
                     holder.playing.setVisibility(View.INVISIBLE);
-                    //holder.number.setVisibility(View.INVISIBLE);
+                    holder.number.setVisibility(View.VISIBLE);
                 }
             }
         }

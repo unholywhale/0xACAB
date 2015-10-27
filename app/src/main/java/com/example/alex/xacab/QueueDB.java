@@ -16,7 +16,7 @@ import java.util.ArrayList;
 public class QueueDB extends SQLiteOpenHelper {
 
     public static final String TABLE_NAME = "queue";
-    public static final int DB_VERSION = 2;
+    public static final int DB_VERSION = 3;
     public static final String KEY_ARTIST = "artist";
     public static final String KEY_ALBUM = "album";
     public static final String KEY_TITLE = "title";
@@ -43,7 +43,7 @@ public class QueueDB extends SQLiteOpenHelper {
                 KEY_DATA + " TEXT," +
                 KEY_DURATION + " INTEGER," +
                 KEY_NUMBER + " INTEGER," +
-              //  KEY_SORT + " INTEGER," +
+                KEY_SORT + " INTEGER," +
                 KEY_YEAR + " INTEGER," +
                 KEY_ALBUM_ID + " INTEGER," +
                 KEY_TRACK_ID + " INTEGER )";

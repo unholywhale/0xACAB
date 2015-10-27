@@ -45,6 +45,7 @@ public class AudioListModel {
                 "year",
                 "album_id",
                 "track_id",
+                "sort",
                 "_id"
 
         };

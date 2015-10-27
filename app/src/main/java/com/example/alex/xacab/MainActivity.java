@@ -167,7 +167,7 @@ public class MainActivity extends Activity implements SelectionListener {
 
     private void populateQueueData() {
         String[] columns = AudioListModel.getColumns();
-        Cursor cursor = getContentResolver().query(QueueProvider.CONTENT_URI, columns, null, null, null);
+        Cursor cursor = getContentResolver().query(QueueProvider.CONTENT_URI, columns, null, null, QueueDB.KEY_SORT);
         if (cursor != null) {
             while (cursor.moveToNext()) {
                 String artist = cursor.getString(cursor.getColumnIndexOrThrow(QueueDB.KEY_ARTIST));
@@ -247,15 +247,19 @@ public class MainActivity extends Activity implements SelectionListener {
     @Override
     public void onQueueFragmentShow() {
         changeButtons(R.layout.container_queue, R.id.container_queue_buttons);
-        mMenu.findItem(R.id.action_clear_queue).setVisible(true);
-        mMenu.findItem(R.id.action_add).setVisible(true);
+        if (mMenu != null) {
+            mMenu.findItem(R.id.action_clear_queue).setVisible(true);
+            mMenu.findItem(R.id.action_add).setVisible(true);
+        }
     }
 
     @Override
     public void onQueueFragmentHide() {
         changeButtons(R.layout.container_main, R.id.container_main_buttons);
-        mMenu.findItem(R.id.action_clear_queue).setVisible(false);
-        mMenu.findItem(R.id.action_add).setVisible(false);
+        if (mMenu != null) {
+            mMenu.findItem(R.id.action_clear_queue).setVisible(false);
+            mMenu.findItem(R.id.action_add).setVisible(false);
+        }
     }
 
     private void changeButtons(int layoutId, int id) {
@@ -264,6 +268,36 @@ public class MainActivity extends Activity implements SelectionListener {
         View buttons = queueLayout.findViewById(id);
         mButtons = buttons;
         ImageView playButton = (ImageView) buttons.findViewById(R.id.player_play);
+        ImageView nextButton = (ImageView) buttons.findViewById(R.id.player_next);
+        ImageView previousButton = (ImageView) buttons.findViewById(R.id.player_previous);
+        if (nextButton != null) {
+            nextButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (currentQueuePosition != -1) {
+                        if (currentQueuePosition == mQueueData.size() - 1) {
+                            onQueueItemSelected(0);
+                        } else {
+                            onQueueItemSelected(currentQueuePosition + 1);
+                        }
+                    }
+                }
+            });
+        }
+        if (previousButton != null) {
+            previousButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (currentQueuePosition != -1) {
+                        if (currentQueuePosition == 0) {
+                            onQueueItemSelected(mQueueData.size() - 1);
+                        } else {
+                            onQueueItemSelected(currentQueuePosition - 1);
+                        }
+                    }
+                }
+            });
+        }
         playButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -303,9 +337,9 @@ public class MainActivity extends Activity implements SelectionListener {
 
         int id = item.getItemId();
         switch (id) {
-            case R.id.action_queue:
-                openQueueFragment();
-                break;
+//            case R.id.action_queue:
+//                openQueueFragment();
+//                break;
             case R.id.action_clear_queue:
                 clearQueue();
                 break;
@@ -343,7 +377,7 @@ public class MainActivity extends Activity implements SelectionListener {
                 String selection = MediaStore.Audio.Media.ALBUM_ID + "=?";
                 Long aId = item.getAlbumId();
                 String[] where = {aId.toString()};
-                Cursor cursor = getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, from, selection, where, null);
+                Cursor cursor = getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, from, selection, where, MediaStore.Audio.Media.TRACK);
                 if (cursor != null) {
                     while (cursor.moveToNext()) {
                         values.clear();
@@ -366,7 +400,7 @@ public class MainActivity extends Activity implements SelectionListener {
                         values.put(QueueDB.KEY_YEAR, newItem.getYear());
                         values.put(QueueDB.KEY_ALBUM_ID, newItem.getAlbumId());
                         values.put(QueueDB.KEY_TRACK_ID, newItem.getTrackId());
-
+                        values.put(QueueDB.KEY_SORT, mQueueData.size() + 1);
                         getContentResolver().insert(QueueProvider.CONTENT_URI, values);
                         mQueueData.add(newItem);
                     }
@@ -381,7 +415,7 @@ public class MainActivity extends Activity implements SelectionListener {
                 values.put(QueueDB.KEY_YEAR, item.getYear());
                 values.put(QueueDB.KEY_ALBUM_ID, item.getAlbumId());
                 values.put(QueueDB.KEY_TRACK_ID, item.getTrackId());
-
+                values.put(QueueDB.KEY_SORT, mQueueData.size() + 1);
                 getContentResolver().insert(QueueProvider.CONTENT_URI, values);
                 mQueueData.add(item);
             }
