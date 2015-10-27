@@ -178,17 +178,17 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
             if (cursor != null) {
                 QueueHolder holder = (QueueHolder) view.getTag();
                 Integer number = cursor.getInt(cursor.getColumnIndexOrThrow(QueueDB.KEY_ID));
-                holder.number.setText(number.toString());
+                //holder.number.setText(number.toString());
                 holder.title.setText(cursor.getString(cursor.getColumnIndexOrThrow(QueueDB.KEY_TITLE)));
                 holder.artist.setText(cursor.getString(cursor.getColumnIndexOrThrow(QueueDB.KEY_ARTIST)));
                 holder.duration.setText(MusicUtils.makeTimeString(context, cursor.getInt(cursor.getColumnIndexOrThrow(QueueDB.KEY_DURATION)) / 1000));
                 holder.data.setText(cursor.getString(cursor.getColumnIndexOrThrow(QueueDB.KEY_DATA)));
                 if (cursor.getPosition() == ((MainActivity) getActivity()).getCurrentQueuePosition()) {
                     holder.playing.setVisibility(View.VISIBLE);
-                    holder.number.setVisibility(View.VISIBLE);
+                    //holder.number.setVisibility(View.VISIBLE);
                 } else {
                     holder.playing.setVisibility(View.INVISIBLE);
-                    holder.number.setVisibility(View.INVISIBLE);
+                    //holder.number.setVisibility(View.INVISIBLE);
                 }
             }
         }

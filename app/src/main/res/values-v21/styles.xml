@@ -2,13 +2,13 @@
 <resources>
 
     <style name="ActionBarStyle"
-        parent="android:Widget.Holo.ActionBar.Solid">
+        parent="android:Widget.Material.ActionBar.Solid">
         <item name="android:background">@color/action_bar_color</item>
     </style>
-    <style name="AppTheme" parent="android:Theme.Holo">
-        <item name="android:actionBarStyle">@style/ActionBarStyle</item>
-        <item name="android:windowBackground">@color/background_color</item>
-        <item name="android:textColor">@color/text_light_color</item>
+    <style name="AppTheme" parent="LightBlue">
+        <!--<item name="android:actionBarStyle">@style/ActionBarStyle</item>-->
+        <!--<item name="android:windowBackground">@color/background_color</item>-->
+        <!--<item name="android:textColor">@color/text_light_color</item>-->
     </style>
 
     <style name="HorizontalDivider">

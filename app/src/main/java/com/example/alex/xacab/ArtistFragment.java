@@ -62,7 +62,7 @@ public class ArtistFragment extends ListFragment {
         String where = MediaStore.Audio.Media.ARTIST + "=?";
         String[] whereArgs = {mArtistName};
         String currentAlbum = "";
-        CursorLoader cursorLoader = new CursorLoader(getActivity(), MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, from, where, whereArgs, null);
+        CursorLoader cursorLoader = new CursorLoader(getActivity(), MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, from, where, whereArgs, MediaStore.Audio.Media.ALBUM_ID + "," + MediaStore.Audio.Media.TRACK);
         Cursor cursor = cursorLoader.loadInBackground();
         Integer trackNumber = 0;
         while (cursor.moveToNext()) {

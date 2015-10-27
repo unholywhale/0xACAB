@@ -24,17 +24,22 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
 
 
 public class MainActivity extends Activity implements SelectionListener {
 
     public final static String INTENT_SONG_STATUS = "com.example.alex.xacab.SONG_STOPPED";
+    public final static int MAX_PROGRESS = 200;
     public final static String INTENT_EXTRA = "SONG_SOURCE";
+    public final static String INTENT_DURATION = "SONG_DURATION";
     public final static String CURRENT_SONG_PREFERENCE = "currentSong";
     public static final int NUM_PAGES = 3;
     public static String songStatus = MusicService.SONG_STOPPED;
     public QueueDB db;
     private int currentQueuePosition = -1;
+    private boolean isPlaying = false;
     private Intent musicServiceIntent;
     private LibraryFragment mLibraryFragment;
     private ArtistFragment mArtistFragment;
@@ -52,8 +57,16 @@ public class MainActivity extends Activity implements SelectionListener {
             if (intent.getAction().equals(INTENT_SONG_STATUS)) {
                 String receiveValue = intent.getStringExtra(MusicService.SONG_STATUS);
                 if (receiveValue.equals(MusicService.SONG_STARTED)) {
+                    isPlaying = true;
                     changePlayStatus(MusicService.SONG_STARTED);
+                    int position = intent.getIntExtra(MusicService.SONG_POSITION, -1);
+                    int step = mQueueData.get(currentQueuePosition).getDuration() / MAX_PROGRESS;
+                    if (position != -1) {
+                        mSeekBar.setProgress(position/step);
+                    }
+                    new SeekBarRefresh().execute(step);
                 } else if (receiveValue.equals(MusicService.SONG_STOPPED)) {
+                    isPlaying = false;
                     changePlayStatus(MusicService.SONG_STOPPED);
                 }
 
@@ -93,13 +106,16 @@ public class MainActivity extends Activity implements SelectionListener {
         mIntentFilter = new IntentFilter();
         mIntentFilter.addAction(INTENT_SONG_STATUS);
         db = new QueueDB(this);
+        musicServiceIntent = new Intent(getApplicationContext(), MusicService.class);
         populateQueueData();
         mSeekBar = (SeekBar) findViewById(R.id.player_slider);
+        mSeekBar.setMax(MAX_PROGRESS);
         mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                int msecs = 0;
-
+                if (!fromUser) {
+                    return;
+                }
             }
 
             @Override
@@ -109,10 +125,17 @@ public class MainActivity extends Activity implements SelectionListener {
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
+                if (currentQueuePosition != -1) {
+                    int duration = mQueueData.get(currentQueuePosition).getDuration();
+                    int newDuration = duration * seekBar.getProgress() / MAX_PROGRESS;
+                    Intent intent = new Intent(getApplicationContext(), MusicService.class);
+                    intent.putExtra(INTENT_DURATION, newDuration);
+                    startService(intent);
+                }
 
             }
         });
-        musicServiceIntent = new Intent(getApplicationContext(), MusicService.class);
+
         if (savedInstanceState == null) {
             FragmentTransaction transaction = getFragmentManager().beginTransaction();
             transaction.replace(R.id.main_activity_container, mQueueFragment);
@@ -378,4 +401,28 @@ public class MainActivity extends Activity implements SelectionListener {
             return null;
         }
     }
+
+    private class SeekBarRefresh extends AsyncTask<Integer, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Integer... params) {
+            Integer step = params[0];
+            while (isPlaying) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mSeekBar.setProgress(mSeekBar.getProgress() + 1);
+                    }
+                });
+                try {
+                    Thread.sleep(step);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            return null;
+        }
+    }
+
+
 }

@@ -23,6 +23,7 @@ public class QueueDB extends SQLiteOpenHelper {
     public static final String KEY_DATA = "data";
     public static final String KEY_DURATION = "duration";
     public static final String KEY_NUMBER = "number";
+    public static final String KEY_SORT = "sort";
     public static final String KEY_YEAR = "year";
     public static final String KEY_ALBUM_ID = "album_id";
     public static final String KEY_TRACK_ID = "track_id";
@@ -42,6 +43,7 @@ public class QueueDB extends SQLiteOpenHelper {
                 KEY_DATA + " TEXT," +
                 KEY_DURATION + " INTEGER," +
                 KEY_NUMBER + " INTEGER," +
+              //  KEY_SORT + " INTEGER," +
                 KEY_YEAR + " INTEGER," +
                 KEY_ALBUM_ID + " INTEGER," +
                 KEY_TRACK_ID + " INTEGER )";

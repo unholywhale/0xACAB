@@ -10,12 +10,14 @@ import java.io.IOException;
 public class MusicService extends Service implements MediaPlayer.OnPreparedListener {
 
     public static final String SONG_STATUS = "SONG_STATUS";
+    public static final String SONG_POSITION = "SONG_POSITION";
     public static final String SONG_STOPPED = "SONG_STOPPED";
     public static final String SONG_STARTED = "SONG_STARTED";
     private final String TAG = "MusicService";
     private MediaPlayer mediaPlayer;
     private int mStartID;
     private String currentSong;
+    private int mDuration;
     private Intent mBroadcastIntent;
 
 
@@ -43,6 +45,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
 
     private void songStarted() {
         mBroadcastIntent.putExtra(SONG_STATUS, SONG_STARTED);
+        mBroadcastIntent.putExtra(SONG_POSITION, mediaPlayer.getCurrentPosition());
         sendBroadcast(mBroadcastIntent);
     }
 
@@ -52,9 +55,13 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         if (mediaPlayer != null) {
             mStartID = startId;
             String songSource = intent.getStringExtra(MainActivity.INTENT_EXTRA);
+            int duration = intent.getIntExtra(MainActivity.INTENT_DURATION, -1);
             try {
                 if (mediaPlayer.isPlaying()) {
-                    if (songSource == null) {
+                    if (duration != -1) {
+                        mediaPlayer.seekTo(duration);
+                        mediaPlayer.start();
+                    } else if (songSource == null) {
                         mediaPlayer.pause();
                         songStopped();
                     } else if (!songSource.equals(currentSong)) {
@@ -68,7 +75,9 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
                         songStopped();
                     }
                 } else {
-                    if (songSource == null) {
+                    if (duration != -1) {
+                        mediaPlayer.seekTo(duration);
+                    } else if (songSource == null) {
                         mediaPlayer.start();
                         songStarted();
                     } else if (songSource.equals(currentSong)) {

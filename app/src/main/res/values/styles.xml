@@ -6,4 +6,11 @@
 
     </style>
 
+    <style name="LightBlue" parent="@android:style/Theme.Material">
+        <item name="android:colorAccent">@color/header_color</item>
+        <item name="android:colorBackground">@color/background_color</item>
+        <item name="android:navigationBarColor">@color/background_color</item>
+        <item name="android:colorPrimary">@color/action_bar_color</item>
+    </style>
+
 </resources>
