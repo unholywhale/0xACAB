@@ -1,6 +1,5 @@
 package com.example.alex.xacab;
 
-import android.app.ActionBar;
 import android.app.Activity;
 import android.app.FragmentTransaction;
 import android.content.BroadcastReceiver;
@@ -8,92 +7,159 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.support.v4.view.PagerAdapter;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.Queue;
 
-/**
- * @TODO: Handle orientation change
- * @TODO: Async queries
- *
- */
 
 public class MainActivity extends Activity implements SelectionListener {
 
     public final static String INTENT_SONG_STATUS = "com.example.alex.xacab.SONG_STOPPED";
-    protected Context context;
-    private MediaPlayer mediaPlayer = new MediaPlayer();
-    private Intent musicServiceIntent;
-    public QueueDB db;
     public final static String INTENT_EXTRA = "SONG_SOURCE";
+    public final static String CURRENT_SONG_PREFERENCE = "currentSong";
+    public static final int NUM_PAGES = 3;
+    public static String songStatus = MusicService.SONG_STOPPED;
+    public QueueDB db;
+    private int currentQueuePosition = -1;
+    private Intent musicServiceIntent;
     private LibraryFragment mLibraryFragment;
     private ArtistFragment mArtistFragment;
-    private ActionBar mActionBar;
-    public final String ARTIST_TAG = "artist_tag";
+    private QueueFragment mQueueFragment;
     private IntentFilter mIntentFilter;
     private RelativeLayout mButtonsContainer;
-    private ArrayList<String> queueData = new ArrayList<>();
-    public static int currentQueuePosition = -1;
+    private ArrayList<AudioListModel> mQueueData = new ArrayList<>();
     private Menu mMenu;
-
+    private View mButtons;
+    private SeekBar mSeekBar;
+    private PagerAdapter mPager;
     private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (intent.getAction() == INTENT_SONG_STATUS) {
+            if (intent.getAction().equals(INTENT_SONG_STATUS)) {
                 String receiveValue = intent.getStringExtra(MusicService.SONG_STATUS);
                 if (receiveValue.equals(MusicService.SONG_STARTED)) {
-                    Toast.makeText(context, "Song started", Toast.LENGTH_SHORT).show();
+                    changePlayStatus(MusicService.SONG_STARTED);
                 } else if (receiveValue.equals(MusicService.SONG_STOPPED)) {
-                    Toast.makeText(context, "Song stopped", Toast.LENGTH_SHORT).show();
+                    changePlayStatus(MusicService.SONG_STOPPED);
                 }
 
             }
         }
     };
 
+    public int getCurrentQueuePosition() {
+        return currentQueuePosition;
+    }
+
+    public void setCurrentQueuePosition(int currentQueuePosition) {
+        this.currentQueuePosition = currentQueuePosition;
+
+    }
+
+    private void changePlayStatus(String status) {
+        ImageView playButton = (ImageView) mButtons.findViewById(R.id.player_play);
+        if (!songStatus.equals(status)) {
+            songStatus = status;
+        }
+        if (status.equals(MusicService.SONG_STOPPED)) {
+            playButton.setImageResource(R.drawable.ic_action_play);
+        } else if (status.equals(MusicService.SONG_STARTED)) {
+            playButton.setImageResource(R.drawable.ic_action_pause);
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        SharedPreferences preferences = getPreferences(0);
+        setFragments();
         mButtonsContainer = (RelativeLayout) findViewById(R.id.main_buttons_container);
-        changeButtons(R.layout.container_main, R.id.container_main_buttons);
-        mActionBar = getActionBar();
+        changeButtons(R.layout.container_queue, R.id.container_queue_buttons);
         mIntentFilter = new IntentFilter();
         mIntentFilter.addAction(INTENT_SONG_STATUS);
         db = new QueueDB(this);
         populateQueueData();
+        mSeekBar = (SeekBar) findViewById(R.id.player_slider);
+        mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                int msecs = 0;
+
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
         musicServiceIntent = new Intent(getApplicationContext(), MusicService.class);
-        //mLibraryFragment = (LibraryFragment) getFragmentManager().findFragmentById(R.id.fragment_library);
-        //mArtistFragment = (ArtistFragment) getFragmentManager().findFragmentById(R.id.fragment_artist_list_item);
         if (savedInstanceState == null) {
             FragmentTransaction transaction = getFragmentManager().beginTransaction();
-            transaction.replace(R.id.main_activity_container, new LibraryFragment());
+            transaction.replace(R.id.main_activity_container, mQueueFragment);
+           // transaction.replace(R.id.drawer_container, mQueueFragment);
+            //transaction.addToBackStack(null);
             // No need to add to the backstack since it's the first fragment to load
             transaction.commit();
-        } else {
-
         }
+    }
 
+    private void setFragments() {
 
+        mArtistFragment = new ArtistFragment();
+//        mArtistFragment.setEnterTransition(mFade);
+//        mArtistFragment.setExitTransition(mFade);
+//        mArtistFragment.setReenterTransition(mFade);
+//        mArtistFragment.setReturnTransition(mFade);
+        mQueueFragment = new QueueFragment();
+//        mQueueFragment.setEnterTransition(mFade);
+//        mQueueFragment.setExitTransition(mFade);
+//        mQueueFragment.setReenterTransition(mFade);
+//        mQueueFragment.setReturnTransition(mFade);
+        mLibraryFragment = new LibraryFragment();
+//        mLibraryFragment.setEnterTransition(mFade);
+//        mLibraryFragment.setExitTransition(mFade);
+//        mLibraryFragment.setReenterTransition(mFade);
+//        mLibraryFragment.setReturnTransition(mFade);
     }
 
     private void populateQueueData() {
-        Cursor cursor = getContentResolver().query(QueueProvider.CONTENT_URI, new String[] { QueueDB.KEY_DATA }, null, null, null);
-        while (cursor.moveToNext()) {
-            queueData.add(cursor.getString(cursor.getColumnIndexOrThrow(QueueDB.KEY_DATA)));
+        String[] columns = AudioListModel.getColumns();
+        Cursor cursor = getContentResolver().query(QueueProvider.CONTENT_URI, columns, null, null, null);
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                String artist = cursor.getString(cursor.getColumnIndexOrThrow(QueueDB.KEY_ARTIST));
+                String album = cursor.getString(cursor.getColumnIndexOrThrow(QueueDB.KEY_ALBUM));
+                String title = cursor.getString(cursor.getColumnIndexOrThrow(QueueDB.KEY_TITLE));
+                String data = cursor.getString(cursor.getColumnIndexOrThrow(QueueDB.KEY_DATA));
+                int duration = cursor.getInt(cursor.getColumnIndexOrThrow(QueueDB.KEY_DURATION));
+                int number = cursor.getInt(cursor.getColumnIndexOrThrow(QueueDB.KEY_NUMBER));
+                int year = cursor.getInt(cursor.getColumnIndexOrThrow(QueueDB.KEY_YEAR));
+                long albumId = cursor.getLong(cursor.getColumnIndexOrThrow(QueueDB.KEY_ALBUM_ID));
+                long trackId = cursor.getLong(cursor.getColumnIndexOrThrow(QueueDB.KEY_TRACK_ID));
+                AudioListModel song = new AudioListModel(artist, album, title, data, duration, number, year, albumId, trackId);
+                mQueueData.add(song);
+            }
+            cursor.close();
         }
     }
 
@@ -130,46 +196,9 @@ public class MainActivity extends Activity implements SelectionListener {
         new AddToQueueTask().execute(item);
     }
 
-    private class AddToQueueTask extends AsyncTask<AudioListModel, Void, Void> {
-
-        @Override
-        protected Void doInBackground(AudioListModel... params) {
-
-            AudioListModel item = params[0];
-
-            ContentValues values = new ContentValues();
-            values.put(QueueDB.KEY_ARTIST, item.getArtist());
-            values.put(QueueDB.KEY_ALBUM, item.getAlbum());
-            values.put(QueueDB.KEY_TITLE, item.getTitle());
-            values.put(QueueDB.KEY_DATA, item.getData());
-            values.put(QueueDB.KEY_DURATION, item.getDuration());
-            values.put(QueueDB.KEY_NUMBER, item.getNumber());
-            values.put(QueueDB.KEY_YEAR, item.getYear());
-            values.put(QueueDB.KEY_ALBUM_ID, item.getAlbumId());
-            values.put(QueueDB.KEY_TRACK_ID, item.getTrackId());
-
-            getContentResolver().insert(QueueProvider.CONTENT_URI, values);
-
-            queueData.add(item.getData());
-
-            return null;
-        }
-
-    }
-
     private void clearQueue() {
         new ClearQueueTask().execute();
-    }
 
-    private class ClearQueueTask extends AsyncTask<Void, Void, Void> {
-
-
-        @Override
-        protected Void doInBackground(Void... params) {
-            getContentResolver().delete(QueueProvider.CONTENT_URI, null, null);
-            queueData.clear();
-            return null;
-        }
     }
 
     public void onLibraryItemSelected(View item) {
@@ -185,47 +214,65 @@ public class MainActivity extends Activity implements SelectionListener {
 
     @Override
     public void onQueueItemSelected(int position) {
-        String data = queueData.get(position);
+        String data = mQueueData.get(position).getData();
         currentQueuePosition = position;
-        getContentResolver().notifyChange(QueueProvider.CONTENT_URI, null);
         musicServiceIntent.putExtra(INTENT_EXTRA, data);
         startService(musicServiceIntent);
+        getContentResolver().notifyChange(QueueProvider.CONTENT_URI, null);
     }
 
     @Override
     public void onQueueFragmentShow() {
         changeButtons(R.layout.container_queue, R.id.container_queue_buttons);
         mMenu.findItem(R.id.action_clear_queue).setVisible(true);
+        mMenu.findItem(R.id.action_add).setVisible(true);
     }
 
     @Override
     public void onQueueFragmentHide() {
         changeButtons(R.layout.container_main, R.id.container_main_buttons);
         mMenu.findItem(R.id.action_clear_queue).setVisible(false);
+        mMenu.findItem(R.id.action_add).setVisible(false);
     }
 
     private void changeButtons(int layoutId, int id) {
         LayoutInflater inflater = getLayoutInflater();
         View queueLayout = inflater.inflate(layoutId, null);
         View buttons = queueLayout.findViewById(id);
+        mButtons = buttons;
+        ImageView playButton = (ImageView) buttons.findViewById(R.id.player_play);
+        playButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                musicServiceIntent.removeExtra(INTENT_EXTRA);
+                startService(musicServiceIntent);
+            }
+        });
+        changePlayStatus(songStatus);
         ((ViewGroup) buttons.getParent()).removeView(buttons);
         mButtonsContainer.removeAllViews();
         mButtonsContainer.addView(buttons);
     }
 
     public void openQueueFragment() {
-        mActionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
-        QueueFragment queueFragment = (QueueFragment) getFragmentManager().findFragmentByTag("QUEUE");
-        if (queueFragment == null) {
-            queueFragment = new QueueFragment();
+        if (getFragmentManager().findFragmentByTag("QUEUE") == null) {
             FragmentTransaction transaction = getFragmentManager().beginTransaction();
-            transaction.replace(R.id.main_activity_container, queueFragment, "QUEUE");
+            transaction.replace(R.id.main_activity_container, mQueueFragment, "QUEUE");
             transaction.addToBackStack(null);
             transaction.commit();
         } else {
             onBackPressed();
         }
 
+    }
+
+    public void openLibraryFragment() {
+        if (getFragmentManager().findFragmentByTag("LIBRARY") == null) {
+            FragmentTransaction transaction = getFragmentManager().beginTransaction();
+            transaction.replace(R.id.main_activity_container, mLibraryFragment, "LIBRARY");
+            transaction.addToBackStack(null);
+            transaction.commit();
+        }
     }
 
     @Override
@@ -239,10 +286,96 @@ public class MainActivity extends Activity implements SelectionListener {
             case R.id.action_clear_queue:
                 clearQueue();
                 break;
+            case R.id.action_add:
+                openLibraryFragment();
             default:
                 break;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+
+    private class AddToQueueTask extends AsyncTask<AudioListModel, Void, Void> {
+
+        @Override
+        protected Void doInBackground(AudioListModel... params) {
+
+            AudioListModel item = params[0];
+            ArrayList<AudioListModel> tracksToAdd;
+            ContentValues values = new ContentValues();
+            if (item.isAlbum) {
+                //String[] from = AudioListModel.getColumns();
+                String[] from = new String[] {
+                        MediaStore.Audio.Media.TITLE,
+                        MediaStore.Audio.Media.ALBUM,
+                        MediaStore.Audio.Media.ALBUM_ID,
+                        MediaStore.Audio.Media.YEAR,
+                        MediaStore.Audio.Media.ARTIST,
+                        MediaStore.Audio.Media.DATA,
+                        MediaStore.Audio.Media.DURATION,
+                        MediaStore.Audio.Media.TRACK,
+                        MediaStore.Audio.Media._ID
+                };
+                String selection = MediaStore.Audio.Media.ALBUM_ID + "=?";
+                Long aId = item.getAlbumId();
+                String[] where = {aId.toString()};
+                Cursor cursor = getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, from, selection, where, null);
+                if (cursor != null) {
+                    while (cursor.moveToNext()) {
+                        values.clear();
+                        String artist = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST));
+                        String album = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM));
+                        String title = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE));
+                        String data = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA));
+                        int duration = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION));
+                        int number = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TRACK));
+                        int year = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.YEAR));
+                        long albumId = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID));
+                        long trackId = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID));
+                        AudioListModel newItem = new AudioListModel(artist, album, title, data, duration, number, year, albumId, trackId);
+                        values.put(QueueDB.KEY_ARTIST, newItem.getArtist());
+                        values.put(QueueDB.KEY_ALBUM, newItem.getAlbum());
+                        values.put(QueueDB.KEY_TITLE, newItem.getTitle());
+                        values.put(QueueDB.KEY_DATA, newItem.getData());
+                        values.put(QueueDB.KEY_DURATION, newItem.getDuration());
+                        values.put(QueueDB.KEY_NUMBER, newItem.getNumber());
+                        values.put(QueueDB.KEY_YEAR, newItem.getYear());
+                        values.put(QueueDB.KEY_ALBUM_ID, newItem.getAlbumId());
+                        values.put(QueueDB.KEY_TRACK_ID, newItem.getTrackId());
+
+                        getContentResolver().insert(QueueProvider.CONTENT_URI, values);
+                        mQueueData.add(newItem);
+                    }
+                }
+            } else {
+                values.put(QueueDB.KEY_ARTIST, item.getArtist());
+                values.put(QueueDB.KEY_ALBUM, item.getAlbum());
+                values.put(QueueDB.KEY_TITLE, item.getTitle());
+                values.put(QueueDB.KEY_DATA, item.getData());
+                values.put(QueueDB.KEY_DURATION, item.getDuration());
+                values.put(QueueDB.KEY_NUMBER, item.getNumber());
+                values.put(QueueDB.KEY_YEAR, item.getYear());
+                values.put(QueueDB.KEY_ALBUM_ID, item.getAlbumId());
+                values.put(QueueDB.KEY_TRACK_ID, item.getTrackId());
+
+                getContentResolver().insert(QueueProvider.CONTENT_URI, values);
+                mQueueData.add(item);
+            }
+
+            return null;
+        }
+
+    }
+
+    private class ClearQueueTask extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            getContentResolver().delete(QueueProvider.CONTENT_URI, null, null);
+            mQueueData.clear();
+            currentQueuePosition = -1;
+            return null;
+        }
     }
 }

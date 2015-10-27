@@ -42,14 +42,12 @@ public class ArtistFragment extends ListFragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-
-        mInflater = inflater;
-
-        View view = mInflater.inflate(R.layout.fragment_artist, null);
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
         if (mArtistName == null) {
-            mArtistName = "Squarepusher"; // default artist for testing
+            return;
+            //mArtistName = "Squarepusher"; // default artist for testing
         }
         String[] from = new String[] {
                 MediaStore.Audio.Media.TITLE,
@@ -103,11 +101,16 @@ public class ArtistFragment extends ListFragment {
             AudioListModel audioItem = new AudioListModel(artist, album, title, data, duration, trackNumber, year, albumId, trackId);
             audioList.add(audioItem);
         }
+
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        mInflater = inflater;
+        View view = mInflater.inflate(R.layout.fragment_artist, null);
         AudioListAdapter adapter = new AudioListAdapter(getActivity(), R.layout.fragment_artist_list_item, R.layout.fragment_artist_list_header, audioList);
         setListAdapter(adapter);
-
         return view;
-
     }
 
 

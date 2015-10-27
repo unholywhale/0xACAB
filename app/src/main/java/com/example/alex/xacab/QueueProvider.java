@@ -3,12 +3,14 @@ package com.example.alex.xacab;
 import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.UriMatcher;
+import android.database.CharArrayBuffer;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
+import android.widget.SlidingDrawer;
 
 public class QueueProvider extends ContentProvider {
     private static final String AUTHORITY = "com.example.alex.xacab.provider";
@@ -17,6 +19,45 @@ public class QueueProvider extends ContentProvider {
     public static final int QUEUE_ID = 110;
     public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY + "/" + DB_BASE_NAME);
     private QueueDB mDB;
+    private Cursor mCursor;
+    private QueueQuery mQuery = new QueueQuery();
+
+
+    private class QueueQuery {
+        Uri uri;
+        String[] projection;
+        String selection;
+        String[] selectionArgs;
+        String sortOrder;
+
+        public boolean compare(Uri uri, String[] projection, String selection,
+                               String[] selectionArgs, String sortOrder) {
+            return uri.equals(this.uri) && projection.equals(this.projection)
+                    && selection.equals(this.selection) && selectionArgs.equals(this.selectionArgs)
+                    && sortOrder.equals(this.sortOrder);
+        }
+
+        public QueueQuery() {
+            this.uri = null;
+            this.projection = null;
+            this.selection = null;
+            this.selectionArgs = null;
+            this.sortOrder = null;
+        }
+
+        public QueueQuery(Uri uri, String[] projection, String selection,
+                          String[] selectionArgs, String sortOrder) {
+            this.uri = uri;
+            this.projection = projection;
+            this.selection = selection;
+            this.selectionArgs = selectionArgs;
+            this.sortOrder = sortOrder;
+        }
+
+
+    }
+
+
 
     private static final UriMatcher sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
     static {
@@ -29,7 +70,7 @@ public class QueueProvider extends ContentProvider {
 
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
-
+        
         SQLiteDatabase db = mDB.getWritableDatabase();
         int uriType = sUriMatcher.match(uri);
         int rowsDeleted = 0;
@@ -46,6 +87,7 @@ public class QueueProvider extends ContentProvider {
             default:
                 throw new IllegalArgumentException("Unknown URI");
         }
+        mCursor = null;
         getContext().getContentResolver().notifyChange(uri, null);
         return rowsDeleted;
     }
@@ -67,6 +109,7 @@ public class QueueProvider extends ContentProvider {
             default:
                 throw new IllegalArgumentException("Unknown URI");
         }
+        mCursor = null;
         getContext().getContentResolver().notifyChange(uri, null);
         return Uri.parse(DB_BASE_NAME + "/" + id);
     }
@@ -80,6 +123,9 @@ public class QueueProvider extends ContentProvider {
     @Override
     public Cursor query(Uri uri, String[] projection, String selection,
                         String[] selectionArgs, String sortOrder) {
+//        if (mCursor != null) {
+//            return mCursor;
+//        }
         SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
         queryBuilder.setTables(QueueDB.TABLE_NAME);
         int uriType = sUriMatcher.match(uri);
@@ -95,6 +141,7 @@ public class QueueProvider extends ContentProvider {
         Cursor cursor = queryBuilder.query(mDB.getReadableDatabase(),
                 projection, selection, selectionArgs, null, null, sortOrder);
         cursor.setNotificationUri(getContext().getContentResolver(), uri);
+        mCursor = cursor;
         return cursor;
     }
 

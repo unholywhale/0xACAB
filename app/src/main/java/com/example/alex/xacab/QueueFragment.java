@@ -1,6 +1,7 @@
 package com.example.alex.xacab;
 
 import android.app.Activity;
+import android.app.Fragment;
 import android.app.ListFragment;
 import android.app.LoaderManager;
 import android.content.Context;
@@ -14,6 +15,7 @@ import android.support.v4.widget.ViewDragHelper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.CursorAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -31,15 +33,17 @@ import java.util.List;
  * Activities containing this fragment MUST implement the {SelectionListener}
  * interface.
  */
-public class QueueFragment extends ListFragment implements LoaderManager.LoaderCallbacks<Cursor> {
+public class QueueFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
 
     private SelectionListener mListener;
     private final static int QUEUE_LOADER = 1;
     private QueueAdapter mAdapter;
+    private ListView mList;
 
-    public static QueueFragment newInstance(String param1, String param2) {
+    public static QueueFragment newInstance() {
         QueueFragment fragment = new QueueFragment();
+
         Bundle args = new Bundle();
         fragment.setArguments(args);
         return fragment;
@@ -47,11 +51,10 @@ public class QueueFragment extends ListFragment implements LoaderManager.LoaderC
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
         getLoaderManager().initLoader(QUEUE_LOADER, null, this);
         mAdapter = new QueueAdapter(getActivity().getApplicationContext(), null, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
-        setListAdapter(mAdapter);
+        super.onCreate(savedInstanceState);
+
     }
 
     /**
@@ -64,16 +67,31 @@ public class QueueFragment extends ListFragment implements LoaderManager.LoaderC
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_queue, null);
+        //mListener.onQueueFragmentShow();
 
-        mListener.onQueueFragmentShow();
+        mList = (ListView) view.findViewById(R.id.queue_list);
+
+        mList.setOnItemClickListener(new ListView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                if (null != mListener) {
+                    // Notify the active callbacks interface (the activity, if the
+                    // fragment is attached to one) that an item has been selected.
+                    mListener.onQueueItemSelected(position);
+                }
+            }
+        });
+
+        mList.setAdapter(mAdapter);
         return view;
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        mListener.onQueueFragmentHide();
+        //mListener.onQueueFragmentHide();
     }
+
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
@@ -121,9 +139,9 @@ public class QueueFragment extends ListFragment implements LoaderManager.LoaderC
         mListener = null;
     }
 
-    @Override
+   // @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
-        super.onListItemClick(l, v, position, id);
+        //super.onListItemClick(l, v, position, id);
 
         if (null != mListener) {
             // Notify the active callbacks interface (the activity, if the
@@ -132,7 +150,9 @@ public class QueueFragment extends ListFragment implements LoaderManager.LoaderC
         }
     }
 
-    static class QueueAdapter extends CursorAdapter {
+    public class QueueAdapter extends CursorAdapter {
+
+        private Integer counter = 0;
 
         public QueueAdapter(Context context, Cursor c, int flag) {
             super(context, c, flag);
@@ -140,30 +160,46 @@ public class QueueFragment extends ListFragment implements LoaderManager.LoaderC
 
         @Override
         public View newView(Context context, Cursor cursor, ViewGroup parent) {
+            counter++;
             View view = LayoutInflater.from(context).inflate(R.layout.fragment_queue_list_item, parent, false);
+            QueueHolder holder = new QueueHolder();
+            holder.number = (TextView) view.findViewById(R.id.queue_number);
+            holder.title = (TextView) view.findViewById(R.id.queue_title);
+            holder.artist = (TextView) view.findViewById(R.id.queue_artist);
+            holder.duration = (TextView) view.findViewById(R.id.queue_duration);
+            holder.data = (TextView) view.findViewById(R.id.queue_data);
+            holder.playing = (ImageView) view.findViewById(R.id.queue_playing);
+            view.setTag(holder);
             return view;
         }
 
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
             if (cursor != null) {
-
-                TextView title = (TextView) view.findViewById(R.id.queue_title);
-                TextView artist = (TextView) view.findViewById(R.id.queue_artist);
-                TextView duration = (TextView) view.findViewById(R.id.queue_duration);
-                TextView data = (TextView) view.findViewById(R.id.queue_data);
-                ImageView playing = (ImageView) view.findViewById(R.id.queue_playing);
-
-                title.setText(cursor.getString(cursor.getColumnIndexOrThrow("title")));
-                artist.setText(cursor.getString(cursor.getColumnIndexOrThrow("artist")));
-                duration.setText(MusicUtils.makeTimeString(context, cursor.getInt(cursor.getColumnIndexOrThrow("duration")) / 1000));
-                data.setText(cursor.getString(cursor.getColumnIndexOrThrow("data")));
-                if (cursor.getPosition() == MainActivity.currentQueuePosition) {
-                    playing.setVisibility(View.VISIBLE);
+                QueueHolder holder = (QueueHolder) view.getTag();
+                Integer number = cursor.getInt(cursor.getColumnIndexOrThrow(QueueDB.KEY_ID));
+                holder.number.setText(number.toString());
+                holder.title.setText(cursor.getString(cursor.getColumnIndexOrThrow(QueueDB.KEY_TITLE)));
+                holder.artist.setText(cursor.getString(cursor.getColumnIndexOrThrow(QueueDB.KEY_ARTIST)));
+                holder.duration.setText(MusicUtils.makeTimeString(context, cursor.getInt(cursor.getColumnIndexOrThrow(QueueDB.KEY_DURATION)) / 1000));
+                holder.data.setText(cursor.getString(cursor.getColumnIndexOrThrow(QueueDB.KEY_DATA)));
+                if (cursor.getPosition() == ((MainActivity) getActivity()).getCurrentQueuePosition()) {
+                    holder.playing.setVisibility(View.VISIBLE);
+                    holder.number.setVisibility(View.VISIBLE);
                 } else {
-                    playing.setVisibility(View.INVISIBLE);
+                    holder.playing.setVisibility(View.INVISIBLE);
+                    holder.number.setVisibility(View.INVISIBLE);
                 }
             }
+        }
+
+        public class QueueHolder {
+            TextView number;
+            TextView title;
+            TextView artist;
+            TextView duration;
+            TextView data;
+            ImageView playing;
         }
     }
 

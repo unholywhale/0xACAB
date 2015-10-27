@@ -1,5 +1,6 @@
 package com.example.alex.xacab;
 
+import android.animation.Animator;
 import android.app.Activity;
 import android.app.LoaderManager;
 import android.content.Context;
@@ -15,6 +16,8 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.CursorAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -49,6 +52,7 @@ public class LibraryFragment extends ListFragment implements LoaderManager.Loade
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 
     }
+
 
     public static LibraryFragment newInstance(int libraryTab) {
         LibraryFragment fragment = new LibraryFragment();

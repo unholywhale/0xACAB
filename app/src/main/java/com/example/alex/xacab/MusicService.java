@@ -52,10 +52,12 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         if (mediaPlayer != null) {
             mStartID = startId;
             String songSource = intent.getStringExtra(MainActivity.INTENT_EXTRA);
-
             try {
                 if (mediaPlayer.isPlaying()) {
-                    if (!songSource.equals(currentSong)) {
+                    if (songSource == null) {
+                        mediaPlayer.pause();
+                        songStopped();
+                    } else if (!songSource.equals(currentSong)) {
                         mediaPlayer.stop();
                         mediaPlayer.reset();
                         mediaPlayer.setDataSource(songSource);
@@ -66,7 +68,10 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
                         songStopped();
                     }
                 } else {
-                    if (songSource.equals(currentSong)) {
+                    if (songSource == null) {
+                        mediaPlayer.start();
+                        songStarted();
+                    } else if (songSource.equals(currentSong)) {
                         mediaPlayer.start();
                         songStarted();
                     } else {

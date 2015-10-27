@@ -16,7 +16,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:ellipsize="end" />
-    <ImageButton
+    <ImageView
         android:id="@+id/library_artists_action"
         android:layout_width="48dp"
         android:layout_height="36dp"

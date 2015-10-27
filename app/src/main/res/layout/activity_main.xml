@@ -1,27 +1,50 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                xmlns:tools="http://schemas.android.com/tools"
-                android:id="@+id/fragment_container"
-                android:orientation="vertical"
+<!--
+<ViewPager xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:id="@+id/pager"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+-->
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:tools="http://schemas.android.com/tools"
+                    android:id="@+id/fragment_container"
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="7">
+            <FrameLayout
+                android:id="@+id/main_activity_container"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/background_color_back"
+            android:orientation="vertical">
+            <RelativeLayout
+                android:id="@+id/main_buttons_container"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content">
+            </RelativeLayout>
+            <SeekBar
+                android:id="@+id/player_slider"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                tools:context=".MainActivity">
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:progressBackgroundTint="#ffffff"/>
 
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="7">
-        <FrameLayout
-            android:id="@+id/main_activity_container"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+        </LinearLayout>
+
     </LinearLayout>
-
-
-    <RelativeLayout
-        android:id="@+id/main_buttons_container"
-        android:layout_height="wrap_content"
-        android:layout_width="wrap_content">
-    </RelativeLayout>
-
-</LinearLayout>
