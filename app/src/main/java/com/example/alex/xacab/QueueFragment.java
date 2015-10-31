@@ -54,7 +54,7 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
         getLoaderManager().initLoader(QUEUE_LOADER, null, this);
         mAdapter = new QueueAdapter(getActivity().getApplicationContext(), null, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
         super.onCreate(savedInstanceState);
-
+        setRetainInstance(true);
     }
 
     /**

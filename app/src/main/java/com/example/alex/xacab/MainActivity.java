@@ -1,6 +1,7 @@
 package com.example.alex.xacab;
 
 import android.app.Activity;
+import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.BroadcastReceiver;
 import android.content.ContentValues;
@@ -20,27 +21,28 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
-import android.widget.SeekBar;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.logging.Handler;
-import java.util.logging.LogRecord;
 
 
 public class MainActivity extends Activity implements SelectionListener {
 
     public final static String INTENT_SONG_STATUS = "com.example.alex.xacab.SONG_STOPPED";
-    public final static int MAX_PROGRESS = 200;
     public final static String INTENT_EXTRA = "SONG_SOURCE";
     public final static String INTENT_DURATION = "SONG_DURATION";
-    public final static String CURRENT_SONG_PREFERENCE = "currentSong";
+    public final static String CURRENT_SONG = "CURRENT_SONG";
+    public final static String CURRENT_QUEUE_POSITION = "CURRENT_QUEUE_POSITION";
+    public final static String TAG_QUEUE = "QUEUE";
+    public final static String TAG_SEEK_BAR = "SEEK_BAR";
     public static final int NUM_PAGES = 3;
     public static String songStatus = MusicService.SONG_STOPPED;
     public QueueDB db;
-    private int currentQueuePosition = -1;
-    private boolean isPlaying = false;
+    private int mCurrentQueuePosition = -1;
+    private AudioListModel currentSong;
+    public boolean isPlaying = false;
     private Intent musicServiceIntent;
+    private SeekBarFragment mSeekBarFragment;
     private LibraryFragment mLibraryFragment;
     private ArtistFragment mArtistFragment;
     private QueueFragment mQueueFragment;
@@ -49,22 +51,34 @@ public class MainActivity extends Activity implements SelectionListener {
     private ArrayList<AudioListModel> mQueueData = new ArrayList<>();
     private Menu mMenu;
     private View mButtons;
-    private SeekBar mSeekBar;
+    //private SeekBar mSeekBar;
+    private boolean isSeeking;
+    private int mProgress = 0;
+    private TextView mPlayerProgress;
+    private TextView mPlayerDuration;
     private PagerAdapter mPager;
     private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals(INTENT_SONG_STATUS)) {
+                if (currentSong == null) {
+                    return;
+                }
                 String receiveValue = intent.getStringExtra(MusicService.SONG_STATUS);
                 if (receiveValue.equals(MusicService.SONG_STARTED)) {
                     isPlaying = true;
                     changePlayStatus(MusicService.SONG_STARTED);
                     int position = intent.getIntExtra(MusicService.SONG_POSITION, -1);
-                    int step = mQueueData.get(currentQueuePosition).getDuration() / MAX_PROGRESS;
+                    int step = currentSong.getDuration() / 200;
                     if (position != -1) {
-                        mSeekBar.setProgress(position/step);
+                        mProgress = position;
+//                        mSeekBar.setProgress(position / step);
+//                        mPlayerProgress.setText(MusicUtils.makeTimeString(getApplicationContext(), mProgress / 1000));
+//                        mPlayerDuration.setText(MusicUtils.makeTimeString(getApplicationContext(),
+//                                currentSong.getDuration() / 1000));
+                        mSeekBarFragment.startTasks(currentSong.getDuration(), position, step);
                     }
-                    new SeekBarRefresh().execute(step);
+
                 } else if (receiveValue.equals(MusicService.SONG_STOPPED)) {
                     isPlaying = false;
                     changePlayStatus(MusicService.SONG_STOPPED);
@@ -75,11 +89,11 @@ public class MainActivity extends Activity implements SelectionListener {
     };
 
     public int getCurrentQueuePosition() {
-        return currentQueuePosition;
+        return mCurrentQueuePosition;
     }
 
     public void setCurrentQueuePosition(int currentQueuePosition) {
-        this.currentQueuePosition = currentQueuePosition;
+        this.mCurrentQueuePosition = currentQueuePosition;
 
     }
 
@@ -108,37 +122,12 @@ public class MainActivity extends Activity implements SelectionListener {
         db = new QueueDB(this);
         musicServiceIntent = new Intent(getApplicationContext(), MusicService.class);
         populateQueueData();
-        mSeekBar = (SeekBar) findViewById(R.id.player_slider);
-        mSeekBar.setMax(MAX_PROGRESS);
-        mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (!fromUser) {
-                    return;
-                }
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                if (currentQueuePosition != -1) {
-                    int duration = mQueueData.get(currentQueuePosition).getDuration();
-                    int newDuration = duration * seekBar.getProgress() / MAX_PROGRESS;
-                    Intent intent = new Intent(getApplicationContext(), MusicService.class);
-                    intent.putExtra(INTENT_DURATION, newDuration);
-                    startService(intent);
-                }
-
-            }
-        });
-
+        mPlayerProgress = (TextView) findViewById(R.id.player_progress);
+        mPlayerDuration = (TextView) findViewById(R.id.player_duration);
         if (savedInstanceState == null) {
             FragmentTransaction transaction = getFragmentManager().beginTransaction();
-            transaction.replace(R.id.main_activity_container, mQueueFragment);
+            transaction.replace(R.id.main_activity_container, mQueueFragment, TAG_QUEUE);
+            transaction.replace(R.id.seek_bar_container, mSeekBarFragment, TAG_SEEK_BAR);
            // transaction.replace(R.id.drawer_container, mQueueFragment);
             //transaction.addToBackStack(null);
             // No need to add to the backstack since it's the first fragment to load
@@ -146,14 +135,34 @@ public class MainActivity extends Activity implements SelectionListener {
         }
     }
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putInt(CURRENT_QUEUE_POSITION, mCurrentQueuePosition);
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        mCurrentQueuePosition = savedInstanceState.getInt(CURRENT_QUEUE_POSITION);
+    }
+
     private void setFragments() {
 
+        FragmentManager fm = getFragmentManager();
+        mSeekBarFragment = (SeekBarFragment) fm.findFragmentByTag(TAG_SEEK_BAR);
+        if (mSeekBarFragment == null) {
+            mSeekBarFragment = new SeekBarFragment();
+        }
+        mQueueFragment = (QueueFragment) fm.findFragmentByTag(TAG_QUEUE);
+        if (mQueueFragment == null) {
+            mQueueFragment = new QueueFragment();
+        }
         mArtistFragment = new ArtistFragment();
 //        mArtistFragment.setEnterTransition(mFade);
 //        mArtistFragment.setExitTransition(mFade);
 //        mArtistFragment.setReenterTransition(mFade);
 //        mArtistFragment.setReturnTransition(mFade);
-        mQueueFragment = new QueueFragment();
 //        mQueueFragment.setEnterTransition(mFade);
 //        mQueueFragment.setExitTransition(mFade);
 //        mQueueFragment.setReenterTransition(mFade);
@@ -163,6 +172,13 @@ public class MainActivity extends Activity implements SelectionListener {
 //        mLibraryFragment.setExitTransition(mFade);
 //        mLibraryFragment.setReenterTransition(mFade);
 //        mLibraryFragment.setReturnTransition(mFade);
+    }
+
+    @Override
+    public void onSeekBarChanged(int duration) {
+        Intent intent = new Intent(getApplicationContext(), MusicService.class);
+        intent.putExtra(INTENT_DURATION, duration);
+        startService(intent);
     }
 
     private void populateQueueData() {
@@ -206,21 +222,13 @@ public class MainActivity extends Activity implements SelectionListener {
         unregisterReceiver(mBroadcastReceiver);
     }
 
-    public void onItemSelected(View item) {
-/*
-        String filePath = ((TextView) item).getText().toString();
-        musicServiceIntent.putExtra(INTENT_EXTRA, filePath);
-        startService(musicServiceIntent);
-*/
-    }
-
     @Override
     public void onArtistItemSelected(AudioListModel item) {
-        new AddToQueueTask().execute(item);
+        new AddToQueueTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, item);
     }
 
     private void clearQueue() {
-        new ClearQueueTask().execute();
+        new ClearQueueTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
     }
 
@@ -235,11 +243,12 @@ public class MainActivity extends Activity implements SelectionListener {
         transaction.commit();
     }
 
+
     @Override
     public void onQueueItemSelected(int position) {
-        String data = mQueueData.get(position).getData();
-        currentQueuePosition = position;
-        musicServiceIntent.putExtra(INTENT_EXTRA, data);
+        mCurrentQueuePosition = position;
+        currentSong = mQueueData.get(position);
+        musicServiceIntent.putExtra(INTENT_EXTRA, currentSong.getData());
         startService(musicServiceIntent);
         getContentResolver().notifyChange(QueueProvider.CONTENT_URI, null);
     }
@@ -274,11 +283,11 @@ public class MainActivity extends Activity implements SelectionListener {
             nextButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (currentQueuePosition != -1) {
-                        if (currentQueuePosition == mQueueData.size() - 1) {
+                    if (mCurrentQueuePosition != -1) {
+                        if (mCurrentQueuePosition == mQueueData.size() - 1) {
                             onQueueItemSelected(0);
                         } else {
-                            onQueueItemSelected(currentQueuePosition + 1);
+                            onQueueItemSelected(mCurrentQueuePosition + 1);
                         }
                     }
                 }
@@ -288,11 +297,11 @@ public class MainActivity extends Activity implements SelectionListener {
             previousButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (currentQueuePosition != -1) {
-                        if (currentQueuePosition == 0) {
+                    if (mCurrentQueuePosition != -1) {
+                        if (mCurrentQueuePosition == 0) {
                             onQueueItemSelected(mQueueData.size() - 1);
                         } else {
-                            onQueueItemSelected(currentQueuePosition - 1);
+                            onQueueItemSelected(mCurrentQueuePosition - 1);
                         }
                     }
                 }
@@ -352,6 +361,9 @@ public class MainActivity extends Activity implements SelectionListener {
         return super.onOptionsItemSelected(item);
     }
 
+    private void refreshDuration() {
+
+    }
 
     private class AddToQueueTask extends AsyncTask<AudioListModel, Void, Void> {
 
@@ -431,32 +443,9 @@ public class MainActivity extends Activity implements SelectionListener {
         protected Void doInBackground(Void... params) {
             getContentResolver().delete(QueueProvider.CONTENT_URI, null, null);
             mQueueData.clear();
-            currentQueuePosition = -1;
+            mCurrentQueuePosition = -1;
             return null;
         }
     }
-
-    private class SeekBarRefresh extends AsyncTask<Integer, Void, Void> {
-
-        @Override
-        protected Void doInBackground(Integer... params) {
-            Integer step = params[0];
-            while (isPlaying) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mSeekBar.setProgress(mSeekBar.getProgress() + 1);
-                    }
-                });
-                try {
-                    Thread.sleep(step);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            return null;
-        }
-    }
-
 
 }

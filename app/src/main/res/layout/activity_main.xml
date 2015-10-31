@@ -25,26 +25,20 @@
         </LinearLayout>
 
 
-        <LinearLayout
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/background_color_back"
-            android:orientation="vertical">
+            android:background="@color/background_color_back">
             <RelativeLayout
                 android:id="@+id/main_buttons_container"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content">
             </RelativeLayout>
-            <SeekBar
-                android:id="@+id/player_slider"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="24dp"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
-                />
-
-
-        </LinearLayout>
+            <FrameLayout
+                android:id="@+id/seek_bar_container"
+                android:layout_below="@id/main_buttons_container"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </RelativeLayout>
 
     </LinearLayout>

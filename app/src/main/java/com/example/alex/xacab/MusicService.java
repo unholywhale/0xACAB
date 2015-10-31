@@ -61,6 +61,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
                     if (duration != -1) {
                         mediaPlayer.seekTo(duration);
                         mediaPlayer.start();
+                        songStarted();
                     } else if (songSource == null) {
                         mediaPlayer.pause();
                         songStopped();
