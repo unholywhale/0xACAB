@@ -51,8 +51,6 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        getLoaderManager().initLoader(QUEUE_LOADER, null, this);
-        mAdapter = new QueueAdapter(getActivity().getApplicationContext(), null, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
     }
@@ -67,8 +65,10 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_queue, null);
-        mListener.onQueueFragmentShow();
+        //mListener.onQueueFragmentShow();
 
+        getLoaderManager().initLoader(QUEUE_LOADER, null, this);
+        mAdapter = new QueueAdapter(getActivity().getApplicationContext(), null, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
         mList = (ListView) view.findViewById(R.id.queue_list);
 
         mList.setOnItemClickListener(new ListView.OnItemClickListener() {
@@ -89,7 +89,7 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        mListener.onQueueFragmentHide();
+        //mListener.onQueueFragmentHide();
     }
 
 

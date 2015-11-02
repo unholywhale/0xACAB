@@ -3,6 +3,9 @@ package com.example.alex.xacab;
 import android.app.Activity;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -10,6 +13,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.session.MediaSession;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -51,7 +57,7 @@ public class MainActivity extends Activity implements SelectionListener {
     private ArrayList<AudioListModel> mQueueData = new ArrayList<>();
     private Menu mMenu;
     private View mButtons;
-    //private SeekBar mSeekBar;
+    private MediaSession mSession;
     private boolean isSeeking;
     private int mProgress = 0;
     private TextView mPlayerProgress;
@@ -113,6 +119,8 @@ public class MainActivity extends Activity implements SelectionListener {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        mSession = new MediaSession(this, "SESSION");
+        mSession.setActive(true);
         SharedPreferences preferences = getPreferences(0);
         setFragments();
         mButtonsContainer = (RelativeLayout) findViewById(R.id.main_buttons_container);
@@ -243,6 +251,25 @@ public class MainActivity extends Activity implements SelectionListener {
         transaction.commit();
     }
 
+    public void makeNotification() {
+        Intent intent = new Intent(this, MainActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        Notification notification = new Notification.Builder(getApplicationContext())
+                .setVisibility(Notification.VISIBILITY_PUBLIC)
+                .setSmallIcon(R.drawable.ic_stat_player)
+                .addAction(R.drawable.ic_action_previous, "Previous", pendingIntent)
+                .addAction(R.drawable.ic_action_play, "Play", pendingIntent)
+                .addAction(R.drawable.ic_action_next, "Next", pendingIntent)
+                .setStyle(new Notification.MediaStyle()
+                        .setShowActionsInCompactView(1)
+                        .setMediaSession(mSession.getSessionToken()))
+                .setContentTitle(currentSong.getTitle())
+                .setContentText(currentSong.getArtist())
+                .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher))
+                .build();
+        NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        manager.notify(1, notification);
+    }
 
     @Override
     public void onQueueItemSelected(int position) {
@@ -251,6 +278,7 @@ public class MainActivity extends Activity implements SelectionListener {
         musicServiceIntent.putExtra(INTENT_EXTRA, currentSong.getData());
         startService(musicServiceIntent);
         getContentResolver().notifyChange(QueueProvider.CONTENT_URI, null);
+        makeNotification();
     }
 
     @Override
