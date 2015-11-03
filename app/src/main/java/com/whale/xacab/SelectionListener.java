@@ -1,7 +1,6 @@
-package com.example.alex.xacab;
+package com.whale.xacab;
 
 import android.view.View;
-import android.widget.TextView;
 
 /**
  * Created by alex on 10/07/15.

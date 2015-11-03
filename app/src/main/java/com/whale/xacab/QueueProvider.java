@@ -1,19 +1,16 @@
-package com.example.alex.xacab;
+package com.whale.xacab;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.UriMatcher;
-import android.database.CharArrayBuffer;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.text.TextUtils;
-import android.util.Log;
-import android.widget.SlidingDrawer;
 
 public class QueueProvider extends ContentProvider {
-    private static final String AUTHORITY = "com.example.alex.xacab.provider";
+    private static final String AUTHORITY = "com.whale.xacab.provider";
     private static final String DB_BASE_NAME = "queue";
     public static final int QUEUE = 100;
     public static final int QUEUE_ID = 110;

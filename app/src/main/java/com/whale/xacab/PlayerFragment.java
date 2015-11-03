@@ -1,7 +1,6 @@
-package com.example.alex.xacab;
+package com.whale.xacab;
 
 import android.app.Activity;
-import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.view.LayoutInflater;
@@ -9,14 +8,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link com.example.alex.xacab.SelectionListener} interface
- * to handle interaction events.
- * Use the {@link PlayerFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+
+
 public class PlayerFragment extends Fragment {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER

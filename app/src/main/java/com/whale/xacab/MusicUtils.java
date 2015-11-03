@@ -1,6 +1,7 @@
-package com.example.alex.xacab;
+package com.whale.xacab;
 
 import android.content.Context;
+
 
 import java.util.Formatter;
 import java.util.Locale;

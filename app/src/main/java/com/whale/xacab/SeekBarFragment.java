@@ -1,7 +1,6 @@
-package com.example.alex.xacab;
+package com.whale.xacab;
 
 import android.app.Activity;
-import android.content.AsyncTaskLoader;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Fragment;
@@ -12,25 +11,30 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 
+
 public class SeekBarFragment extends Fragment {
 
     public static final int MAX_PROGRESS = 200;
     private SelectionListener mListener;
     public SeekBar mSeekBar;
     private TextView mPlayerProgress;
+    private TextView mPlayerDuration;
+    private TextView mPlayerInfo;
+    private String mInfo;
     private int mProgress = 0;
     private int mStep;
-    private TextView mPlayerDuration;
     private Integer mCurrentDuration;
     private boolean isPlaying;
     private MainActivity mActivity;
     private SeekBarRefresh mSeekBarRefresh;
     private ProgressRefresh mProgressRefresh;
 
-    public void startTasks(int duration, int position, int step) {
+    public void startTasks(int duration, int position, int step, String artist, String title) {
         mCurrentDuration = duration;
         mProgress = position;
         mStep = step;
+        mInfo = artist + " - " + title;
+        mPlayerInfo.setText(mInfo);
         mSeekBar.setProgress(position / step);
         mPlayerProgress.setText(MusicUtils.makeTimeString(mActivity.getApplicationContext(), position / 1000));
         mPlayerDuration.setText(MusicUtils.makeTimeString(mActivity.getApplicationContext(), duration / 1000));
@@ -82,7 +86,8 @@ public class SeekBarFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_seek_bar, container, false);
-//        if (savedInstanceState == null) {
+        //if (savedInstanceState == null) {
+            mPlayerInfo = (TextView) view.findViewById(R.id.player_info);
             mSeekBar = (SeekBar) view.findViewById(R.id.player_slider);
             mSeekBar.setMax(MAX_PROGRESS);
             mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -106,7 +111,13 @@ public class SeekBarFragment extends Fragment {
             });
             mPlayerProgress = (TextView) view.findViewById(R.id.player_progress);
             mPlayerDuration = (TextView) view.findViewById(R.id.player_duration);
-//        }
+            if (mCurrentDuration != null) {
+                mPlayerDuration.setText(MusicUtils.makeTimeString(mActivity.getApplicationContext(), mCurrentDuration / 1000));
+            }
+            if (mInfo != null) {
+                mPlayerInfo.setText(mInfo);
+            }
+        //}
         return view;
     }
 

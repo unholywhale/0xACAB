@@ -1,4 +1,4 @@
-package com.example.alex.xacab;
+package com.whale.xacab;
 
 import android.app.Activity;
 import android.app.FragmentManager;
@@ -13,8 +13,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.Image;
 import android.media.session.MediaSession;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -29,12 +29,17 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+
 import java.util.ArrayList;
+import java.util.Random;
 
 
 public class MainActivity extends Activity implements SelectionListener {
 
-    public final static String INTENT_SONG_STATUS = "com.example.alex.xacab.SONG_STOPPED";
+    public final static String INTENT_SONG_STATUS = "com.whale.xacab.SONG_STOPPED";
+    public final static String INTENT_SONG_NEXT = "com.whale.xacab.SONG_NEXT";
+    public final static String INTENT_SONG_PREV = "com.whale.xacab.SONG_PREV";
+    public final static String INTENT_SONG_PLAY = "com.whale.xacab.SONG_PLAY";
     public final static String INTENT_EXTRA = "SONG_SOURCE";
     public final static String INTENT_DURATION = "SONG_DURATION";
     public final static String CURRENT_SONG = "CURRENT_SONG";
@@ -42,11 +47,15 @@ public class MainActivity extends Activity implements SelectionListener {
     public final static String TAG_QUEUE = "QUEUE";
     public final static String TAG_SEEK_BAR = "SEEK_BAR";
     public static final int NUM_PAGES = 3;
+    private static final String IS_SHUFFLING = "IS_SHUFFLED";
+    private static final String IS_REPEATING = "IS_REPEATING";
     public static String songStatus = MusicService.SONG_STOPPED;
     public QueueDB db;
     private int mCurrentQueuePosition = -1;
     private AudioListModel currentSong;
     public boolean isPlaying = false;
+    public boolean isShuffling = false;
+    public boolean isRepeating = false;
     private Intent musicServiceIntent;
     private SeekBarFragment mSeekBarFragment;
     private LibraryFragment mLibraryFragment;
@@ -59,9 +68,6 @@ public class MainActivity extends Activity implements SelectionListener {
     private View mButtons;
     private MediaSession mSession;
     private boolean isSeeking;
-    private int mProgress = 0;
-    private TextView mPlayerProgress;
-    private TextView mPlayerDuration;
     private PagerAdapter mPager;
     private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -77,19 +83,30 @@ public class MainActivity extends Activity implements SelectionListener {
                     int position = intent.getIntExtra(MusicService.SONG_POSITION, -1);
                     int step = currentSong.getDuration() / 200;
                     if (position != -1) {
-                        mProgress = position;
+//                        mProgress = position;
 //                        mSeekBar.setProgress(position / step);
 //                        mPlayerProgress.setText(MusicUtils.makeTimeString(getApplicationContext(), mProgress / 1000));
 //                        mPlayerDuration.setText(MusicUtils.makeTimeString(getApplicationContext(),
 //                                currentSong.getDuration() / 1000));
-                        mSeekBarFragment.startTasks(currentSong.getDuration(), position, step);
+                        mSeekBarFragment.startTasks(currentSong.getDuration(), position, step, currentSong.getArtist(), currentSong.getTitle());
                     }
 
                 } else if (receiveValue.equals(MusicService.SONG_STOPPED)) {
                     isPlaying = false;
                     changePlayStatus(MusicService.SONG_STOPPED);
                 }
-
+                makeNotification();
+            } else if (intent.getAction().equals(INTENT_SONG_NEXT)) {
+                if (mCurrentQueuePosition != -1) {
+                    nextSong();
+                }
+            } else if (intent.getAction().equals(INTENT_SONG_PREV)) {
+                if (mCurrentQueuePosition != -1) {
+                    prevSong();
+                }
+            } else if (intent.getAction().equals(INTENT_SONG_PLAY)) {
+                musicServiceIntent.removeExtra(INTENT_EXTRA);
+                startService(musicServiceIntent);
             }
         }
     };
@@ -115,6 +132,31 @@ public class MainActivity extends Activity implements SelectionListener {
         }
     }
 
+    private void nextSong() {
+        int position;
+        if (mCurrentQueuePosition != -1) {
+            if (isShuffling) {
+                Random rand = new Random();
+                position = rand.nextInt(mQueueData.size());
+            } else {
+                if (mCurrentQueuePosition == mQueueData.size() - 1) {
+                    position = 0;
+                } else {
+                    position = mCurrentQueuePosition + 1;
+                }
+            }
+            onQueueItemSelected(position);
+        }
+    }
+
+    private void prevSong() {
+        if (mCurrentQueuePosition == 0) {
+            onQueueItemSelected(mQueueData.size() - 1);
+        } else {
+            onQueueItemSelected(mCurrentQueuePosition - 1);
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -127,11 +169,17 @@ public class MainActivity extends Activity implements SelectionListener {
         changeButtons(R.layout.container_queue, R.id.container_queue_buttons);
         mIntentFilter = new IntentFilter();
         mIntentFilter.addAction(INTENT_SONG_STATUS);
+        mIntentFilter.addAction(INTENT_SONG_PREV);
+        mIntentFilter.addAction(INTENT_SONG_NEXT);
+        mIntentFilter.addAction(INTENT_SONG_PLAY);
         db = new QueueDB(this);
         musicServiceIntent = new Intent(getApplicationContext(), MusicService.class);
         populateQueueData();
-        mPlayerProgress = (TextView) findViewById(R.id.player_progress);
-        mPlayerDuration = (TextView) findViewById(R.id.player_duration);
+        if (mCurrentQueuePosition != -1) {
+            currentSong = mQueueData.get(mCurrentQueuePosition);
+        }
+//        mPlayerProgress = (TextView) findViewById(R.id.player_progress);
+//        mPlayerDuration = (TextView) findViewById(R.id.player_duration);
         if (savedInstanceState == null) {
             FragmentTransaction transaction = getFragmentManager().beginTransaction();
             transaction.replace(R.id.main_activity_container, mQueueFragment, TAG_QUEUE);
@@ -146,6 +194,8 @@ public class MainActivity extends Activity implements SelectionListener {
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         outState.putInt(CURRENT_QUEUE_POSITION, mCurrentQueuePosition);
+        outState.putBoolean(IS_SHUFFLING, isShuffling);
+        outState.putBoolean(IS_REPEATING, isRepeating);
         super.onSaveInstanceState(outState);
     }
 
@@ -153,6 +203,31 @@ public class MainActivity extends Activity implements SelectionListener {
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         mCurrentQueuePosition = savedInstanceState.getInt(CURRENT_QUEUE_POSITION);
+        if (mCurrentQueuePosition != -1) {
+            currentSong = mQueueData.get(mCurrentQueuePosition);
+        }
+        isShuffling = savedInstanceState.getBoolean(IS_SHUFFLING);
+        isRepeating = savedInstanceState.getBoolean(IS_REPEATING);
+        invalidateButtons();
+    }
+
+    private void invalidateButtons() {
+        ImageView shuffleButton = (ImageView) mButtons.findViewById(R.id.player_shuffle);
+        if (shuffleButton != null) {
+            if (isShuffling) {
+                shuffleButton.setImageResource(R.drawable.ic_action_shuffle);
+            } else {
+                shuffleButton.setImageResource(R.drawable.ic_action_shuffle_disabled);
+            }
+        }
+        ImageView repeatButton = (ImageView) mButtons.findViewById(R.id.player_repeat);
+        if (repeatButton != null) {
+            if (isRepeating) {
+                repeatButton.setImageResource(R.drawable.ic_action_repeat);
+            } else {
+                repeatButton.setImageResource(R.drawable.ic_action_repeat_disabled);
+            }
+        }
     }
 
     private void setFragments() {
@@ -252,14 +327,24 @@ public class MainActivity extends Activity implements SelectionListener {
     }
 
     public void makeNotification() {
-        Intent intent = new Intent(this, MainActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        Intent contentIntent = new Intent(getApplicationContext(), MainActivity.class);
+        Intent nextIntent = new Intent();
+        nextIntent.setAction(INTENT_SONG_NEXT);
+        Intent prevIntent = new Intent();
+        prevIntent.setAction(INTENT_SONG_PREV);
+        Intent playIntent = new Intent();
+        playIntent.setAction(INTENT_SONG_PLAY);
+        PendingIntent pendingContentIntent = PendingIntent.getActivity(this, 0 , contentIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pendingNextIntent = PendingIntent.getBroadcast(this, 0, nextIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pendingPrevIntent = PendingIntent.getBroadcast(this, 0, prevIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pendingPlayIntent = PendingIntent.getBroadcast(this, 0, playIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         Notification notification = new Notification.Builder(getApplicationContext())
                 .setVisibility(Notification.VISIBILITY_PUBLIC)
                 .setSmallIcon(R.drawable.ic_stat_player)
-                .addAction(R.drawable.ic_action_previous, "Previous", pendingIntent)
-                .addAction(R.drawable.ic_action_play, "Play", pendingIntent)
-                .addAction(R.drawable.ic_action_next, "Next", pendingIntent)
+                .setContentIntent(pendingContentIntent)
+                .addAction(R.drawable.ic_action_previous, "Previous", pendingPrevIntent)
+                .addAction(isPlaying ? R.drawable.ic_action_pause : R.drawable.ic_action_play, "Play", pendingPlayIntent)
+                .addAction(R.drawable.ic_action_next, "Next", pendingNextIntent)
                 .setStyle(new Notification.MediaStyle()
                         .setShowActionsInCompactView(1)
                         .setMediaSession(mSession.getSessionToken()))
@@ -278,7 +363,6 @@ public class MainActivity extends Activity implements SelectionListener {
         musicServiceIntent.putExtra(INTENT_EXTRA, currentSong.getData());
         startService(musicServiceIntent);
         getContentResolver().notifyChange(QueueProvider.CONTENT_URI, null);
-        makeNotification();
     }
 
     @Override
@@ -307,17 +391,13 @@ public class MainActivity extends Activity implements SelectionListener {
         ImageView playButton = (ImageView) buttons.findViewById(R.id.player_play);
         ImageView nextButton = (ImageView) buttons.findViewById(R.id.player_next);
         ImageView previousButton = (ImageView) buttons.findViewById(R.id.player_previous);
+        final ImageView repeatButton = (ImageView) buttons.findViewById(R.id.player_repeat);
+        final ImageView shuffleButton = (ImageView) buttons.findViewById(R.id.player_shuffle);
         if (nextButton != null) {
             nextButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (mCurrentQueuePosition != -1) {
-                        if (mCurrentQueuePosition == mQueueData.size() - 1) {
-                            onQueueItemSelected(0);
-                        } else {
-                            onQueueItemSelected(mCurrentQueuePosition + 1);
-                        }
-                    }
+                    nextSong();
                 }
             });
         }
@@ -325,13 +405,7 @@ public class MainActivity extends Activity implements SelectionListener {
             previousButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (mCurrentQueuePosition != -1) {
-                        if (mCurrentQueuePosition == 0) {
-                            onQueueItemSelected(mQueueData.size() - 1);
-                        } else {
-                            onQueueItemSelected(mCurrentQueuePosition - 1);
-                        }
-                    }
+                    prevSong();
                 }
             });
         }
@@ -342,6 +416,34 @@ public class MainActivity extends Activity implements SelectionListener {
                 startService(musicServiceIntent);
             }
         });
+        if (repeatButton != null) {
+            repeatButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (isRepeating) {
+                        isRepeating = false;
+                        repeatButton.setImageResource(R.drawable.ic_action_repeat_disabled);
+                    } else {
+                        isRepeating = true;
+                        repeatButton.setImageResource(R.drawable.ic_action_repeat);
+                    }
+                }
+            });
+        }
+        if (shuffleButton != null) {
+            shuffleButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (isShuffling) {
+                        isShuffling = false;
+                        shuffleButton.setImageResource(R.drawable.ic_action_shuffle_disabled);
+                    } else {
+                        isShuffling = true;
+                        shuffleButton.setImageResource(R.drawable.ic_action_shuffle);
+                    }
+                }
+            });
+        }
         changePlayStatus(songStatus);
         ((ViewGroup) buttons.getParent()).removeView(buttons);
         mButtonsContainer.removeAllViews();

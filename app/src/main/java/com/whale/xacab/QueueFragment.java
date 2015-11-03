@@ -1,17 +1,14 @@
-package com.example.alex.xacab;
+package com.whale.xacab;
 
 import android.app.Activity;
 import android.app.Fragment;
-import android.app.ListFragment;
 import android.app.LoaderManager;
 import android.content.Context;
 import android.content.CursorLoader;
 import android.content.Loader;
 import android.database.Cursor;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
-import android.support.v4.widget.ViewDragHelper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,10 +18,8 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import org.w3c.dom.Text;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -202,7 +197,5 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
             ImageView playing;
         }
     }
-
-
 
 }

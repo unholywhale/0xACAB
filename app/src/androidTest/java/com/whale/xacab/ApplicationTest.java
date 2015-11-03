@@ -1,4 +1,4 @@
-package com.example.alex.xacab;
+package com.whale.xacab;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;

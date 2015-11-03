@@ -2,13 +2,18 @@
              xmlns:tools="http://schemas.android.com/tools"
              android:layout_width="match_parent"
              android:layout_height="match_parent"
-             tools:context="com.example.alex.xacab.SeekBarFragment">
+             tools:context="com.whale.xacab.SeekBarFragment">
 
-    <!-- TODO: Update blank fragment layout -->
+    <TextView
+        android:id="@+id/player_info"
+        android:layout_width="wrap_content"
+        android:layout_height="18dp"
+        android:layout_centerHorizontal="true"/>
     <SeekBar
         android:id="@+id/player_slider"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_below="@id/player_info"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"/>
     <TextView
@@ -22,7 +27,7 @@
         android:layout_height="wrap_content"/>
     <TextView
         android:id="@+id/player_duration"
-        android:text="2:54"
+        android:text="-:--"
         android:layout_alignParentEnd="true"
         android:layout_below="@id/player_slider"
         android:layout_marginEnd="16dp"
