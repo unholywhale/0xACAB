@@ -9,10 +9,13 @@ import android.content.Loader;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Environment;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.CursorAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -35,6 +38,7 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
     private final static int QUEUE_LOADER = 1;
     private QueueAdapter mAdapter;
     private ListView mList;
+    private Button mAdd;
 
     public static QueueFragment newInstance() {
         QueueFragment fragment = new QueueFragment();
@@ -57,6 +61,47 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
     public QueueFragment() {
     }
 
+    private class QueueGestureHelper extends GestureHelper {
+
+        public QueueGestureHelper(Context context) {
+            super(context);
+        }
+
+        @Override
+        public void onScrollTop() {
+            if (mAdd.getVisibility() == View.INVISIBLE) {
+                Runnable action = new Runnable() {
+                    @Override
+                    public void run() {
+                        mAdd.setVisibility(View.VISIBLE);
+                    }
+                };
+                mAdd.animate()
+                        .translationY(0)
+                        .alpha(1)
+                        .withStartAction(action)
+                        .start();
+            }
+        }
+
+        @Override
+        public void onScrollBottom() {
+            if (mAdd.getVisibility() == View.VISIBLE) {
+                Runnable action = new Runnable() {
+                    @Override
+                    public void run() {
+                        mAdd.setVisibility(View.INVISIBLE);
+                    }
+                };
+                mAdd.animate()
+                        .translationY(100)
+                        .alpha(0)
+                        .withEndAction(action)
+                        .start();
+            }
+        }
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_queue, null);
@@ -77,9 +122,20 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
             }
         });
 
+        mList.setOnTouchListener(new QueueGestureHelper(getActivity().getApplicationContext()));
+
+        mAdd = (Button) view.findViewById(R.id.queue_add);
+        mAdd.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mListener.onQueueAdd();
+            }
+        });
+
         mList.setAdapter(mAdapter);
         return view;
     }
+
 
     @Override
     public void onDestroyView() {
@@ -132,17 +188,6 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
     public void onDetach() {
         super.onDetach();
         mListener = null;
-    }
-
-   // @Override
-    public void onListItemClick(ListView l, View v, int position, long id) {
-        //super.onListItemClick(l, v, position, id);
-
-        if (null != mListener) {
-            // Notify the active callbacks interface (the activity, if the
-            // fragment is attached to one) that an item has been selected.
-            mListener.onQueueItemSelected(position);
-        }
     }
 
     public class QueueAdapter extends CursorAdapter {

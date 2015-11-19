@@ -3,6 +3,30 @@
   <component name="EntryPointsManager">
     <entry_points version="2.0" />
   </component>
+  <component name="FrameworkDetectionExcludesConfiguration">
+    <file type="android" url="file://$PROJECT_DIR$/drag-sort-listview/demo" />
+    <file type="android" url="file://$PROJECT_DIR$/drag-sort-listview/library" />
+    <file type="android" url="file://$USER_HOME$/drag-sort-listview/demo" />
+    <file type="android" url="file://$USER_HOME$/drag-sort-listview/library" />
+  </component>
+  <component name="MavenProjectsManager">
+    <option name="originalFiles">
+      <list>
+        <option value="$PROJECT_DIR$/drag-sort-listview/pom.xml" />
+        <option value="$USER_HOME$/drag-sort-listview/pom.xml" />
+      </list>
+    </option>
+    <option name="ignoredFiles">
+      <set>
+        <option value="$PROJECT_DIR$/drag-sort-listview/demo/pom.xml" />
+        <option value="$PROJECT_DIR$/drag-sort-listview/library/pom.xml" />
+        <option value="$PROJECT_DIR$/drag-sort-listview/pom.xml" />
+        <option value="$USER_HOME$/drag-sort-listview/demo/pom.xml" />
+        <option value="$USER_HOME$/drag-sort-listview/library/pom.xml" />
+        <option value="$USER_HOME$/drag-sort-listview/pom.xml" />
+      </set>
+    </option>
+  </component>
   <component name="NullableNotNullManager">
     <option name="myDefaultNullable" value="android.support.annotation.Nullable" />
     <option name="myDefaultNotNull" value="android.support.annotation.NonNull" />

@@ -38,6 +38,12 @@ public class ArtistFragment extends ListFragment {
     }
 
     @Override
+    public void onStop() {
+        mListener.setFragmentTitle(MainActivity.APP_TITLE);
+        super.onStop();
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
@@ -45,6 +51,7 @@ public class ArtistFragment extends ListFragment {
             return;
             //mArtistName = "Squarepusher"; // default artist for testing
         }
+        mListener.setFragmentTitle(mArtistName);
         String[] from = new String[] {
                 MediaStore.Audio.Media.TITLE,
                 MediaStore.Audio.Media.ALBUM,

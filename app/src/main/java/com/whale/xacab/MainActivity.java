@@ -1,6 +1,7 @@
 package com.whale.xacab;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.app.Notification;
@@ -9,6 +10,7 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -36,6 +38,7 @@ import java.util.Random;
 
 public class MainActivity extends Activity implements SelectionListener {
 
+    public final static String APP_TITLE = "0xACAB";
     public final static String INTENT_SONG_STATUS = "com.whale.xacab.SONG_STOPPED";
     public final static String INTENT_SONG_NEXT = "com.whale.xacab.SONG_NEXT";
     public final static String INTENT_SONG_PREV = "com.whale.xacab.SONG_PREV";
@@ -264,6 +267,11 @@ public class MainActivity extends Activity implements SelectionListener {
         startService(intent);
     }
 
+    @Override
+    public void onQueueAdd() {
+        openLibraryFragment();
+    }
+
     private void populateQueueData() {
         String[] columns = AudioListModel.getColumns();
         Cursor cursor = getContentResolver().query(QueueProvider.CONTENT_URI, columns, null, null, QueueDB.KEY_SORT);
@@ -311,7 +319,23 @@ public class MainActivity extends Activity implements SelectionListener {
     }
 
     private void clearQueue() {
-        new ClearQueueTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Clear queue?");
+        builder.setPositiveButton("CLEAR", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                new ClearQueueTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+            }
+        });
+        builder.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                //blank
+            }
+        });
+        AlertDialog dialog = builder.create();
+        dialog.show();
+        //new ClearQueueTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
     }
 
@@ -324,6 +348,11 @@ public class MainActivity extends Activity implements SelectionListener {
         transaction.replace(R.id.main_activity_container, mArtistFragment);
         transaction.addToBackStack(null);
         transaction.commit();
+    }
+
+    @Override
+    public void setFragmentTitle(String title) {
+        setTitle(title);
     }
 
     public void makeNotification() {
@@ -365,23 +394,6 @@ public class MainActivity extends Activity implements SelectionListener {
         getContentResolver().notifyChange(QueueProvider.CONTENT_URI, null);
     }
 
-    @Override
-    public void onQueueFragmentShow() {
-        changeButtons(R.layout.container_queue, R.id.container_queue_buttons);
-        if (mMenu != null) {
-            mMenu.findItem(R.id.action_clear_queue).setVisible(true);
-            mMenu.findItem(R.id.action_add).setVisible(true);
-        }
-    }
-
-    @Override
-    public void onQueueFragmentHide() {
-        changeButtons(R.layout.container_main, R.id.container_main_buttons);
-        if (mMenu != null) {
-            mMenu.findItem(R.id.action_clear_queue).setVisible(false);
-            mMenu.findItem(R.id.action_add).setVisible(false);
-        }
-    }
 
     private void changeButtons(int layoutId, int id) {
         LayoutInflater inflater = getLayoutInflater();
@@ -482,8 +494,9 @@ public class MainActivity extends Activity implements SelectionListener {
             case R.id.action_clear_queue:
                 clearQueue();
                 break;
-            case R.id.action_add:
-                openLibraryFragment();
+            //case R.id.action_add:
+            //    openLibraryFragment();
+            //    break;
             default:
                 break;
         }

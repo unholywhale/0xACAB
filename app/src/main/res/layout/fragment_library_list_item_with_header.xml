@@ -3,7 +3,21 @@
               android:orientation="horizontal"
               android:descendantFocusability="blocksDescendants"
               android:layout_width="match_parent"
-              android:layout_height="50dp">
+              android:layout_height="wrap_content">
+    <RelativeLayout
+        android:id="@+id/library_header_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp">
+        <TextView
+            android:id="@+id/library_header"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/header_color"/>
+    </RelativeLayout>
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="50dp"
+        android:layout_below="@id/library_header_layout">
         <TextView
             android:id="@+id/library_artist"
             android:textSize="16sp"
@@ -23,6 +37,7 @@
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
             />
+    </RelativeLayout>
     <!--<TextView
         android:id="@+id/library_num_albums"
         android:paddingStart="16dp"

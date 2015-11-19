@@ -19,6 +19,8 @@ import android.widget.CursorAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import org.w3c.dom.Text;
+
 
 public class LibraryFragment extends ListFragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
@@ -130,20 +132,38 @@ public class LibraryFragment extends ListFragment implements LoaderManager.Loade
 
     class LibraryAdapter extends CursorAdapter {
 
+//        Character mFirstLetter;
+
         public LibraryAdapter(Context context, Cursor c, int flags) {
             super(context, c, flags);
         }
 
         @Override
         public View newView(Context context, Cursor cursor, ViewGroup parent) {
-            View view = LayoutInflater.from(context).inflate(R.layout.fragment_library_list_item, parent, false);
+           // String sArtist = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.ArtistColumns.ARTIST));
+            View view;
+//            if (mFirstLetter == null) {
+//                mFirstLetter = sArtist.charAt(0);
+                view = LayoutInflater.from(context).inflate(R.layout.fragment_library_list_item, parent, false);
+//            } else if (mFirstLetter != sArtist.charAt(0)) {
+//                mFirstLetter = sArtist.charAt(0);
+//                view = LayoutInflater.from(context).inflate(R.layout.fragment_library_list_item_with_header, parent, false);
+//            } else {
+//                view = LayoutInflater.from(context).inflate(R.layout.fragment_library_list_item, parent, false);
+//            }
             return view;
         }
 
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
+            String sArtist = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.ArtistColumns.ARTIST));
+//            TextView header = (TextView) view.findViewById(R.id.library_header);
+//            if (header != null) {
+//                Character c = sArtist.charAt(0);
+//                header.setText(c.toString());
+//            }
             TextView artist = (TextView) view.findViewById(R.id.library_artist);
-            artist.setText(cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.ArtistColumns.ARTIST)));
+            artist.setText(sArtist);
         }
     }
 }

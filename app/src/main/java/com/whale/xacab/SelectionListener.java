@@ -9,8 +9,7 @@ public interface SelectionListener {
     void onArtistItemSelected(AudioListModel item);
     void onLibraryItemSelected(View item);
     void onQueueItemSelected(int position);
-    void onQueueFragmentShow();
-    void onQueueFragmentHide();
-
     void onSeekBarChanged(int newDuration);
+    void onQueueAdd();
+    void setFragmentTitle(String title);
 }

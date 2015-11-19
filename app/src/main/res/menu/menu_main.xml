@@ -5,10 +5,10 @@
           android:icon="@drawable/ic_action_clear_queue"
           android:title="Clear"
           android:showAsAction="ifRoom"/>
-    <item android:id="@+id/action_add"
+    <!--<item android:id="@+id/action_add"
           android:icon="@drawable/ic_action_add"
           android:title="Add"
-          android:showAsAction="ifRoom"/>
+          android:showAsAction="ifRoom"/>-->
     <!--<item android:id="@+id/action_queue"
           android:icon="@drawable/ic_action_queue"
           android:title="Queue"
