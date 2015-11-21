@@ -16,6 +16,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.CursorAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -24,6 +26,7 @@ import android.widget.TextView;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -137,6 +140,10 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
         return view;
     }
 
+    public QueueAdapter getAdapter() {
+        return mAdapter;
+    }
+
     @Override
     public void onStart() {
         mListener.setQueueMenu();
@@ -199,6 +206,8 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
     public class QueueAdapter extends CursorAdapter {
 
         private Integer counter = 0;
+        private boolean mCheckBoxVisible = false;
+        private HashMap<Integer, Boolean>  hashMapChecked = new HashMap<>();
 
         public QueueAdapter(Context context, Cursor c, int flag) {
             super(context, c, flag);
@@ -215,6 +224,20 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
             holder.duration = (TextView) view.findViewById(R.id.queue_duration);
             holder.data = (TextView) view.findViewById(R.id.queue_data);
             holder.playing = (ImageView) view.findViewById(R.id.queue_playing);
+            holder.checked = (CheckBox) view.findViewById(R.id.queue_checked);
+            holder.checked.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    int pos = (Integer) buttonView.getTag();
+                    if (pos != ListView.INVALID_POSITION) {
+                        if (isChecked) {
+                            hashMapChecked.put(pos, isChecked);
+                        } else if (hashMapChecked.get(pos) != null){
+                            hashMapChecked.remove(pos);
+                        }
+                    }
+                }
+            });
             view.setTag(holder);
             return view;
         }
@@ -229,13 +252,35 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
                 holder.artist.setText(cursor.getString(cursor.getColumnIndexOrThrow(QueueDB.KEY_ARTIST)));
                 holder.duration.setText(MusicUtils.makeTimeString(context, cursor.getInt(cursor.getColumnIndexOrThrow(QueueDB.KEY_DURATION)) / 1000));
                 holder.data.setText(cursor.getString(cursor.getColumnIndexOrThrow(QueueDB.KEY_DATA)));
-                if (cursor.getPosition() == ((MainActivity) getActivity()).getCurrentQueuePosition()) {
-                    holder.playing.setVisibility(View.VISIBLE);
-                    holder.number.setVisibility(View.INVISIBLE);
-                } else {
+                if (mCheckBoxVisible) {
                     holder.playing.setVisibility(View.INVISIBLE);
-                    holder.number.setVisibility(View.VISIBLE);
+                    holder.number.setVisibility(View.INVISIBLE);
+                    holder.checked.setVisibility(View.VISIBLE);
+                    Boolean checked = hashMapChecked.get(cursor.getPosition());
+                    holder.checked.setTag(cursor.getPosition());
+                    if (checked != null) {
+                        holder.checked.setChecked(checked);
+                    } else {
+                        holder.checked.setChecked(false);
+                    }
+                } else {
+                    holder.checked.setVisibility(View.INVISIBLE);
+                    holder.checked.setChecked(false);
+                    if (cursor.getPosition() == ((MainActivity) getActivity()).getCurrentQueuePosition()) {
+                        holder.playing.setVisibility(View.VISIBLE);
+                        holder.number.setVisibility(View.INVISIBLE);
+                    } else {
+                        holder.playing.setVisibility(View.INVISIBLE);
+                        holder.number.setVisibility(View.VISIBLE);
+                    }
                 }
+            }
+        }
+
+        public void setCheckboxVisibility(boolean visibility) {
+            mCheckBoxVisible = visibility;
+            if (!mCheckBoxVisible) {
+                hashMapChecked.clear();
             }
         }
 
@@ -246,6 +291,7 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
             TextView duration;
             TextView data;
             ImageView playing;
+            CheckBox checked;
         }
     }
 

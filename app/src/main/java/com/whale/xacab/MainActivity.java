@@ -70,8 +70,7 @@ public class MainActivity extends Activity implements SelectionListener {
     private Menu mMenu;
     private View mButtons;
     private MediaSession mSession;
-    private boolean isSeeking;
-    private PagerAdapter mPager;
+    private boolean mSelectMode = false;
     private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -352,7 +351,7 @@ public class MainActivity extends Activity implements SelectionListener {
         prevIntent.setAction(INTENT_SONG_PREV);
         Intent playIntent = new Intent();
         playIntent.setAction(INTENT_SONG_PLAY);
-        PendingIntent pendingContentIntent = PendingIntent.getActivity(this, 0 , contentIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pendingContentIntent = PendingIntent.getActivity(this, 0, contentIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         PendingIntent pendingNextIntent = PendingIntent.getBroadcast(this, 0, nextIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         PendingIntent pendingPrevIntent = PendingIntent.getBroadcast(this, 0, prevIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         PendingIntent pendingPlayIntent = PendingIntent.getBroadcast(this, 0, playIntent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -505,6 +504,14 @@ public class MainActivity extends Activity implements SelectionListener {
         }
     }
 
+    private void selectMode() {
+        if (mQueueFragment != null) {
+            mSelectMode = !mSelectMode;
+            mQueueFragment.getAdapter().setCheckboxVisibility(mSelectMode);
+            mQueueFragment.getAdapter().notifyDataSetChanged();
+        }
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
@@ -516,15 +523,14 @@ public class MainActivity extends Activity implements SelectionListener {
             case R.id.action_close:
                 closeLibrary();
                 break;
+            case R.id.action_select:
+                selectMode();
+                break;
             default:
                 break;
         }
 
         return super.onOptionsItemSelected(item);
-    }
-
-    private void refreshDuration() {
-
     }
 
     private class AddToQueueTask extends AsyncTask<AudioListModel, Void, Void> {
