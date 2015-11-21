@@ -12,4 +12,6 @@ public interface SelectionListener {
     void onSeekBarChanged(int newDuration);
     void onQueueAdd();
     void setFragmentTitle(String title);
+    void setLibraryMenu();
+    void setQueueMenu();
 }

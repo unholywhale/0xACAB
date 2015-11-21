@@ -66,8 +66,8 @@ public class GestureHelper implements View.OnTouchListener {
 
         @Override
         public boolean onSingleTapUp(MotionEvent e) {
-            mHelper.onClick();
-            return true;
+            //mHelper.onClick();
+            return false;
         }
 
         @Override

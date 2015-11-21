@@ -245,19 +245,8 @@ public class MainActivity extends Activity implements SelectionListener {
             mQueueFragment = new QueueFragment();
         }
         mArtistFragment = new ArtistFragment();
-//        mArtistFragment.setEnterTransition(mFade);
-//        mArtistFragment.setExitTransition(mFade);
-//        mArtistFragment.setReenterTransition(mFade);
-//        mArtistFragment.setReturnTransition(mFade);
-//        mQueueFragment.setEnterTransition(mFade);
-//        mQueueFragment.setExitTransition(mFade);
-//        mQueueFragment.setReenterTransition(mFade);
-//        mQueueFragment.setReturnTransition(mFade);
         mLibraryFragment = new LibraryFragment();
-//        mLibraryFragment.setEnterTransition(mFade);
-//        mLibraryFragment.setExitTransition(mFade);
-//        mLibraryFragment.setReenterTransition(mFade);
-//        mLibraryFragment.setReturnTransition(mFade);
+
     }
 
     @Override
@@ -462,17 +451,17 @@ public class MainActivity extends Activity implements SelectionListener {
         mButtonsContainer.addView(buttons);
     }
 
-    public void openQueueFragment() {
-        if (getFragmentManager().findFragmentByTag("QUEUE") == null) {
-            FragmentTransaction transaction = getFragmentManager().beginTransaction();
-            transaction.replace(R.id.main_activity_container, mQueueFragment, "QUEUE");
-            transaction.addToBackStack(null);
-            transaction.commit();
-        } else {
-            onBackPressed();
-        }
-
-    }
+//    public void openQueueFragment() {
+//        if (getFragmentManager().findFragmentByTag("QUEUE") == null) {
+//            FragmentTransaction transaction = getFragmentManager().beginTransaction();
+//            transaction.replace(R.id.main_activity_container, mQueueFragment, "QUEUE");
+//            transaction.addToBackStack(null);
+//            transaction.commit();
+//        } else {
+//            onBackPressed();
+//        }
+//
+//    }
 
     public void openLibraryFragment() {
         if (getFragmentManager().findFragmentByTag("LIBRARY") == null) {
@@ -484,19 +473,49 @@ public class MainActivity extends Activity implements SelectionListener {
     }
 
     @Override
+    public void setLibraryMenu() {
+        if (mMenu != null) {
+            MenuItem closeButton = mMenu.findItem(R.id.action_close);
+            MenuItem clearQueueButton = mMenu.findItem(R.id.action_clear_queue);
+            closeButton.setVisible(true);
+            clearQueueButton.setVisible(false);
+        }
+    }
+
+    @Override
+    public void setQueueMenu() {
+        if (mMenu != null) {
+            MenuItem closeButton = mMenu.findItem(R.id.action_close);
+            MenuItem clearQueueButton = mMenu.findItem(R.id.action_clear_queue);
+            closeButton.setVisible(false);
+            clearQueueButton.setVisible(true);
+        }
+    }
+
+    public void closeLibrary() {
+        if (mArtistFragment != null) {
+            if (mArtistFragment.getActivity() == this) {
+                getFragmentManager().popBackStack();
+                onBackPressed();
+            } else {
+                onBackPressed();
+            }
+        } else {
+            onBackPressed();
+        }
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
         int id = item.getItemId();
         switch (id) {
-//            case R.id.action_queue:
-//                openQueueFragment();
-//                break;
             case R.id.action_clear_queue:
                 clearQueue();
                 break;
-            //case R.id.action_add:
-            //    openLibraryFragment();
-            //    break;
+            case R.id.action_close:
+                closeLibrary();
+                break;
             default:
                 break;
         }

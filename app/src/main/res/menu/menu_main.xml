@@ -5,6 +5,11 @@
           android:icon="@drawable/ic_action_clear_queue"
           android:title="Clear"
           android:showAsAction="ifRoom"/>
+    <item android:id="@+id/action_close"
+          android:icon="@drawable/ic_action_close"
+          android:title="Close"
+          android:showAsAction="ifRoom"
+          android:visible="false"/>
     <!--<item android:id="@+id/action_add"
           android:icon="@drawable/ic_action_add"
           android:title="Add"

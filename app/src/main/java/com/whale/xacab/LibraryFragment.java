@@ -19,13 +19,11 @@ import android.widget.CursorAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import org.w3c.dom.Text;
-
 
 public class LibraryFragment extends ListFragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private final static int LIBRARY_LOADER = 2;
-    private SelectionListener mSelectionListener;
+    private SelectionListener mListener;
     private LayoutInflater mInflater;
     private LibraryAdapter mAdapter;
 
@@ -33,7 +31,7 @@ public class LibraryFragment extends ListFragment implements LoaderManager.Loade
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         try {
-            mSelectionListener = (SelectionListener) activity;
+            mListener = (SelectionListener) activity;
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
                     + " must implement SelectionListener");
@@ -46,6 +44,12 @@ public class LibraryFragment extends ListFragment implements LoaderManager.Loade
         getLoaderManager().initLoader(LIBRARY_LOADER, null, this);
         mAdapter = new LibraryAdapter(getActivity().getApplicationContext(), null, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
         setListAdapter(mAdapter);
+    }
+
+    @Override
+    public void onStart() {
+        mListener.setLibraryMenu();
+        super.onStart();
     }
 
     @Override
@@ -85,8 +89,9 @@ public class LibraryFragment extends ListFragment implements LoaderManager.Loade
 
     @Override
     public void onDetach() {
+
         super.onDetach();
-        mSelectionListener = null;
+        mListener = null;
     }
 
 
@@ -94,10 +99,10 @@ public class LibraryFragment extends ListFragment implements LoaderManager.Loade
     public void onListItemClick(ListView l, View v, int position, long id) {
         super.onListItemClick(l, v, position, id);
 
-        if (null != mSelectionListener) {
+        if (null != mListener) {
             // Notify the active callbacks interface (the activity, if the
             // fragment is attached to one) that an item has been selected.
-            mSelectionListener.onLibraryItemSelected(v);
+            mListener.onLibraryItemSelected(v);
         }
     }
 

@@ -111,6 +111,8 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
         mAdapter = new QueueAdapter(getActivity().getApplicationContext(), null, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
         mList = (ListView) view.findViewById(R.id.queue_list);
 
+        mList.setOnTouchListener(new QueueGestureHelper(getActivity().getApplicationContext()));
+
         mList.setOnItemClickListener(new ListView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -122,7 +124,6 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
             }
         });
 
-        mList.setOnTouchListener(new QueueGestureHelper(getActivity().getApplicationContext()));
 
         mAdd = (Button) view.findViewById(R.id.queue_add);
         mAdd.setOnClickListener(new View.OnClickListener() {
@@ -136,6 +137,11 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
         return view;
     }
 
+    @Override
+    public void onStart() {
+        mListener.setQueueMenu();
+        super.onStart();
+    }
 
     @Override
     public void onDestroyView() {
