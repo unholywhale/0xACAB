@@ -207,10 +207,20 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
 
         private Integer counter = 0;
         private boolean mCheckBoxVisible = false;
-        private HashMap<Integer, Boolean>  hashMapChecked = new HashMap<>();
+        private HashMap<Integer, QueueHashHolder>  hashMapChecked = new HashMap<>();
+
+        public class QueueHashHolder {
+            Long id;
+            Integer position;
+            Boolean isChecked;
+        }
 
         public QueueAdapter(Context context, Cursor c, int flag) {
             super(context, c, flag);
+        }
+
+        public HashMap<Integer, QueueHashHolder> getHashMapChecked() {
+            return hashMapChecked;
         }
 
         @Override
@@ -228,12 +238,13 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
             holder.checked.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    int pos = (Integer) buttonView.getTag();
-                    if (pos != ListView.INVALID_POSITION) {
+                    QueueHashHolder queueHashHolder = (QueueHashHolder) buttonView.getTag();
+                    if (queueHashHolder.position != ListView.INVALID_POSITION) {
                         if (isChecked) {
-                            hashMapChecked.put(pos, isChecked);
-                        } else if (hashMapChecked.get(pos) != null){
-                            hashMapChecked.remove(pos);
+                            queueHashHolder.isChecked = isChecked;
+                            hashMapChecked.put(queueHashHolder.position, queueHashHolder);
+                        } else if (hashMapChecked.get(queueHashHolder.position) != null){
+                            hashMapChecked.remove(queueHashHolder.position);
                         }
                     }
                 }
@@ -246,7 +257,7 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
         public void bindView(View view, Context context, Cursor cursor) {
             if (cursor != null) {
                 QueueHolder holder = (QueueHolder) view.getTag();
-                Integer number = cursor.getInt(cursor.getColumnIndexOrThrow(QueueDB.KEY_SORT));
+                Integer number = cursor.getPosition() + 1;//getInt(cursor.getColumnIndexOrThrow(QueueDB.KEY_SORT));
                 holder.number.setText(number.toString());
                 holder.title.setText(cursor.getString(cursor.getColumnIndexOrThrow(QueueDB.KEY_TITLE)));
                 holder.artist.setText(cursor.getString(cursor.getColumnIndexOrThrow(QueueDB.KEY_ARTIST)));
@@ -256,8 +267,15 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
                     holder.playing.setVisibility(View.INVISIBLE);
                     holder.number.setVisibility(View.INVISIBLE);
                     holder.checked.setVisibility(View.VISIBLE);
-                    Boolean checked = hashMapChecked.get(cursor.getPosition());
-                    holder.checked.setTag(cursor.getPosition());
+                    QueueHashHolder queueHashHolder = hashMapChecked.get(cursor.getPosition());
+                    if (queueHashHolder == null) {
+                        queueHashHolder = new QueueHashHolder();
+                        queueHashHolder.id = cursor.getLong(cursor.getColumnIndexOrThrow(QueueDB.KEY_ID));
+                        queueHashHolder.position = cursor.getPosition();
+                        queueHashHolder.isChecked = false;
+                    }
+                    Boolean checked = queueHashHolder.isChecked;
+                    holder.checked.setTag(queueHashHolder);
                     if (checked != null) {
                         holder.checked.setChecked(checked);
                     } else {

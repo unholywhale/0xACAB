@@ -49,7 +49,7 @@ public class GestureHelper implements View.OnTouchListener {
         return mGestureDetector.onTouchEvent(ev);
     }
 
-    private static final class GestureListener extends GestureDetector.SimpleOnGestureListener {
+    private static final class GestureListener implements GestureDetector.OnGestureListener {
 
         private static final int SWIPE_THRESHOLD = 30;
         private static final int SWIPE_VELOCITY_THRESHOLD = 100;
@@ -61,19 +61,18 @@ public class GestureHelper implements View.OnTouchListener {
 
         @Override
         public boolean onDown(MotionEvent e) {
-            return true;
+            return false;
+        }
+
+        @Override
+        public void onShowPress(MotionEvent e) {
+
         }
 
         @Override
         public boolean onSingleTapUp(MotionEvent e) {
             //mHelper.onClick();
             return false;
-        }
-
-        @Override
-        public boolean onDoubleTap(MotionEvent e) {
-            mHelper.onDoubleTap();
-            return true;
         }
 
         @Override
@@ -97,6 +96,12 @@ public class GestureHelper implements View.OnTouchListener {
             }
             return false;
         }
+
+        @Override
+        public void onLongPress(MotionEvent e) {
+
+        }
+
 
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {

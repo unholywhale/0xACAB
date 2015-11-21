@@ -33,7 +33,9 @@ import android.widget.TextView;
 
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Random;
+import java.util.concurrent.ThreadPoolExecutor;
 
 
 public class MainActivity extends Activity implements SelectionListener {
@@ -512,13 +514,24 @@ public class MainActivity extends Activity implements SelectionListener {
         }
     }
 
+    private void deleteSelected() {
+
+        HashMap<Integer, QueueFragment.QueueAdapter.QueueHashHolder> hashMap = mQueueFragment.getAdapter().getHashMapChecked();
+        new DeleteSelectedTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, hashMap);
+
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
         int id = item.getItemId();
         switch (id) {
             case R.id.action_clear_queue:
-                clearQueue();
+                if (!mSelectMode) {
+                    clearQueue();
+                } else {
+                    deleteSelected();
+                }
                 break;
             case R.id.action_close:
                 closeLibrary();
@@ -612,6 +625,30 @@ public class MainActivity extends Activity implements SelectionListener {
             getContentResolver().delete(QueueProvider.CONTENT_URI, null, null);
             mQueueData.clear();
             mCurrentQueuePosition = -1;
+            return null;
+        }
+    }
+
+    private class DeleteSelectedTask extends AsyncTask<HashMap<Integer, QueueFragment.QueueAdapter.QueueHashHolder>, Void, Void> {
+
+        @Override
+        protected Void doInBackground(HashMap<Integer, QueueFragment.QueueAdapter.QueueHashHolder>... params) {
+            HashMap<Integer, QueueFragment.QueueAdapter.QueueHashHolder> hashMap = params[0];
+            for (QueueFragment.QueueAdapter.QueueHashHolder holder : hashMap.values()) {
+                String where = QueueDB.KEY_ID + "=?;";
+                String[] args = {holder.id.toString()};
+                getContentResolver().delete(QueueProvider.CONTENT_URI, where, args);
+            }
+            mSelectMode = false;
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mQueueFragment.getAdapter().setCheckboxVisibility(mSelectMode);
+                    mQueueFragment.getAdapter().notifyDataSetChanged();
+                    mQueueData.clear();
+                    populateQueueData();
+                }
+            });
             return null;
         }
     }
