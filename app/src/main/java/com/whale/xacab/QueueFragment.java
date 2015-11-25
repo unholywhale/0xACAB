@@ -20,6 +20,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CursorAdapter;
 import android.widget.ImageView;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -104,6 +105,17 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
             }
         }
     }
+
+    private DropListener mDropListener = new DropListener() {
+        @Override
+        public void onDrop(int from, int to) {
+            QueueAdapter adapter = (QueueAdapter) mList.getAdapter();
+            adapter.onDrop(from, to);
+            mList.invalidateViews();
+        }
+    };
+
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -203,11 +215,21 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
         mListener = null;
     }
 
-    public class QueueAdapter extends CursorAdapter {
+    public class QueueAdapter extends CursorAdapter implements RemoveListener, DropListener {
 
         private Integer counter = 0;
         private boolean mCheckBoxVisible = false;
         private HashMap<Integer, QueueHashHolder>  hashMapChecked = new HashMap<>();
+
+        @Override
+        public void onDrop(int from, int to) {
+
+        }
+
+        @Override
+        public void onRemove(int which) {
+
+        }
 
         public class QueueHashHolder {
             Long id;
