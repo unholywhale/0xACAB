@@ -14,4 +14,7 @@ public interface SelectionListener {
     void setFragmentTitle(String title);
     void setLibraryMenu();
     void setQueueMenu();
+    void invalidateQueue();
+    int getCurrentQueuePosition();
+    void setCurrentQueuePosition(int position);
 }

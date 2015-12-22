@@ -21,7 +21,6 @@ import android.media.session.MediaSession;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.support.v4.view.PagerAdapter;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -37,6 +36,8 @@ import java.util.HashMap;
 import java.util.Random;
 import java.util.concurrent.ThreadPoolExecutor;
 
+// TODO: 14/12/15 add file navigation
+// TODO: 14/12/15 add lockscreen buttons
 
 public class MainActivity extends Activity implements SelectionListener {
 
@@ -61,9 +62,12 @@ public class MainActivity extends Activity implements SelectionListener {
     public boolean isPlaying = false;
     public boolean isShuffling = false;
     public boolean isRepeating = false;
+    public boolean isLibrary = true;
+    private boolean mReorderMode = false;
     private Intent musicServiceIntent;
     private SeekBarFragment mSeekBarFragment;
     private LibraryFragment mLibraryFragment;
+    private FilesFragment mFilesFragment;
     private ArtistFragment mArtistFragment;
     private QueueFragment mQueueFragment;
     private IntentFilter mIntentFilter;
@@ -115,10 +119,12 @@ public class MainActivity extends Activity implements SelectionListener {
         }
     };
 
+    @Override
     public int getCurrentQueuePosition() {
         return mCurrentQueuePosition;
     }
 
+    @Override
     public void setCurrentQueuePosition(int currentQueuePosition) {
         this.mCurrentQueuePosition = currentQueuePosition;
 
@@ -247,6 +253,7 @@ public class MainActivity extends Activity implements SelectionListener {
         }
         mArtistFragment = new ArtistFragment();
         mLibraryFragment = new LibraryFragment();
+        mFilesFragment = new FilesFragment();
 
     }
 
@@ -259,7 +266,7 @@ public class MainActivity extends Activity implements SelectionListener {
 
     @Override
     public void onQueueAdd() {
-        openLibraryFragment();
+        openLibrary(false);
     }
 
     private void populateQueueData() {
@@ -353,10 +360,12 @@ public class MainActivity extends Activity implements SelectionListener {
         prevIntent.setAction(INTENT_SONG_PREV);
         Intent playIntent = new Intent();
         playIntent.setAction(INTENT_SONG_PLAY);
+
         PendingIntent pendingContentIntent = PendingIntent.getActivity(this, 0, contentIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         PendingIntent pendingNextIntent = PendingIntent.getBroadcast(this, 0, nextIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         PendingIntent pendingPrevIntent = PendingIntent.getBroadcast(this, 0, prevIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         PendingIntent pendingPlayIntent = PendingIntent.getBroadcast(this, 0, playIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
         Notification notification = new Notification.Builder(getApplicationContext())
                 .setVisibility(Notification.VISIBILITY_PUBLIC)
                 .setSmallIcon(R.drawable.ic_stat_player)
@@ -464,22 +473,29 @@ public class MainActivity extends Activity implements SelectionListener {
 //
 //    }
 
-    public void openLibraryFragment() {
-        if (getFragmentManager().findFragmentByTag("LIBRARY") == null) {
-            FragmentTransaction transaction = getFragmentManager().beginTransaction();
-            transaction.replace(R.id.main_activity_container, mLibraryFragment, "LIBRARY");
-            transaction.addToBackStack(null);
-            transaction.commit();
+    @Override
+    public void onBackPressed() {
+        if (mReorderMode) {
+            reorderMode();
+        } else {
+            super.onBackPressed();
         }
     }
+
 
     @Override
     public void setLibraryMenu() {
         if (mMenu != null) {
             MenuItem closeButton = mMenu.findItem(R.id.action_close);
             MenuItem clearQueueButton = mMenu.findItem(R.id.action_clear_queue);
+            MenuItem selectButton = mMenu.findItem(R.id.action_select);
+            MenuItem reorderButton = mMenu.findItem(R.id.action_reorder);
+            MenuItem librarySwitchButton = mMenu.findItem(R.id.action_library_switch);
+            librarySwitchButton.setVisible(true);
             closeButton.setVisible(true);
             clearQueueButton.setVisible(false);
+            selectButton.setVisible(false);
+            reorderButton.setVisible(false);
         }
     }
 
@@ -488,8 +504,14 @@ public class MainActivity extends Activity implements SelectionListener {
         if (mMenu != null) {
             MenuItem closeButton = mMenu.findItem(R.id.action_close);
             MenuItem clearQueueButton = mMenu.findItem(R.id.action_clear_queue);
+            MenuItem selectButton = mMenu.findItem(R.id.action_select);
+            MenuItem reorderButton = mMenu.findItem(R.id.action_reorder);
+            MenuItem librarySwitchButton = mMenu.findItem(R.id.action_library_switch);
+            librarySwitchButton.setVisible(false);
             closeButton.setVisible(false);
             clearQueueButton.setVisible(true);
+            selectButton.setVisible(true);
+            reorderButton.setVisible(true);
         }
     }
 
@@ -514,11 +536,68 @@ public class MainActivity extends Activity implements SelectionListener {
         }
     }
 
+    @Override
+    public void invalidateQueue() {
+        mQueueData.clear();
+        populateQueueData();
+    }
+
     private void deleteSelected() {
 
         HashMap<Integer, QueueFragment.QueueAdapter.QueueHashHolder> hashMap = mQueueFragment.getAdapter().getHashMapChecked();
         new DeleteSelectedTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, hashMap);
 
+    }
+
+    private void reorderMode() {
+        mReorderMode = !mReorderMode;
+        MenuItem reorder = mMenu.findItem(R.id.action_reorder);
+        MenuItem clear = mMenu.findItem(R.id.action_clear_queue);
+        MenuItem select = mMenu.findItem(R.id.action_select);
+        if (mReorderMode) {
+            reorder.setIcon(R.drawable.ic_action_close);
+            clear.setVisible(false);
+            select.setVisible(false);
+        } else {
+            reorder.setIcon(R.drawable.ic_action_reorder);
+            clear.setVisible(true);
+            select.setVisible(true);
+        }
+        if (mQueueFragment != null) {
+            mQueueFragment.reorderMode(mReorderMode);
+        }
+    }
+
+    private void openLibraryFragment() {
+        getFragmentManager().popBackStack("files", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+
+        FragmentTransaction transaction = getFragmentManager().beginTransaction();
+        transaction.replace(R.id.main_activity_container, mLibraryFragment, "LIBRARY");
+        transaction.addToBackStack("library");
+        transaction.commit();
+    }
+
+    private void openFilesFragment() {
+        getFragmentManager().popBackStack("library", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+
+        FragmentTransaction transaction = getFragmentManager().beginTransaction();
+        transaction.replace(R.id.main_activity_container, mFilesFragment, "FILES");
+        transaction.addToBackStack("files");
+        transaction.commit();
+    }
+
+    private void openLibrary(boolean librarySwitch) {
+        if (librarySwitch) {
+            isLibrary = !isLibrary;
+        }
+        MenuItem librarySwitchButton = mMenu.findItem(R.id.action_library_switch);
+        if (isLibrary) {
+            librarySwitchButton.setIcon(R.drawable.ic_action_files_disabled);
+            openLibraryFragment();
+        } else {
+            librarySwitchButton.setIcon(R.drawable.ic_action_files);
+            openFilesFragment();
+        }
     }
 
     @Override
@@ -539,6 +618,11 @@ public class MainActivity extends Activity implements SelectionListener {
             case R.id.action_select:
                 selectMode();
                 break;
+            case R.id.action_reorder:
+                reorderMode();
+                break;
+            case R.id.action_library_switch:
+                openLibrary(true);
             default:
                 break;
         }
@@ -611,6 +695,12 @@ public class MainActivity extends Activity implements SelectionListener {
                 values.put(QueueDB.KEY_SORT, mQueueData.size() + 1);
                 getContentResolver().insert(QueueProvider.CONTENT_URI, values);
                 mQueueData.add(item);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+
+                    }
+                });
             }
 
             return null;

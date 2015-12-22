@@ -1,10 +1,15 @@
 <resources>
 
     <!-- Base application theme. -->
-
-    <style name="AppTheme" parent="android:Theme.Holo.Light.DarkActionBar">
-
-    </style>
+    <!--<style name="AppTheme" parent="@style/Theme.AppCompat">
+        &lt;!&ndash;<item name="android:actionBarStyle">@style/ActionBarStyle</item>&ndash;&gt;
+        &lt;!&ndash;<item name="android:windowBackground">@color/background_color</item>&ndash;&gt;
+        &lt;!&ndash;<item name="android:textColor">@color/text_light_color</item>&ndash;&gt;
+        <item name="colorPrimary">@color/action_bar_color</item>
+        <item name="colorAccent">@color/header_color</item>
+        <item name="android:colorBackground">@color/background_color</item>
+        <item name="android:navigationBarColor">@color/background_color</item>
+    </style>-->
 
     <style name="LightBlue" parent="@android:style/Theme.Material">
         <item name="android:colorAccent">@color/header_color</item>

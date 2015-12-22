@@ -3,10 +3,12 @@ package com.whale.xacab;
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.LoaderManager;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.CursorLoader;
 import android.content.Loader;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.GestureDetector;
@@ -25,10 +27,15 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 
+import com.mobeta.android.dslv.DragSortController;
+import com.mobeta.android.dslv.DragSortListView;
+
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Queue;
 
 /**
  * A fragment representing a list of Items.
@@ -41,7 +48,7 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
     private SelectionListener mListener;
     private final static int QUEUE_LOADER = 1;
     private QueueAdapter mAdapter;
-    private ListView mList;
+    private DragSortListView mList;
     private Button mAdd;
 
     public static QueueFragment newInstance() {
@@ -106,11 +113,29 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
         }
     }
 
-    private DropListener mDropListener = new DropListener() {
+    private DragSortListView.DropListener mDropListener = new DragSortListView.DropListener() {
         @Override
-        public void onDrop(int from, int to) {
-            QueueAdapter adapter = (QueueAdapter) mList.getAdapter();
-            adapter.onDrop(from, to);
+        public void drop(int from, int to) {
+            int current = mListener.getCurrentQueuePosition();
+            if (current == from) {
+                mListener.setCurrentQueuePosition(to);
+            } else if (current > from && current < to) {
+                mListener.setCurrentQueuePosition(current - 1);
+            } else if (current > to && current < from) {
+                mListener.setCurrentQueuePosition(current + 1);
+            }
+            mAdapter.onDrop(from, to);
+            mListener.invalidateQueue();
+
+        }
+    };
+
+    private DragSortListView.RemoveListener mRemoveListener = new DragSortListView.RemoveListener() {
+
+        @Override
+        public void remove(int i) {
+
+            mAdapter.onRemove(i);
             mList.invalidateViews();
         }
     };
@@ -124,7 +149,8 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
 
         getLoaderManager().initLoader(QUEUE_LOADER, null, this);
         mAdapter = new QueueAdapter(getActivity().getApplicationContext(), null, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
-        mList = (ListView) view.findViewById(R.id.queue_list);
+        mList = (DragSortListView) view.findViewById(R.id.queue_list);
+
 
         mList.setOnTouchListener(new QueueGestureHelper(getActivity().getApplicationContext()));
 
@@ -172,7 +198,7 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         String[] columns = AudioListModel.getColumns();
-        CursorLoader cursorLoader = new CursorLoader(getActivity(), QueueProvider.CONTENT_URI, columns, null, null, null);
+        CursorLoader cursorLoader = new CursorLoader(getActivity(), QueueProvider.CONTENT_URI, columns, null, null, QueueDB.KEY_SORT);
         return cursorLoader;
     }
 
@@ -215,6 +241,20 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
         mListener = null;
     }
 
+    public void reorderMode(boolean enabled) {
+        if (enabled) {
+            mList.setDropListener(mDropListener);
+            mList.setRemoveListener(mRemoveListener);
+            DragSortController controller = new DragSortController(mList);
+            controller.setDragHandleId(R.id.queue_number);
+            controller.setBackgroundColor(R.color.background_color);
+            mList.setFloatViewManager(controller);
+            mList.setOnTouchListener(controller);
+        } else {
+            mList.setOnTouchListener(new QueueGestureHelper(getActivity().getApplicationContext()));
+        }
+    }
+
     public class QueueAdapter extends CursorAdapter implements RemoveListener, DropListener {
 
         private Integer counter = 0;
@@ -223,7 +263,44 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
 
         @Override
         public void onDrop(int from, int to) {
+            ArrayList<ContentValues> values = new ArrayList<>();
+            ContentValues cv;
+            Cursor cursor = getCursor();
+            int start, end, inc;
+            // If dragging down, sort + 1, otherwise sort - 1
+            if (from < to) {
+                start = from;
+                end = to;
+                inc = 1;
+            } else {
+                start = to;
+                end = from;
+                inc = -1;
+            }
+            for (int i = start; i <= end; i++) {
+                cursor.moveToPosition(i);
+                cv = new ContentValues();
+                DatabaseUtils.cursorRowToContentValues(cursor, cv);
+                values.add(cv);
+            }
 
+            synchronized (this) {
+                for (ContentValues v : values) {
+                    long sort = v.getAsLong(QueueDB.KEY_SORT);
+                    v.remove(QueueDB.KEY_SORT);
+                    if (sort - 1 == from) {
+                        v.put(QueueDB.KEY_SORT, to + 1);
+                    } else {
+                        v.put(QueueDB.KEY_SORT, sort - inc);
+                    }
+                    Long id = v.getAsLong(QueueDB.KEY_ID);
+                    v.remove(QueueDB.KEY_ID);
+                    String where = QueueDB.KEY_ID + "=?";
+                    String[] args = { id.toString() };
+                    getActivity().getContentResolver().update(QueueProvider.CONTENT_URI, v, where, args);
+                }
+            }
+            int j = 0;
         }
 
         @Override
@@ -306,7 +383,7 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
                 } else {
                     holder.checked.setVisibility(View.INVISIBLE);
                     holder.checked.setChecked(false);
-                    if (cursor.getPosition() == ((MainActivity) getActivity()).getCurrentQueuePosition()) {
+                    if (cursor.getPosition() == (mListener.getCurrentQueuePosition())) {
                         holder.playing.setVisibility(View.VISIBLE);
                         holder.number.setVisibility(View.INVISIBLE);
                     } else {

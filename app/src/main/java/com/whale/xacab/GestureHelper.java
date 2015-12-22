@@ -68,6 +68,8 @@ public class GestureHelper implements View.OnTouchListener {
 
     @Override
     public boolean onTouch(View v, MotionEvent ev) {
+        if (true)
+            return mGestureDetector.onTouchEvent(ev);
         if (ev.getX() > 180) {
             return mGestureDetector.onTouchEvent(ev);
         } else {

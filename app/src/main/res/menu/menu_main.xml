@@ -1,6 +1,10 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
       xmlns:tools="http://schemas.android.com/tools"
       tools:context=".MainActivity">
+    <item android:id="@+id/action_reorder"
+          android:icon="@drawable/ic_action_reorder"
+          android:title="Reorder"
+          android:showAsAction="ifRoom"/>
     <item android:id="@+id/action_select"
           android:icon="@drawable/ic_action_select"
           android:title="Select"
@@ -9,21 +13,14 @@
           android:icon="@drawable/ic_action_clear_queue"
           android:title="Clear"
           android:showAsAction="ifRoom"/>
+    <item android:id="@+id/action_library_switch"
+          android:icon="@drawable/ic_action_files_disabled"
+          android:title="Files"
+          android:showAsAction="ifRoom"
+          android:visible="false"/>
     <item android:id="@+id/action_close"
           android:icon="@drawable/ic_action_close"
           android:title="Close"
           android:showAsAction="ifRoom"
           android:visible="false"/>
-    <!--<item android:id="@+id/action_add"
-          android:icon="@drawable/ic_action_add"
-          android:title="Add"
-          android:showAsAction="ifRoom"/>-->
-    <!--<item android:id="@+id/action_queue"
-          android:icon="@drawable/ic_action_queue"
-          android:title="Queue"
-          android:showAsAction="ifRoom"/>-->
-    <!--<item android:id="@+id/action_settings"
-          android:title="@string/action_settings"
-          android:orderInCategory="100"
-          android:showAsAction="never"/>-->
 </menu>

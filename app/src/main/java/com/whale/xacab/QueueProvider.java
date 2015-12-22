@@ -9,6 +9,8 @@ import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.text.TextUtils;
 
+import java.util.Queue;
+
 public class QueueProvider extends ContentProvider {
     private static final String AUTHORITY = "com.whale.xacab.provider";
     private static final String DB_BASE_NAME = "queue";
@@ -101,6 +103,27 @@ public class QueueProvider extends ContentProvider {
     @Override
     public int update(Uri uri, ContentValues values, String selection,
                       String[] selectionArgs) {
-        return 0;
+        SQLiteDatabase db = mDB.getWritableDatabase();
+        int uriType = sUriMatcher.match(uri);
+        int rowsUpdated = 0;
+        switch (uriType) {
+            case QUEUE_ID:
+                String id = uri.getLastPathSegment();
+                if (TextUtils.isEmpty(selection)) {
+                    rowsUpdated = db.update(QueueDB.TABLE_NAME, values, QueueDB.KEY_ID + "=" + id, null);
+                } else {
+                    rowsUpdated = db.update(QueueDB.TABLE_NAME, values, QueueDB.KEY_ID + "=" + id + " and " + selection, selectionArgs);
+                }
+                break;
+            case QUEUE:
+                rowsUpdated = db.update(QueueDB.TABLE_NAME, values, selection, selectionArgs);
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown URI");
+        }
+        getContext().getContentResolver().notifyChange(uri, null);
+        return rowsUpdated;
     }
+
+
 }

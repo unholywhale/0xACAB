@@ -14,6 +14,7 @@ import android.widget.TextView;
 
 public class SeekBarFragment extends Fragment {
 
+
     public static final int MAX_PROGRESS = 200;
     private SelectionListener mListener;
     public SeekBar mSeekBar;
@@ -163,6 +164,7 @@ public class SeekBarFragment extends Fragment {
 
     private class ProgressRefresh extends AsyncTask<Integer, Void, Void> {
 
+
         @Override
         protected Void doInBackground(Integer... params) {
             while (mActivity.isPlaying) {
@@ -179,6 +181,7 @@ public class SeekBarFragment extends Fragment {
                     }
                 });
             }
+
             return null;
         }
     }

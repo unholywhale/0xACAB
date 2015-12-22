@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:dslv="http://schemas.android.com/apk/com.whale.xacab"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
     <TextView
@@ -7,12 +8,19 @@
         android:layout_width="wrap_content"
         android:layout_height="1dp"
         android:visibility="invisible"/>
-    <ListView
+    <com.mobeta.android.dslv.DragSortListView
         android:id="@+id/queue_list"
         android:layout_below="@id/header"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:divider="@null"/>
+        android:divider="@null"
+        dslv:collapsed_height="1dp"
+        dslv:drag_enabled="true"
+        dslv:drag_handle="@+id/queue_drag_handle"
+        dslv:drag_scroll_start="0.33"
+        dslv:drag_start_mode="onMove"
+        dslv:float_alpha="0.6"
+        dslv:max_drag_scroll_speed="0.5"/>
     <Button
         android:id="@+id/queue_add"
         android:background="@drawable/round_button"
