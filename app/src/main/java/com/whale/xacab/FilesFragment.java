@@ -2,6 +2,7 @@ package com.whale.xacab;
 
 import android.app.Activity;
 import android.content.Context;
+import android.media.MediaMetadataRetriever;
 import android.os.Bundle;
 import android.app.ListFragment;
 import android.os.Environment;
@@ -19,6 +20,7 @@ import com.whale.xacab.dummy.DummyContent;
 import java.io.File;
 import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -26,19 +28,11 @@ public class FilesFragment extends ListFragment {
 
 
     private SelectionListener mListener;
-
-    private class FilesModel {
-        boolean isDir;
-        String path;
-
-        public FilesModel(boolean isDir, String path) {
-            this.isDir = isDir;
-            this.path = path;
-        }
-
-    }
+    private String mCurrentPath;
 
     private ArrayList<File> mFiles = new ArrayList<>();
+
+    private FilesAdapter mAdapter;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -50,8 +44,8 @@ public class FilesFragment extends ListFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_files, null);
-        FilesAdapter adapter = new FilesAdapter(getActivity(), R.layout.fragment_files_list_item, mFiles);
-        setListAdapter(adapter);
+        mAdapter = new FilesAdapter(getActivity(), R.layout.fragment_files_list_item, mFiles);
+        setListAdapter(mAdapter);
         return view;
     }
 
@@ -60,8 +54,11 @@ public class FilesFragment extends ListFragment {
         super.onCreate(savedInstanceState);
 
         String path = Environment.getExternalStorageDirectory().toString() + "/mobile/music/users/alex/music/itunes/itunes media/music";
+        if (mCurrentPath == null) {
+            mCurrentPath = path;
+        }
         Log.d("files", "Path " + path);
-        populateFiles(path);
+        populateFiles(mCurrentPath);
 
     }
 
@@ -73,11 +70,12 @@ public class FilesFragment extends ListFragment {
 
     private void populateFiles(String path) {
         mFiles.clear();
+        if (path.equals(Environment.getRootDirectory().toString())) {
+            mFiles.add(new File("..", ".."));
+        }
         File f = new File(path);
         File file[] = f.listFiles();
-        for (int i = 0; i < file.length; i++) {
-            mFiles.add(file[i]);
-        }
+        Collections.addAll(mFiles, file);
     }
 
     @Override
@@ -100,11 +98,27 @@ public class FilesFragment extends ListFragment {
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
         super.onListItemClick(l, v, position, id);
-
-        if (null != mListener) {
-
-
+        File file = mFiles.get(position);
+        if (file.isDirectory()) {
+            mCurrentPath += "/" + file.getName();
+            populateFiles(mCurrentPath);
+            mAdapter.notifyDataSetChanged();
+        } else {
+            AudioListModel item = getAudioData(file.getPath());
+            mListener.onArtistItemSelected(item);
         }
+    }
+
+    private AudioListModel getAudioData(String path) {
+        MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+        mmr.setDataSource(path);
+        String artist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+        String album = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM);
+        String title = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+        Integer duration = Integer.parseInt(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
+        Integer number = Integer.parseInt(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CD_TRACK_NUMBER));
+        Integer year = Integer.parseInt(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_YEAR));
+        return new AudioListModel(artist, album, title, path, duration, number, year, 0, 0);
     }
 
     public class FilesAdapter extends ArrayAdapter<File> {
@@ -131,7 +145,7 @@ public class FilesFragment extends ListFragment {
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             View row = convertView;
-            FileHolder holder = null;
+            FileHolder holder;
             File file = rows.get(position);
             LayoutInflater inflater = ((Activity) context).getLayoutInflater();
             if (row == null) {

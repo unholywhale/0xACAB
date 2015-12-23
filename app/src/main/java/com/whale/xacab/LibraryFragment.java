@@ -19,6 +19,8 @@ import android.widget.CursorAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import java.io.File;
+
 
 public class LibraryFragment extends ListFragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
@@ -59,8 +61,7 @@ public class LibraryFragment extends ListFragment implements LoaderManager.Loade
 
 
     public static LibraryFragment newInstance(int libraryTab) {
-        LibraryFragment fragment = new LibraryFragment();
-        return fragment;
+        return new LibraryFragment();
     }
 
     /**
@@ -73,8 +74,7 @@ public class LibraryFragment extends ListFragment implements LoaderManager.Loade
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mInflater = inflater;
-        View view = mInflater.inflate(R.layout.fragment_library, null);
-        return view;
+        return mInflater.inflate(R.layout.fragment_library, null);
     }
 
     @Override
@@ -120,9 +120,8 @@ public class LibraryFragment extends ListFragment implements LoaderManager.Loade
         uri = MediaStore.Audio.Artists.EXTERNAL_CONTENT_URI;
         sortOrder = MediaStore.Audio.Artists.ARTIST;
 
-        CursorLoader cursorLoader = new CursorLoader(getActivity(), uri, from, null, null, sortOrder);
+        return new CursorLoader(getActivity(), uri, from, null, null, sortOrder);
 
-        return cursorLoader;
     }
 
     @Override
