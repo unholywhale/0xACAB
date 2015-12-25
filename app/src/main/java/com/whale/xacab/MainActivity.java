@@ -374,7 +374,7 @@ public class MainActivity extends Activity implements SelectionListener {
                 .addAction(isPlaying ? R.drawable.ic_action_pause : R.drawable.ic_action_play, "Play", pendingPlayIntent)
                 .addAction(R.drawable.ic_action_next, "Next", pendingNextIntent)
                 .setStyle(new Notification.MediaStyle()
-                        .setShowActionsInCompactView(1)
+                        .setShowActionsInCompactView(0, 1, 2)
                         .setMediaSession(mSession.getSessionToken()))
                 .setContentTitle(currentSong.getTitle())
                 .setContentText(currentSong.getArtist())
