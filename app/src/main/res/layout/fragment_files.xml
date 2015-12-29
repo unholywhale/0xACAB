@@ -10,10 +10,22 @@
     <ListView
         android:id="@+id/android:list"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_height="match_parent"/>
     <TextView
         android:id="@+id/android:empty"
         android:text=""
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
+    <Button
+        android:id="@+id/files_add"
+        android:background="@drawable/round_button"
+        android:text="+"
+        android:textSize="24sp"
+        android:visibility="invisible"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_marginEnd="15dp"
+        android:layout_marginBottom="15dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignBottom="@id/android:list"/>
 </RelativeLayout>

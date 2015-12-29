@@ -1,5 +1,6 @@
 package com.whale.xacab;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Context;
 import android.media.MediaMetadataRetriever;
@@ -11,16 +12,24 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.whale.xacab.dummy.DummyContent;
 
 import java.io.File;
+import java.io.FileFilter;
+import java.io.FilenameFilter;
 import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 
 
@@ -29,7 +38,7 @@ public class FilesFragment extends ListFragment {
 
     private SelectionListener mListener;
     private String mCurrentPath;
-
+    private Button mAddButton;
     private ArrayList<File> mFiles = new ArrayList<>();
 
     private FilesAdapter mAdapter;
@@ -44,6 +53,13 @@ public class FilesFragment extends ListFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_files, null);
+        mAddButton = (Button) view.findViewById(R.id.files_add);
+        mAddButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                addItems();
+            }
+        });
         mAdapter = new FilesAdapter(getActivity(), R.layout.fragment_files_list_item, mFiles);
         setListAdapter(mAdapter);
         return view;
@@ -64,17 +80,26 @@ public class FilesFragment extends ListFragment {
 
     @Override
     public void onStart() {
-        mListener.setLibraryMenu();
+        mListener.setFilesMenu();
         super.onStart();
+    }
+
+    public FilesAdapter getAdapter() {
+        return mAdapter;
     }
 
     private void populateFiles(String path) {
         mFiles.clear();
-        if (path.equals(Environment.getRootDirectory().toString())) {
+        if (!path.equals(Environment.getExternalStorageDirectory().toString())) {
             mFiles.add(new File("..", ".."));
         }
         File f = new File(path);
-        File file[] = f.listFiles();
+        File file[] = f.listFiles(new FileFilter() {
+            @Override
+            public boolean accept(File file) {
+                return file.isDirectory() || file.getName().toLowerCase().endsWith(".mp3");
+            }
+        });
         Collections.addAll(mFiles, file);
     }
 
@@ -95,6 +120,54 @@ public class FilesFragment extends ListFragment {
         mListener = null;
     }
 
+    public void addItems() {
+        Integer counter = 0;
+        for (FilesAdapter.FileHashHolder holder : getAdapter().hashMapChecked.values()) {
+            if (holder.isChecked) {
+                AudioListModel item = getAudioData(mFiles.get(holder.position));
+                mListener.onArtistItemSelected(item);
+            }
+            counter++;
+        }
+        selectMode(false);
+        mListener.setSelectMode(false);
+        getAdapter().setCheckBoxVisibility(false);
+        getAdapter().notifyDataSetChanged();
+        Toast.makeText(getActivity(), counter.toString() + " files added", Toast.LENGTH_SHORT);
+    }
+
+    public void selectMode(boolean enabled) {
+        if (enabled) {
+            if (mAddButton.getVisibility() == View.INVISIBLE) {
+                Runnable action = new Runnable() {
+                    @Override
+                    public void run() {
+                        mAddButton.setVisibility(View.VISIBLE);
+                    }
+                };
+                mAddButton.animate()
+                        .translationY(0)
+                        .alpha(1)
+                        .withStartAction(action)
+                        .start();
+            }
+        } else {
+            if (mAddButton.getVisibility() == View.VISIBLE) {
+                Runnable action = new Runnable() {
+                    @Override
+                    public void run() {
+                        mAddButton.setVisibility(View.INVISIBLE);
+                    }
+                };
+                mAddButton.animate()
+                        .translationY(100)
+                        .alpha(0)
+                        .withEndAction(action)
+                        .start();
+            }
+        }
+    }
+
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
         super.onListItemClick(l, v, position, id);
@@ -104,28 +177,51 @@ public class FilesFragment extends ListFragment {
             populateFiles(mCurrentPath);
             mAdapter.notifyDataSetChanged();
         } else {
-            AudioListModel item = getAudioData(file.getPath());
+            AudioListModel item = getAudioData(file);
             mListener.onArtistItemSelected(item);
         }
     }
 
-    private AudioListModel getAudioData(String path) {
+    private AudioListModel getAudioData(File file) {
         MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-        mmr.setDataSource(path);
+        mmr.setDataSource(file.getPath());
         String artist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+        if (artist == null) {
+            artist = "Unknown artist";
+        }
         String album = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM);
         String title = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+        if (title == null) {
+            title = file.getName();
+        }
         Integer duration = Integer.parseInt(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
-        Integer number = Integer.parseInt(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CD_TRACK_NUMBER));
-        Integer year = Integer.parseInt(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_YEAR));
-        return new AudioListModel(artist, album, title, path, duration, number, year, 0, 0);
+        Integer number = 0;
+        try {
+            number = Integer.parseInt(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CD_TRACK_NUMBER));
+        } catch (NumberFormatException nf) {
+            Log.e("number", nf.getMessage());
+        }
+        Integer year = 0;
+        try {
+            year = Integer.parseInt(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_YEAR));
+        } catch (NumberFormatException nf) {
+            Log.e("year", nf.getMessage());
+        }
+        return new AudioListModel(artist, album, title, file.getPath(), duration, number, year, 0, 0);
     }
 
     public class FilesAdapter extends ArrayAdapter<File> {
+
         Context context;
         int layoutResourceId;
+        boolean mCheckBoxVisible = false;
         ArrayList<File> rows = null;
+        private HashMap<Integer, FileHashHolder> hashMapChecked = new HashMap<>();
 
+        public class FileHashHolder {
+            Integer position;
+            Boolean isChecked;
+        }
 
         public FilesAdapter(Context context, int resource, ArrayList<File> rows) {
             super(context, resource, rows);
@@ -136,11 +232,30 @@ public class FilesFragment extends ListFragment {
 
         public FileHolder getHolder(View row) {
             FileHolder holder = new FileHolder();
+            holder.checked = (CheckBox) row.findViewById(R.id.files_checked);
+            holder.checked.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+                    FileHashHolder fileHashHolder = (FileHashHolder) compoundButton.getTag();
+                    if (fileHashHolder.position != ListView.INVALID_POSITION) {
+                        fileHashHolder.isChecked = isChecked;
+                        if (isChecked) {
+                            hashMapChecked.put(fileHashHolder.position, fileHashHolder);
+                        } else if (hashMapChecked.get(fileHashHolder.position) != null) {
+                            hashMapChecked.remove(fileHashHolder.position);
+                        }
+                    }
+                }
+            });
+
             holder.dirIcon = (ImageView) row.findViewById(R.id.files_dir_icon);
             holder.fileIcon = (ImageView) row.findViewById(R.id.files_file_icon);
             holder.title = (TextView) row.findViewById(R.id.files_title);
             return holder;
         }
+
+        public HashMap<Integer, FileHashHolder> getHashMapChecked() { return hashMapChecked; }
+
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
@@ -156,17 +271,49 @@ public class FilesFragment extends ListFragment {
                 holder = (FileHolder) row.getTag();
             }
             if (file.isDirectory()) {
-                holder.dirIcon.setVisibility(View.VISIBLE);
-                holder.fileIcon.setVisibility(View.INVISIBLE);
+                holder.title.setTextColor(getResources().getColor(R.color.header_color));
             } else {
+                holder.title.setTextColor(getResources().getColor(R.color.text_light_color));
+            }
+            if (mCheckBoxVisible) {
                 holder.dirIcon.setVisibility(View.INVISIBLE);
-                holder.fileIcon.setVisibility(View.VISIBLE);
+                holder.fileIcon.setVisibility(View.INVISIBLE);
+                holder.checked.setVisibility(View.VISIBLE);
+                FileHashHolder fileHashHolder = hashMapChecked.get(position);
+                if (fileHashHolder == null) {
+                    fileHashHolder = new FileHashHolder();
+                    fileHashHolder.position = position;
+                    fileHashHolder.isChecked = false;
+                }
+                holder.checked.setTag(fileHashHolder);
+                if (fileHashHolder.isChecked != null) {
+                    holder.checked.setChecked(fileHashHolder.isChecked);
+                } else {
+                    holder.checked.setChecked(false);
+                }
+            } else {
+                holder.checked.setVisibility(View.INVISIBLE);
+                if (file.isDirectory()) {
+                    holder.dirIcon.setVisibility(View.VISIBLE);
+                    holder.fileIcon.setVisibility(View.INVISIBLE);
+                } else {
+                    holder.dirIcon.setVisibility(View.INVISIBLE);
+                    holder.fileIcon.setVisibility(View.VISIBLE);
+                }
             }
             holder.title.setText(file.getName());
             return row;
         }
 
+        public void setCheckBoxVisibility(boolean visible) {
+            mCheckBoxVisible = visible;
+            if (!mCheckBoxVisible) {
+                hashMapChecked.clear();
+            }
+        }
+
         class FileHolder {
+            CheckBox checked;
             ImageView dirIcon;
             ImageView fileIcon;
             TextView title;

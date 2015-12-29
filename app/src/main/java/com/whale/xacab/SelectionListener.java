@@ -2,9 +2,6 @@ package com.whale.xacab;
 
 import android.view.View;
 
-/**
- * Created by alex on 10/07/15.
- */
 public interface SelectionListener {
     void onArtistItemSelected(AudioListModel item);
     void onLibraryItemSelected(View item);
@@ -13,8 +10,11 @@ public interface SelectionListener {
     void onQueueAdd();
     void setFragmentTitle(String title);
     void setLibraryMenu();
+    void setFilesMenu();
     void setQueueMenu();
     void invalidateQueue();
+    void setMenuItemVisibility(int resourceId, boolean visible);
     int getCurrentQueuePosition();
     void setCurrentQueuePosition(int position);
+    void setSelectMode(boolean enabled);
 }

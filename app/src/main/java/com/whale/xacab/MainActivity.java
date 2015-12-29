@@ -51,6 +51,8 @@ public class MainActivity extends Activity implements SelectionListener {
     public final static String CURRENT_SONG = "CURRENT_SONG";
     public final static String CURRENT_QUEUE_POSITION = "CURRENT_QUEUE_POSITION";
     public final static String TAG_QUEUE = "QUEUE";
+    public static final String TAG_LIBRARY = "LIBRARY";
+    public static final String TAG_FILES = "FILES";
     public final static String TAG_SEEK_BAR = "SEEK_BAR";
     public static final int NUM_PAGES = 3;
     private static final String IS_SHUFFLING = "IS_SHUFFLED";
@@ -485,33 +487,38 @@ public class MainActivity extends Activity implements SelectionListener {
 
     @Override
     public void setLibraryMenu() {
-        if (mMenu != null) {
-            MenuItem closeButton = mMenu.findItem(R.id.action_close);
-            MenuItem clearQueueButton = mMenu.findItem(R.id.action_clear_queue);
-            MenuItem selectButton = mMenu.findItem(R.id.action_select);
-            MenuItem reorderButton = mMenu.findItem(R.id.action_reorder);
-            MenuItem librarySwitchButton = mMenu.findItem(R.id.action_library_switch);
-            librarySwitchButton.setVisible(true);
-            closeButton.setVisible(true);
-            clearQueueButton.setVisible(false);
-            selectButton.setVisible(false);
-            reorderButton.setVisible(false);
-        }
+        setMenuItemVisibility(R.id.action_reorder, false);
+        setMenuItemVisibility(R.id.action_clear_queue, false);
+        setMenuItemVisibility(R.id.action_select, false);
+        setMenuItemVisibility(R.id.action_close, true);
+        setMenuItemVisibility(R.id.action_library_switch, true);
+    }
+
+    @Override
+    public void setFilesMenu() {
+        setMenuItemVisibility(R.id.action_reorder, false);
+        setMenuItemVisibility(R.id.action_clear_queue, false);
+        setMenuItemVisibility(R.id.action_select, true);
+        setMenuItemVisibility(R.id.action_close, true);
+        setMenuItemVisibility(R.id.action_library_switch, true);
     }
 
     @Override
     public void setQueueMenu() {
+        setMenuItemVisibility(R.id.action_reorder, true);
+        setMenuItemVisibility(R.id.action_clear_queue, true);
+        setMenuItemVisibility(R.id.action_select, true);
+        setMenuItemVisibility(R.id.action_close, false);
+        setMenuItemVisibility(R.id.action_library_switch, false);
+    }
+
+    @Override
+    public void setMenuItemVisibility(int resourceId, boolean visible) {
         if (mMenu != null) {
-            MenuItem closeButton = mMenu.findItem(R.id.action_close);
-            MenuItem clearQueueButton = mMenu.findItem(R.id.action_clear_queue);
-            MenuItem selectButton = mMenu.findItem(R.id.action_select);
-            MenuItem reorderButton = mMenu.findItem(R.id.action_reorder);
-            MenuItem librarySwitchButton = mMenu.findItem(R.id.action_library_switch);
-            librarySwitchButton.setVisible(false);
-            closeButton.setVisible(false);
-            clearQueueButton.setVisible(true);
-            selectButton.setVisible(true);
-            reorderButton.setVisible(true);
+            MenuItem item = mMenu.findItem(resourceId);
+            if (item != null) {
+                item.setVisible(visible);
+            }
         }
     }
 
@@ -529,11 +536,21 @@ public class MainActivity extends Activity implements SelectionListener {
     }
 
     private void selectMode() {
-        if (mQueueFragment != null) {
+        if (mQueueFragment.isAdded()) {
             mSelectMode = !mSelectMode;
             mQueueFragment.getAdapter().setCheckboxVisibility(mSelectMode);
             mQueueFragment.getAdapter().notifyDataSetChanged();
+        } else if (mFilesFragment.isAdded()) {
+            mSelectMode = !mSelectMode;
+            mFilesFragment.selectMode(mSelectMode);
+            mFilesFragment.getAdapter().setCheckBoxVisibility(mSelectMode);
+            mFilesFragment.getAdapter().notifyDataSetChanged();
         }
+    }
+
+    @Override
+    public void setSelectMode(boolean enabled) {
+        mSelectMode = enabled;
     }
 
     @Override
@@ -569,20 +586,20 @@ public class MainActivity extends Activity implements SelectionListener {
     }
 
     private void openLibraryFragment() {
-        getFragmentManager().popBackStack("files", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+        getFragmentManager().popBackStack(TAG_FILES, FragmentManager.POP_BACK_STACK_INCLUSIVE);
 
         FragmentTransaction transaction = getFragmentManager().beginTransaction();
-        transaction.replace(R.id.main_activity_container, mLibraryFragment, "LIBRARY");
-        transaction.addToBackStack("library");
+        transaction.replace(R.id.main_activity_container, mLibraryFragment, TAG_LIBRARY);
+        transaction.addToBackStack(TAG_LIBRARY);
         transaction.commit();
     }
 
     private void openFilesFragment() {
-        getFragmentManager().popBackStack("library", FragmentManager.POP_BACK_STACK_INCLUSIVE);
+        getFragmentManager().popBackStack(TAG_LIBRARY, FragmentManager.POP_BACK_STACK_INCLUSIVE);
 
         FragmentTransaction transaction = getFragmentManager().beginTransaction();
-        transaction.replace(R.id.main_activity_container, mFilesFragment, "FILES");
-        transaction.addToBackStack("files");
+        transaction.replace(R.id.main_activity_container, mFilesFragment, TAG_FILES);
+        transaction.addToBackStack(TAG_FILES);
         transaction.commit();
     }
 
