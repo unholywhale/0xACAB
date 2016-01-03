@@ -36,35 +36,35 @@ public class GestureHelper implements View.OnTouchListener {
     }
 
     public void onSwipeRight() {
-    };
+    }
 
     public void onSwipeLeft() {
-    };
+    }
 
     public void onSwipeTop() {
-    };
+    }
 
 
     public void onSwipeBottom() {
-    };
+    }
 
     public void onScrollRight() {
-    };
+    }
 
     public void onScrollLeft() {
-    };
+    }
 
     public void onScrollTop() {
-    };
+    }
 
     public void onScrollBottom() {
-    };
+    }
 
     public void onDoubleTap() {
-    };
+    }
 
     public void onClick() {
-    };
+    }
 
     @Override
     public boolean onTouch(View v, MotionEvent ev) {
@@ -202,7 +202,7 @@ public class GestureHelper implements View.OnTouchListener {
         if (mDragView != null) {
             if (mDragListener != null)
                 mDragListener.onStopDrag(mListView.getChildAt(itemIndex));
-            mDragView.setVisibility(mListView.GONE);
+            mDragView.setVisibility(ListView.GONE);
             WindowManager wm = (WindowManager) mListView.getContext().getSystemService(Context.WINDOW_SERVICE);
             wm.removeView(mDragView);
             mDragView.setImageDrawable(null);

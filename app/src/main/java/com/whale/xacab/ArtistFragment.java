@@ -1,29 +1,47 @@
 package com.whale.xacab;
 
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
+import android.app.ActionBar;
 import android.app.Activity;
+import android.app.Fragment;
 import android.content.Context;
 import android.content.CursorLoader;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.app.ListFragment;
 import android.provider.MediaStore;
+import android.util.Log;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AnimationSet;
+import android.widget.AbsListView;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import com.mobeta.android.dslv.DragSortController;
+import com.mobeta.android.dslv.DragSortListView;
 
 import java.util.ArrayList;
 
 
-public class ArtistFragment extends ListFragment {
+public class ArtistFragment extends Fragment {
 
     private SelectionListener mListener;
     private String mArtistName;
     private ArrayList<AudioListModel> audioList = new ArrayList<>();
     private LayoutInflater mInflater;
+    private ListView mList;
+    private AudioListAdapter mAdapter;
 
     public static ArtistFragment newInstance(String param1, String param2) {
         ArtistFragment fragment = new ArtistFragment();
@@ -35,6 +53,87 @@ public class ArtistFragment extends ListFragment {
      * fragment (e.g. upon screen orientation changes).
      */
     public ArtistFragment() {
+    }
+
+    private class ArtistGestureListener extends GestureDetector.SimpleOnGestureListener {
+
+        private static final int SWIPE_THRESHOLD = 30;
+        private static final int SWIPE_VELOCITY_THRESHOLD = 100;
+        private ListView mListView;
+        private ArtistFragment mFragment;
+
+        public ArtistGestureListener(Fragment fragment, ListView l) {
+            try {
+                mFragment = (ArtistFragment) fragment;
+            } catch (ClassCastException e) {
+                throw new ClassCastException(fragment.toString());
+            }
+            this.mListView = l;
+        }
+
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+            boolean result = false;
+            try {
+                float diffY = e2.getY() - e1.getY();
+                float diffX = e2.getX() - e1.getX();
+                if (Math.abs(diffX) > Math.abs(diffY)) {
+                    if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
+                        int position = mListView.pointToPosition((int) e1.getX(),(int) e1.getY());
+                        View v = mListView.getChildAt(position - mListView.getFirstVisiblePosition());
+                        if (diffX > 0) {
+                            mFragment.addLast(position);
+                            Log.d("SWIPE", "right");
+                            //mHelper.onSwipeRight();
+                        } else {
+                            mFragment.addNext(position);
+                            Log.d("SWIPE", "left");
+                            //mHelper.onSwipeLeft();
+                        }
+                    }
+                } else {
+                    if (Math.abs(diffY) > SWIPE_THRESHOLD && Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
+                        if (diffY > 0) {
+                            //mHelper.onSwipeBottom();
+                        } else {
+                            //mHelper.onSwipeTop();
+                        }
+                    }
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            return result;
+        }
+    }
+
+    private void addLast(final int position) {
+        Runnable action = new Runnable() {
+            @Override
+            public void run() {
+                mListener.onArtistItemSelected(audioList.get(position));
+            }
+        };
+        View view = mList.getChildAt(position - mList.getFirstVisiblePosition());
+        ImageView rightIndicator = (ImageView) view.findViewById(R.id.artist_right_indicator);
+        ObjectAnimator fadeIn = ObjectAnimator.ofFloat(rightIndicator, "alpha", 1f);
+        fadeIn.setRepeatCount(1);
+        fadeIn.setRepeatMode(ValueAnimator.REVERSE);
+        fadeIn.setDuration(500);
+        fadeIn.start();
+//        ObjectAnimator fadeOut = ObjectAnimator.ofFloat(rightIndicator, "alpha", 0.5f);
+//        fadeOut.setDuration(500);
+//        AnimatorSet animSet = new AnimatorSet();
+//        animSet.playSequentially(fadeIn, fadeOut);
+        action.run();
+    }
+
+    private void addNext(int position) {
+
+    }
+
+    private void addFirst(int position) {
+
     }
 
     @Override
@@ -111,8 +210,25 @@ public class ArtistFragment extends ListFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mInflater = inflater;
         View view = mInflater.inflate(R.layout.fragment_artist, null);
-        AudioListAdapter adapter = new AudioListAdapter(getActivity(), R.layout.fragment_artist_list_item, R.layout.fragment_artist_list_header, audioList);
-        setListAdapter(adapter);
+        mAdapter = new AudioListAdapter(getActivity(), R.layout.fragment_artist_list_item, R.layout.fragment_artist_list_header, audioList);
+        mList = (ListView) view.findViewById(R.id.artist_list);
+        final ArtistGestureListener gestureListener = new ArtistGestureListener(this, mList);
+        final GestureDetector gestureDetector = new GestureDetector(getActivity().getApplicationContext(), gestureListener);
+        mList.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                return gestureDetector.onTouchEvent(motionEvent);
+            }
+        });
+//        mList.setOnItemClickListener(new ListView.OnItemClickListener() {
+//            @Override
+//            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+//                if (mListener != null) {
+//                    mListener.onArtistItemSelected(audioList.get(position));
+//                }
+//            }
+//        });
+        mList.setAdapter(mAdapter);
         return view;
     }
 
@@ -138,16 +254,16 @@ public class ArtistFragment extends ListFragment {
         mArtistName = artistName;
     }
 
-    @Override
-    public void onListItemClick(ListView l, View v, int position, long id) {
-        super.onListItemClick(l, v, position, id);
-
-        if (null != mListener) {
-            // Notify the active callbacks interface (the activity, if the
-            // fragment is attached to one) that an item has been selected.
-            mListener.onArtistItemSelected(audioList.get(position));
-        }
-    }
+//    @Override
+//    public void onListItemClick(ListView l, View v, int position, long id) {
+//        super.onListItemClick(l, v, position, id);
+//
+//        if (null != mListener) {
+//            // Notify the active callbacks interface (the activity, if the
+//            // fragment is attached to one) that an item has been selected.
+//            mListener.onArtistItemSelected(audioList.get(position));
+//        }
+//    }
 
     static class AudioListAdapter extends ArrayAdapter<AudioListModel> {
 

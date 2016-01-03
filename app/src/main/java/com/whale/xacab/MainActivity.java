@@ -16,7 +16,6 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.BitmapFactory;
-import android.media.Image;
 import android.media.session.MediaSession;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -30,14 +29,10 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
-import java.util.concurrent.ThreadPoolExecutor;
 
-// TODO: 14/12/15 add file navigation
-// TODO: 14/12/15 add lockscreen buttons
 
 public class MainActivity extends Activity implements SelectionListener {
 
@@ -48,23 +43,21 @@ public class MainActivity extends Activity implements SelectionListener {
     public final static String INTENT_SONG_PLAY = "com.whale.xacab.SONG_PLAY";
     public final static String INTENT_EXTRA = "SONG_SOURCE";
     public final static String INTENT_DURATION = "SONG_DURATION";
-    public final static String CURRENT_SONG = "CURRENT_SONG";
     public final static String CURRENT_QUEUE_POSITION = "CURRENT_QUEUE_POSITION";
     public final static String TAG_QUEUE = "QUEUE";
     public static final String TAG_LIBRARY = "LIBRARY";
     public static final String TAG_FILES = "FILES";
     public final static String TAG_SEEK_BAR = "SEEK_BAR";
-    public static final int NUM_PAGES = 3;
     private static final String IS_SHUFFLING = "IS_SHUFFLED";
     private static final String IS_REPEATING = "IS_REPEATING";
     public static String songStatus = MusicService.SONG_STOPPED;
     public QueueDB db;
-    private int mCurrentQueuePosition = -1;
-    private AudioListModel currentSong;
     public boolean isPlaying = false;
     public boolean isShuffling = false;
     public boolean isRepeating = false;
     public boolean isLibrary = true;
+    private int mCurrentQueuePosition = -1;
+    private AudioListModel currentSong;
     private boolean mReorderMode = false;
     private Intent musicServiceIntent;
     private SeekBarFragment mSeekBarFragment;
@@ -129,7 +122,6 @@ public class MainActivity extends Activity implements SelectionListener {
     @Override
     public void setCurrentQueuePosition(int currentQueuePosition) {
         this.mCurrentQueuePosition = currentQueuePosition;
-
     }
 
     private void changePlayStatus(String status) {
@@ -151,7 +143,9 @@ public class MainActivity extends Activity implements SelectionListener {
                 Random rand = new Random();
                 position = rand.nextInt(mQueueData.size());
             } else {
-                if (mCurrentQueuePosition == mQueueData.size() - 1) {
+                if (!isRepeating && mCurrentQueuePosition == mQueueData.size() - 1) {
+                    return;
+                } else if (mCurrentQueuePosition == mQueueData.size() - 1) {
                     position = 0;
                 } else {
                     position = mCurrentQueuePosition + 1;
@@ -175,7 +169,6 @@ public class MainActivity extends Activity implements SelectionListener {
         setContentView(R.layout.activity_main);
         mSession = new MediaSession(this, "SESSION");
         mSession.setActive(true);
-        SharedPreferences preferences = getPreferences(0);
         setFragments();
         mButtonsContainer = (RelativeLayout) findViewById(R.id.main_buttons_container);
         changeButtons(R.layout.container_queue, R.id.container_queue_buttons);
@@ -190,18 +183,13 @@ public class MainActivity extends Activity implements SelectionListener {
         if (mCurrentQueuePosition != -1) {
             currentSong = mQueueData.get(mCurrentQueuePosition);
         }
-//        mPlayerProgress = (TextView) findViewById(R.id.player_progress);
-//        mPlayerDuration = (TextView) findViewById(R.id.player_duration);
         if (savedInstanceState == null) {
-            FragmentTransaction transaction = getFragmentManager().beginTransaction();
-            transaction.replace(R.id.main_activity_container, mQueueFragment, TAG_QUEUE);
-            transaction.replace(R.id.seek_bar_container, mSeekBarFragment, TAG_SEEK_BAR);
-           // transaction.replace(R.id.drawer_container, mQueueFragment);
-            //transaction.addToBackStack(null);
-            // No need to add to the backstack since it's the first fragment to load
-            transaction.commit();
+            openSeekBarFragment();
+            openQueueFragment();
         }
     }
+
+
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
@@ -223,6 +211,23 @@ public class MainActivity extends Activity implements SelectionListener {
         invalidateButtons();
     }
 
+    private void setFragments() {
+
+        FragmentManager fm = getFragmentManager();
+        mSeekBarFragment = (SeekBarFragment) fm.findFragmentByTag(TAG_SEEK_BAR);
+        if (mSeekBarFragment == null) {
+            mSeekBarFragment = new SeekBarFragment();
+        }
+        mQueueFragment = (QueueFragment) fm.findFragmentByTag(TAG_QUEUE);
+        if (mQueueFragment == null) {
+            mQueueFragment = new QueueFragment();
+        }
+        mArtistFragment = new ArtistFragment();
+        mLibraryFragment = new LibraryFragment();
+        mFilesFragment = new FilesFragment();
+
+    }
+
     private void invalidateButtons() {
         ImageView shuffleButton = (ImageView) mButtons.findViewById(R.id.player_shuffle);
         if (shuffleButton != null) {
@@ -242,22 +247,6 @@ public class MainActivity extends Activity implements SelectionListener {
         }
     }
 
-    private void setFragments() {
-
-        FragmentManager fm = getFragmentManager();
-        mSeekBarFragment = (SeekBarFragment) fm.findFragmentByTag(TAG_SEEK_BAR);
-        if (mSeekBarFragment == null) {
-            mSeekBarFragment = new SeekBarFragment();
-        }
-        mQueueFragment = (QueueFragment) fm.findFragmentByTag(TAG_QUEUE);
-        if (mQueueFragment == null) {
-            mQueueFragment = new QueueFragment();
-        }
-        mArtistFragment = new ArtistFragment();
-        mLibraryFragment = new LibraryFragment();
-        mFilesFragment = new FilesFragment();
-
-    }
 
     @Override
     public void onSeekBarChanged(int duration) {
@@ -334,19 +323,12 @@ public class MainActivity extends Activity implements SelectionListener {
         });
         AlertDialog dialog = builder.create();
         dialog.show();
-        //new ClearQueueTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-
     }
 
     public void onLibraryItemSelected(View item) {
         TextView vArtist = (TextView) item.findViewById(R.id.library_artist);
         String artist = (String) vArtist.getText();
-        FragmentTransaction transaction = getFragmentManager().beginTransaction();
-        mArtistFragment = new ArtistFragment();
-        mArtistFragment.setArtist(artist);
-        transaction.replace(R.id.main_activity_container, mArtistFragment);
-        transaction.addToBackStack(null);
-        transaction.commit();
+        openArtistFragment(artist);
     }
 
     @Override
@@ -401,6 +383,7 @@ public class MainActivity extends Activity implements SelectionListener {
         View queueLayout = inflater.inflate(layoutId, null);
         View buttons = queueLayout.findViewById(id);
         mButtons = buttons;
+
         ImageView playButton = (ImageView) buttons.findViewById(R.id.player_play);
         ImageView nextButton = (ImageView) buttons.findViewById(R.id.player_next);
         ImageView previousButton = (ImageView) buttons.findViewById(R.id.player_previous);
@@ -585,6 +568,23 @@ public class MainActivity extends Activity implements SelectionListener {
         }
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Open fragments
+    ///////////////////////////////////////////////////////////////////////////
+
+    private void openQueueFragment() {
+        FragmentTransaction transaction = getFragmentManager().beginTransaction();
+        transaction.replace(R.id.main_activity_container, mQueueFragment, TAG_QUEUE);
+        transaction.commit();  // Do not add to backstack
+        setTitle(R.string.queue_header);
+    }
+
+    private void openSeekBarFragment() {
+        FragmentTransaction transaction = getFragmentManager().beginTransaction();
+        transaction.replace(R.id.seek_bar_container, mSeekBarFragment, TAG_SEEK_BAR);
+        transaction.commit();
+    }
+
     private void openLibraryFragment() {
         getFragmentManager().popBackStack(TAG_FILES, FragmentManager.POP_BACK_STACK_INCLUSIVE);
 
@@ -592,6 +592,7 @@ public class MainActivity extends Activity implements SelectionListener {
         transaction.replace(R.id.main_activity_container, mLibraryFragment, TAG_LIBRARY);
         transaction.addToBackStack(TAG_LIBRARY);
         transaction.commit();
+        setTitle(R.string.library_header);
     }
 
     private void openFilesFragment() {
@@ -601,6 +602,17 @@ public class MainActivity extends Activity implements SelectionListener {
         transaction.replace(R.id.main_activity_container, mFilesFragment, TAG_FILES);
         transaction.addToBackStack(TAG_FILES);
         transaction.commit();
+        setTitle(R.string.files_header);
+    }
+
+    private void openArtistFragment(String artist) {
+        FragmentTransaction transaction = getFragmentManager().beginTransaction();
+        mArtistFragment = new ArtistFragment();
+        mArtistFragment.setArtist(artist);
+        transaction.replace(R.id.main_activity_container, mArtistFragment);
+        transaction.addToBackStack(null);
+        transaction.commit();
+        setTitle(artist);
     }
 
     private void openLibrary(boolean librarySwitch) {
@@ -657,7 +669,7 @@ public class MainActivity extends Activity implements SelectionListener {
             ContentValues values = new ContentValues();
             if (item.isAlbum) {
                 //String[] from = AudioListModel.getColumns();
-                String[] from = new String[] {
+                String[] from = new String[]{
                         MediaStore.Audio.Media.TITLE,
                         MediaStore.Audio.Media.ALBUM,
                         MediaStore.Audio.Media.ALBUM_ID,
