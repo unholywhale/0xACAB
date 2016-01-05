@@ -107,29 +107,40 @@ public class ArtistFragment extends Fragment {
         }
     }
 
-    private void addLast(final int position) {
-        Runnable action = new Runnable() {
-            @Override
-            public void run() {
-                mListener.onArtistItemSelected(audioList.get(position));
-            }
-        };
+    private void addLast(int position) {
         View view = mList.getChildAt(position - mList.getFirstVisiblePosition());
         ImageView rightIndicator = (ImageView) view.findViewById(R.id.artist_right_indicator);
-        ObjectAnimator fadeIn = ObjectAnimator.ofFloat(rightIndicator, "alpha", 1f);
-        fadeIn.setRepeatCount(1);
-        fadeIn.setRepeatMode(ValueAnimator.REVERSE);
-        fadeIn.setDuration(500);
-        fadeIn.start();
-//        ObjectAnimator fadeOut = ObjectAnimator.ofFloat(rightIndicator, "alpha", 0.5f);
-//        fadeOut.setDuration(500);
-//        AnimatorSet animSet = new AnimatorSet();
-//        animSet.playSequentially(fadeIn, fadeOut);
-        action.run();
+        TextView duration = (TextView) view.findViewById(R.id.track_duration);
+        ObjectAnimator arrowAnimation = ObjectAnimator.ofFloat(rightIndicator, "alpha", 1f);
+        arrowAnimation.setRepeatCount(1);
+        arrowAnimation.setRepeatMode(ValueAnimator.REVERSE);
+        arrowAnimation.setDuration(500);
+        ObjectAnimator durationAnimation = ObjectAnimator.ofFloat(duration, "alpha", 0f);
+        durationAnimation.setRepeatCount(1);
+        durationAnimation.setRepeatMode(ValueAnimator.REVERSE);
+        durationAnimation.setDuration(500);
+        AnimatorSet animatorSet = new AnimatorSet();
+        animatorSet.playTogether(arrowAnimation, durationAnimation);
+        animatorSet.start();
+        mListener.onArtistItemSelected(audioList.get(position));
     }
 
     private void addNext(int position) {
-
+        View view = mList.getChildAt(position - mList.getFirstVisiblePosition());
+        ImageView leftIndicator = (ImageView) view.findViewById(R.id.artist_left_indicator);
+        TextView number = (TextView) view.findViewById(R.id.track_number);
+        ObjectAnimator arrowAnimation = ObjectAnimator.ofFloat(leftIndicator, "alpha", 1f);
+        arrowAnimation.setRepeatCount(1);
+        arrowAnimation.setRepeatMode(ValueAnimator.REVERSE);
+        arrowAnimation.setDuration(500);
+        ObjectAnimator numberAnimation = ObjectAnimator.ofFloat(number, "alpha", 0f);
+        numberAnimation.setRepeatCount(1);
+        numberAnimation.setRepeatMode(ValueAnimator.REVERSE);
+        numberAnimation.setDuration(500);
+        AnimatorSet animatorSet = new AnimatorSet();
+        animatorSet.playTogether(arrowAnimation, numberAnimation);
+        animatorSet.start();
+        mListener.onArtistItemSelected(audioList.get(position), MainActivity.ADD_NEXT);
     }
 
     private void addFirst(int position) {

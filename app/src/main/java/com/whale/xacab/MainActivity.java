@@ -15,6 +15,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.graphics.BitmapFactory;
 import android.media.session.MediaSession;
 import android.os.AsyncTask;
@@ -31,6 +32,7 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Queue;
 import java.util.Random;
 
 
@@ -50,13 +52,15 @@ public class MainActivity extends Activity implements SelectionListener {
     public final static String TAG_SEEK_BAR = "SEEK_BAR";
     private static final String IS_SHUFFLING = "IS_SHUFFLED";
     private static final String IS_REPEATING = "IS_REPEATING";
+    public static final int ADD_NEXT = 0;
+    public static final int ADD_LAST = 1;
     public static String songStatus = MusicService.SONG_STOPPED;
     public QueueDB db;
     public boolean isPlaying = false;
     public boolean isShuffling = false;
     public boolean isRepeating = false;
     public boolean isLibrary = true;
-    private int mCurrentQueuePosition = -1;
+    private Integer mCurrentQueuePosition = -1;
     private AudioListModel currentSong;
     private boolean mReorderMode = false;
     private Intent musicServiceIntent;
@@ -208,6 +212,7 @@ public class MainActivity extends Activity implements SelectionListener {
         }
         isShuffling = savedInstanceState.getBoolean(IS_SHUFFLING);
         isRepeating = savedInstanceState.getBoolean(IS_REPEATING);
+        invalidateQueue();
         invalidateButtons();
     }
 
@@ -299,6 +304,46 @@ public class MainActivity extends Activity implements SelectionListener {
     protected void onDestroy() {
         super.onDestroy();
         unregisterReceiver(mBroadcastReceiver);
+    }
+
+    @Override
+    public void onArtistItemSelected(AudioListModel item, int mode) {
+        if (mode == ADD_LAST) {
+            onArtistItemSelected(item);
+        } else if (mode == ADD_NEXT) {
+            if (mCurrentQueuePosition == -1) {
+                onArtistItemSelected(item);
+                return;
+            }
+            ArrayList<ContentValues> contentValuesList = new ArrayList<>();
+            ContentValues cv;
+            String[] columns = AudioListModel.getColumns();
+            String where = QueueDB.KEY_SORT + " > " + mCurrentQueuePosition.toString();
+            //String[] whereArgs = {mCurrentQueuePosition.toString()};
+            Cursor cursor = getContentResolver().query(QueueProvider.CONTENT_URI, columns, where, null, QueueDB.KEY_SORT);
+            while (cursor.moveToNext()) {
+//                String title = cursor.getString(cursor.getColumnIndexOrThrow(QueueDB.KEY_TITLE));
+//                int sort = cursor.getInt(cursor.getColumnIndexOrThrow(QueueDB.KEY_SORT));
+                cv = new ContentValues();
+                DatabaseUtils.cursorRowToContentValues(cursor, cv);
+                contentValuesList.add(cv);
+            }
+            if (!item.isAlbum) {
+                for (ContentValues el : contentValuesList) {
+                    Integer i = el.getAsInteger(QueueDB.KEY_SORT);
+                    i++;
+                    el.remove(QueueDB.KEY_SORT);
+                    el.put(QueueDB.KEY_SORT, i);
+                    Long id = el.getAsLong(QueueDB.KEY_ID);
+                    String selection = QueueDB.KEY_ID + "=?";
+                    String[] selectionArgs = {id.toString()};
+                    getContentResolver().update(QueueProvider.CONTENT_URI, el, selection, selectionArgs);
+                }
+                item.setSort(mCurrentQueuePosition + 2);
+                onArtistItemSelected(item);
+            }
+
+        }
     }
 
     @Override
@@ -665,7 +710,6 @@ public class MainActivity extends Activity implements SelectionListener {
         protected Void doInBackground(AudioListModel... params) {
 
             AudioListModel item = params[0];
-            ArrayList<AudioListModel> tracksToAdd;
             ContentValues values = new ContentValues();
             if (item.isAlbum) {
                 //String[] from = AudioListModel.getColumns();
@@ -721,15 +765,13 @@ public class MainActivity extends Activity implements SelectionListener {
                 values.put(QueueDB.KEY_YEAR, item.getYear());
                 values.put(QueueDB.KEY_ALBUM_ID, item.getAlbumId());
                 values.put(QueueDB.KEY_TRACK_ID, item.getTrackId());
-                values.put(QueueDB.KEY_SORT, mQueueData.size() + 1);
+                if (item.getSort() != -1) {
+                    values.put(QueueDB.KEY_SORT, item.getSort());
+                } else {
+                    values.put(QueueDB.KEY_SORT, mQueueData.size() + 1);
+                }
                 getContentResolver().insert(QueueProvider.CONTENT_URI, values);
-                mQueueData.add(item);
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-
-                    }
-                });
+                invalidateQueue();
             }
 
             return null;
@@ -764,8 +806,7 @@ public class MainActivity extends Activity implements SelectionListener {
                 public void run() {
                     mQueueFragment.getAdapter().setCheckboxVisibility(mSelectMode);
                     mQueueFragment.getAdapter().notifyDataSetChanged();
-                    mQueueData.clear();
-                    populateQueueData();
+                    invalidateQueue();
                 }
             });
             return null;

@@ -7,12 +7,13 @@ public class AudioListModel {
 
     private String artist, album, title, data;
 
-    private int duration, year, number;
+    private int duration, year, number, sort;
 
     private long albumId, trackId;
 
     private Bitmap albumArt;
     public boolean isAlbum;
+
     public AudioListModel(String artist, String album, String title, String data, int duration, int number, int year, long albumId, long trackId) {
         this.artist = artist;
         this.album = album;
@@ -23,8 +24,24 @@ public class AudioListModel {
         this.year = year;
         this.albumId = albumId;
         this.trackId = trackId;
+        this.sort = -1;
         this.isAlbum = false;
     }
+
+    public AudioListModel(String artist, String album, String title, String data, int duration, int number, int year, long albumId, long trackId, int sort) {
+        this.artist = artist;
+        this.album = album;
+        this.title = title;
+        this.data = data;
+        this.duration = duration;
+        this.number = number;
+        this.year = year;
+        this.albumId = albumId;
+        this.trackId = trackId;
+        this.sort = sort;
+        this.isAlbum = false;
+    }
+
     public AudioListModel(String artist, String album, int year, long albumId, Bitmap albumArt) {
         this.artist = artist;
         this.album = album;
@@ -125,5 +142,12 @@ public class AudioListModel {
         this.trackId = trackId;
     }
 
+    public int getSort() {
+        return sort;
+    }
+
+    public void setSort(int sort) {
+        this.sort = sort;
+    }
 
 }
