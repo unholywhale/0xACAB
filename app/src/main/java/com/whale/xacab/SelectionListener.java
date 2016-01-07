@@ -4,6 +4,7 @@ import android.provider.MediaStore;
 import android.view.View;
 
 public interface SelectionListener {
+    void openLibrary(boolean librarySwitch);
     void onArtistItemSelected(AudioListModel item);
     void onArtistItemSelected(AudioListModel item, int mode);
     void onLibraryItemSelected(View item);

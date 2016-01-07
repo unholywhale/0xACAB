@@ -8,14 +8,9 @@
         android:layout_height="1dp"
         android:visibility="invisible"/>
     <ListView
-        android:id="@+id/android:list"
+        android:id="@+id/files_list"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"/>
-    <TextView
-        android:id="@+id/android:empty"
-        android:text=""
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
     <Button
         android:id="@+id/files_add"
         android:background="@drawable/round_button"
@@ -27,5 +22,16 @@
         android:layout_marginEnd="15dp"
         android:layout_marginBottom="15dp"
         android:layout_alignParentEnd="true"
-        android:layout_alignBottom="@id/android:list"/>
+        android:layout_alignBottom="@id/files_list"/>
+    <ImageButton
+        android:id="@+id/files_switch"
+        android:background="@drawable/round_button"
+        android:src="@drawable/ic_library_icon"
+        android:textSize="24sp"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_marginEnd="15dp"
+        android:layout_marginBottom="15dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignBottom="@id/files_list"/>
 </RelativeLayout>

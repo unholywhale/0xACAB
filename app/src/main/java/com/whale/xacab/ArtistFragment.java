@@ -57,7 +57,7 @@ public class ArtistFragment extends Fragment {
 
     private class ArtistGestureListener extends GestureDetector.SimpleOnGestureListener {
 
-        private static final int SWIPE_THRESHOLD = 30;
+        private static final int SWIPE_THRESHOLD = 100;
         private static final int SWIPE_VELOCITY_THRESHOLD = 100;
         private ListView mListView;
         private ArtistFragment mFragment;
@@ -69,6 +69,14 @@ public class ArtistFragment extends Fragment {
                 throw new ClassCastException(fragment.toString());
             }
             this.mListView = l;
+        }
+
+        @Override
+        public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+            if (Math.abs(distanceX) > 30) {
+                return true;
+            }
+            return super.onScroll(e1, e2, distanceX, distanceY);
         }
 
         @Override

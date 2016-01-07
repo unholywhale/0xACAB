@@ -519,7 +519,7 @@ public class MainActivity extends Activity implements SelectionListener {
         setMenuItemVisibility(R.id.action_clear_queue, false);
         setMenuItemVisibility(R.id.action_select, false);
         setMenuItemVisibility(R.id.action_close, true);
-        setMenuItemVisibility(R.id.action_library_switch, true);
+//        setMenuItemVisibility(R.id.action_library_switch, true);
     }
 
     @Override
@@ -528,7 +528,7 @@ public class MainActivity extends Activity implements SelectionListener {
         setMenuItemVisibility(R.id.action_clear_queue, false);
         setMenuItemVisibility(R.id.action_select, true);
         setMenuItemVisibility(R.id.action_close, true);
-        setMenuItemVisibility(R.id.action_library_switch, true);
+//        setMenuItemVisibility(R.id.action_library_switch, true);
     }
 
     @Override
@@ -537,7 +537,7 @@ public class MainActivity extends Activity implements SelectionListener {
         setMenuItemVisibility(R.id.action_clear_queue, true);
         setMenuItemVisibility(R.id.action_select, true);
         setMenuItemVisibility(R.id.action_close, false);
-        setMenuItemVisibility(R.id.action_library_switch, false);
+//        setMenuItemVisibility(R.id.action_library_switch, false);
     }
 
     @Override
@@ -660,16 +660,17 @@ public class MainActivity extends Activity implements SelectionListener {
         setTitle(artist);
     }
 
-    private void openLibrary(boolean librarySwitch) {
+    @Override
+    public void openLibrary(boolean librarySwitch) {
         if (librarySwitch) {
             isLibrary = !isLibrary;
         }
-        MenuItem librarySwitchButton = mMenu.findItem(R.id.action_library_switch);
+//        MenuItem librarySwitchButton = mMenu.findItem(R.id.action_library_switch);
         if (isLibrary) {
-            librarySwitchButton.setIcon(R.drawable.ic_action_files_disabled);
+//            librarySwitchButton.setIcon(R.drawable.ic_action_files_disabled);
             openLibraryFragment();
         } else {
-            librarySwitchButton.setIcon(R.drawable.ic_action_files);
+//            librarySwitchButton.setIcon(R.drawable.ic_action_files);
             openFilesFragment();
         }
     }
@@ -695,8 +696,9 @@ public class MainActivity extends Activity implements SelectionListener {
             case R.id.action_reorder:
                 reorderMode();
                 break;
-            case R.id.action_library_switch:
-                openLibrary(true);
+//            case R.id.action_library_switch:
+//                openLibrary(true);
+//                break;
             default:
                 break;
         }

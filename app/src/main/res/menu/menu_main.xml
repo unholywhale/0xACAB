@@ -13,11 +13,11 @@
           android:icon="@drawable/ic_action_clear_queue"
           android:title="Clear"
           android:showAsAction="ifRoom"/>
-    <item android:id="@+id/action_library_switch"
+    <!--<item android:id="@+id/action_library_switch"
           android:icon="@drawable/ic_action_files_disabled"
           android:title="Files"
           android:showAsAction="ifRoom"
-          android:visible="false"/>
+          android:visible="false"/>-->
     <item android:id="@+id/action_close"
           android:icon="@drawable/ic_action_close"
           android:title="Close"

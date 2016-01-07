@@ -1,6 +1,7 @@
 package com.whale.xacab;
 
 import android.app.Activity;
+import android.app.Fragment;
 import android.app.LoaderManager;
 import android.content.Context;
 import android.content.CursorLoader;
@@ -15,19 +16,64 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.CursorAdapter;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import java.io.File;
 
 
-public class LibraryFragment extends ListFragment implements LoaderManager.LoaderCallbacks<Cursor> {
+public class LibraryFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private final static int LIBRARY_LOADER = 2;
     private SelectionListener mListener;
-    private LayoutInflater mInflater;
     private LibraryAdapter mAdapter;
+    private ImageButton mSwitch;
+    private ListView mList;
+
+    private class LibraryGestureHelper extends GestureHelper {
+
+        public LibraryGestureHelper(Context context) {
+            super(context);
+        }
+
+        @Override
+        public void onScrollTop() {
+            if (mSwitch.getVisibility() == View.INVISIBLE) {
+                Runnable action = new Runnable() {
+                    @Override
+                    public void run() {
+                        mSwitch.setVisibility(View.VISIBLE);
+                    }
+                };
+                mSwitch.animate()
+                        .translationY(0)
+                        .alpha(1)
+                        .withStartAction(action)
+                        .start();
+            }
+        }
+
+        @Override
+        public void onScrollBottom() {
+            if (mSwitch.getVisibility() == View.VISIBLE) {
+                Runnable action = new Runnable() {
+                    @Override
+                    public void run() {
+                        mSwitch.setVisibility(View.INVISIBLE);
+                    }
+                };
+                mSwitch.animate()
+                        .translationY(100)
+                        .alpha(0)
+                        .withEndAction(action)
+                        .start();
+            }
+        }
+    }
 
     @Override
     public void onAttach(Activity activity) {
@@ -43,9 +89,6 @@ public class LibraryFragment extends ListFragment implements LoaderManager.Loade
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getLoaderManager().initLoader(LIBRARY_LOADER, null, this);
-        mAdapter = new LibraryAdapter(getActivity().getApplicationContext(), null, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
-        setListAdapter(mAdapter);
     }
 
     @Override
@@ -73,8 +116,30 @@ public class LibraryFragment extends ListFragment implements LoaderManager.Loade
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        mInflater = inflater;
-        return mInflater.inflate(R.layout.fragment_library, null);
+        View view = inflater.inflate(R.layout.fragment_library, null);
+        mSwitch = (ImageButton) view.findViewById(R.id.library_switch);
+        mSwitch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mListener.openLibrary(true);
+            }
+        });
+        mList = (ListView) view.findViewById(R.id.library_list);
+        getLoaderManager().initLoader(LIBRARY_LOADER, null, this);
+        mAdapter = new LibraryAdapter(getActivity().getApplicationContext(), null, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
+        mList.setAdapter(mAdapter);
+        mList.setOnTouchListener(new LibraryGestureHelper(getActivity().getApplicationContext()));
+        mList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                if (null != mListener) {
+                    // Notify the active callbacks interface (the activity, if the
+                    // fragment is attached to one) that an item has been selected.
+                    mListener.onLibraryItemSelected(view);
+                }
+            }
+        });
+        return view;
     }
 
     @Override
@@ -95,15 +160,8 @@ public class LibraryFragment extends ListFragment implements LoaderManager.Loade
     }
 
 
-    @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
-        super.onListItemClick(l, v, position, id);
 
-        if (null != mListener) {
-            // Notify the active callbacks interface (the activity, if the
-            // fragment is attached to one) that an item has been selected.
-            mListener.onLibraryItemSelected(v);
-        }
     }
 
     @Override

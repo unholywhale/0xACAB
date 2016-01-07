@@ -2,7 +2,9 @@ package com.whale.xacab;
 
 import android.app.ActionBar;
 import android.app.Activity;
+import android.app.Fragment;
 import android.content.Context;
+import android.media.Image;
 import android.media.MediaMetadataRetriever;
 import android.os.Bundle;
 import android.app.ListFragment;
@@ -11,10 +13,12 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
@@ -33,15 +37,58 @@ import java.util.HashMap;
 import java.util.List;
 
 
-public class FilesFragment extends ListFragment {
+public class FilesFragment extends Fragment {
 
 
     private SelectionListener mListener;
     private String mCurrentPath;
     private Button mAddButton;
+    private ImageButton mSwitch;
+    private ListView mList;
     private ArrayList<File> mFiles = new ArrayList<>();
 
     private FilesAdapter mAdapter;
+
+    private class FilesGestureHelper extends GestureHelper {
+
+        public FilesGestureHelper(Context context) {
+            super(context);
+        }
+
+        @Override
+        public void onScrollTop() {
+            if (mSwitch.getVisibility() == View.INVISIBLE) {
+                Runnable action = new Runnable() {
+                    @Override
+                    public void run() {
+                        mSwitch.setVisibility(View.VISIBLE);
+                    }
+                };
+                mSwitch.animate()
+                        .translationY(0)
+                        .alpha(1)
+                        .withStartAction(action)
+                        .start();
+            }
+        }
+
+        @Override
+        public void onScrollBottom() {
+            if (mSwitch.getVisibility() == View.VISIBLE) {
+                Runnable action = new Runnable() {
+                    @Override
+                    public void run() {
+                        mSwitch.setVisibility(View.INVISIBLE);
+                    }
+                };
+                mSwitch.animate()
+                        .translationY(100)
+                        .alpha(0)
+                        .withEndAction(action)
+                        .start();
+            }
+        }
+    }
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -53,6 +100,13 @@ public class FilesFragment extends ListFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_files, null);
+        mSwitch = (ImageButton) view.findViewById(R.id.files_switch);
+        mSwitch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mListener.openLibrary(true);
+            }
+        });
         mAddButton = (Button) view.findViewById(R.id.files_add);
         mAddButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -61,7 +115,24 @@ public class FilesFragment extends ListFragment {
             }
         });
         mAdapter = new FilesAdapter(getActivity(), R.layout.fragment_files_list_item, mFiles);
-        setListAdapter(mAdapter);
+        mList = (ListView) view.findViewById(R.id.files_list);
+        mList.setAdapter(mAdapter);
+        mList.setOnTouchListener(new FilesGestureHelper(getActivity().getApplicationContext()));
+        mList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                File file = mFiles.get(i);
+                if (file.isDirectory()) {
+                    mCurrentPath += "/" + file.getName();
+                    populateFiles(mCurrentPath);
+                    mAdapter.notifyDataSetChanged();
+                } else {
+                    AudioListModel item = getAudioData(file);
+                    mListener.onArtistItemSelected(item);
+                }
+
+            }
+        });
         return view;
     }
 
@@ -69,7 +140,7 @@ public class FilesFragment extends ListFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        String path = Environment.getExternalStorageDirectory().toString() + "/mobile/music/users/alex/music/itunes/itunes media/music";
+        String path = Environment.getExternalStorageDirectory().toString();
         if (mCurrentPath == null) {
             mCurrentPath = path;
         }
@@ -168,18 +239,8 @@ public class FilesFragment extends ListFragment {
         }
     }
 
-    @Override
+
     public void onListItemClick(ListView l, View v, int position, long id) {
-        super.onListItemClick(l, v, position, id);
-        File file = mFiles.get(position);
-        if (file.isDirectory()) {
-            mCurrentPath += "/" + file.getName();
-            populateFiles(mCurrentPath);
-            mAdapter.notifyDataSetChanged();
-        } else {
-            AudioListModel item = getAudioData(file);
-            mListener.onArtistItemSelected(item);
-        }
     }
 
     private AudioListModel getAudioData(File file) {

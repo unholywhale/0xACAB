@@ -277,6 +277,7 @@ public class GestureHelper implements View.OnTouchListener {
                         } else {
                             mHelper.onSwipeLeft();
                         }
+                        result = true;
                     }
                 } else {
                     if (Math.abs(diffY) > SWIPE_THRESHOLD && Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
