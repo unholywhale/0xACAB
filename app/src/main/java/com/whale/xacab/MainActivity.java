@@ -29,6 +29,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -310,9 +311,11 @@ public class MainActivity extends Activity implements SelectionListener {
     public void onArtistItemSelected(AudioListModel item, int mode) {
         if (mode == ADD_LAST) {
             onArtistItemSelected(item);
+            Toast.makeText(this, "Added last", Toast.LENGTH_SHORT);
         } else if (mode == ADD_NEXT) {
             if (mCurrentQueuePosition == -1) {
                 onArtistItemSelected(item);
+                Toast.makeText(this, "Added last", Toast.LENGTH_SHORT);
                 return;
             }
             ArrayList<ContentValues> contentValuesList = new ArrayList<>();

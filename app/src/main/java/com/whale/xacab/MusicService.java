@@ -34,6 +34,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
             @Override
             public void onCompletion(MediaPlayer mp) {
                 songStopped();
+                nextSong();
             }
         });
     }
@@ -47,6 +48,12 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         mBroadcastIntent.putExtra(SONG_STATUS, SONG_STARTED);
         mBroadcastIntent.putExtra(SONG_POSITION, mediaPlayer.getCurrentPosition());
         sendBroadcast(mBroadcastIntent);
+    }
+
+    private void nextSong() {
+        Intent intent = new Intent();
+        intent.setAction(MainActivity.INTENT_SONG_NEXT);
+        sendBroadcast(intent);
     }
 
     @Override
