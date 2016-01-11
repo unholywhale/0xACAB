@@ -590,7 +590,8 @@ public class MainActivity extends Activity implements SelectionListener {
         populateQueueData();
     }
 
-    private void deleteSelected() {
+    @Override
+    public void deleteSelected() {
 
         HashMap<Integer, QueueFragment.QueueAdapter.QueueHashHolder> hashMap = mQueueFragment.getAdapter().getHashMapChecked();
         new DeleteSelectedTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, hashMap);

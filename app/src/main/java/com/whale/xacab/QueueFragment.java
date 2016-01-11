@@ -9,6 +9,7 @@ import android.content.CursorLoader;
 import android.content.Loader;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
+import android.media.Image;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.GestureDetector;
@@ -45,6 +46,8 @@ import java.util.Queue;
 public class QueueFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
 
+    private boolean isOptionsVisible = false;
+    private View prevView;
     private SelectionListener mListener;
     private final static int QUEUE_LOADER = 1;
     private QueueAdapter mAdapter;
@@ -85,6 +88,7 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
                     @Override
                     public void run() {
                         mAdd.setVisibility(View.VISIBLE);
+                        invalidateOptions();
                     }
                 };
                 mAdd.animate()
@@ -102,6 +106,7 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
                     @Override
                     public void run() {
                         mAdd.setVisibility(View.INVISIBLE);
+                        invalidateOptions();
                     }
                 };
                 mAdd.animate()
@@ -160,11 +165,21 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
                 if (null != mListener) {
                     // Notify the active callbacks interface (the activity, if the
                     // fragment is attached to one) that an item has been selected.
+                    if (view != prevView) {
+                        invalidateOptions();
+                    }
                     mListener.onQueueItemSelected(position);
                 }
             }
         });
 
+        mList.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
+                toggleOptions(view);
+                return true;
+            }
+        });
 
         mAdd = (Button) view.findViewById(R.id.queue_add);
         mAdd.setOnClickListener(new View.OnClickListener() {
@@ -176,6 +191,35 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
 
         mList.setAdapter(mAdapter);
         return view;
+    }
+
+    private void invalidateOptions() {
+        if (prevView != null) {
+            ImageView prevInfo = (ImageView) prevView.findViewById(R.id.queue_info);
+            ImageView prevDelete = (ImageView) prevView.findViewById(R.id.queue_delete);
+            TextView prevDuration = (TextView) prevView.findViewById(R.id.queue_duration);
+
+            prevDuration.setVisibility(View.VISIBLE);
+            prevInfo.setVisibility(View.INVISIBLE);
+            prevDelete.setVisibility(View.INVISIBLE);
+            prevView = null;
+            isOptionsVisible = false;
+        }
+    }
+
+    private void toggleOptions(View view) {
+        if (isOptionsVisible) {
+            invalidateOptions();
+        }
+        isOptionsVisible = true;
+        prevView = view;
+        ImageView info = (ImageView) view.findViewById(R.id.queue_info);
+        ImageView delete = (ImageView) view.findViewById(R.id.queue_delete);
+        TextView duration = (TextView) view.findViewById(R.id.queue_duration);
+
+        duration.setVisibility(View.INVISIBLE);
+        info.setVisibility(View.VISIBLE);
+        delete.setVisibility(View.VISIBLE);
     }
 
     public QueueAdapter getAdapter() {
@@ -348,6 +392,16 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
                     }
                 }
             });
+            holder.delete = (ImageView) view.findViewById(R.id.queue_delete);
+            holder.delete.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    QueueHashHolder deleteHashHolder = (QueueHashHolder) view.getTag();
+                    hashMapChecked.clear();
+                    hashMapChecked.put(deleteHashHolder.position, deleteHashHolder);
+                    mListener.deleteSelected();
+                }
+            });
             view.setTag(holder);
             return view;
         }
@@ -362,6 +416,10 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
                 holder.artist.setText(cursor.getString(cursor.getColumnIndexOrThrow(QueueDB.KEY_ARTIST)));
                 holder.duration.setText(MusicUtils.makeTimeString(context, cursor.getInt(cursor.getColumnIndexOrThrow(QueueDB.KEY_DURATION)) / 1000));
                 holder.data.setText(cursor.getString(cursor.getColumnIndexOrThrow(QueueDB.KEY_DATA)));
+                QueueHashHolder deleteHashHolder = new QueueHashHolder();
+                deleteHashHolder.id = cursor.getLong(cursor.getColumnIndexOrThrow(QueueDB.KEY_ID));
+                deleteHashHolder.position = cursor.getPosition();
+                holder.delete.setTag(deleteHashHolder);
                 if (mCheckBoxVisible) {
                     holder.playing.setVisibility(View.INVISIBLE);
                     holder.number.setVisibility(View.INVISIBLE);
@@ -409,6 +467,8 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
             TextView data;
             ImageView playing;
             CheckBox checked;
+            ImageView delete;
+            ImageView info;
         }
     }
 
