@@ -20,6 +20,7 @@ import android.graphics.BitmapFactory;
 import android.media.session.MediaSession;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Debug;
 import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -309,20 +310,25 @@ public class MainActivity extends Activity implements SelectionListener {
 
     @Override
     public void onArtistItemSelected(AudioListModel item, int mode) {
+        onArtistItemSelected(item, mode, 0);
+    }
+
+    @Override
+    public void onArtistItemSelected(AudioListModel item, int mode, int counter) {
         if (mode == ADD_LAST) {
             onArtistItemSelected(item);
-            Toast.makeText(this, "Added last", Toast.LENGTH_SHORT);
+            Toast.makeText(this, "Added last", Toast.LENGTH_SHORT).show();
         } else if (mode == ADD_NEXT) {
             if (mCurrentQueuePosition == -1) {
                 onArtistItemSelected(item);
-                Toast.makeText(this, "Added last", Toast.LENGTH_SHORT);
+                Toast.makeText(this, "Added last", Toast.LENGTH_SHORT).show();
                 return;
             }
             ArrayList<ContentValues> contentValuesList = new ArrayList<>();
             ContentValues cv;
             String[] columns = AudioListModel.getColumns();
-            String where = QueueDB.KEY_SORT + " > " + mCurrentQueuePosition.toString();
-            //String[] whereArgs = {mCurrentQueuePosition.toString()};
+            Integer insertPosition = mCurrentQueuePosition + counter + 1;
+            String where = QueueDB.KEY_SORT + " > " + insertPosition.toString();
             Cursor cursor = getContentResolver().query(QueueProvider.CONTENT_URI, columns, where, null, QueueDB.KEY_SORT);
             while (cursor.moveToNext()) {
 //                String title = cursor.getString(cursor.getColumnIndexOrThrow(QueueDB.KEY_TITLE));
@@ -332,20 +338,70 @@ public class MainActivity extends Activity implements SelectionListener {
                 contentValuesList.add(cv);
             }
             if (!item.isAlbum) {
-                for (ContentValues el : contentValuesList) {
-                    Integer i = el.getAsInteger(QueueDB.KEY_SORT);
-                    i++;
-                    el.remove(QueueDB.KEY_SORT);
-                    el.put(QueueDB.KEY_SORT, i);
-                    Long id = el.getAsLong(QueueDB.KEY_ID);
-                    String selection = QueueDB.KEY_ID + "=?";
-                    String[] selectionArgs = {id.toString()};
-                    getContentResolver().update(QueueProvider.CONTENT_URI, el, selection, selectionArgs);
-                }
-                item.setSort(mCurrentQueuePosition + 2);
+                changeSortNumber(contentValuesList, 0);
+                item.setSort(insertPosition + 1);
                 onArtistItemSelected(item);
+            } else {
+                ContentValues values = new ContentValues();
+                String[] from = new String[]{
+                        MediaStore.Audio.Media.TITLE,
+                        MediaStore.Audio.Media.ALBUM,
+                        MediaStore.Audio.Media.ALBUM_ID,
+                        MediaStore.Audio.Media.YEAR,
+                        MediaStore.Audio.Media.ARTIST,
+                        MediaStore.Audio.Media.DATA,
+                        MediaStore.Audio.Media.DURATION,
+                        MediaStore.Audio.Media.TRACK,
+                        MediaStore.Audio.Media._ID
+                };
+                String selection = MediaStore.Audio.Media.ALBUM_ID + "=?";
+                Long aId = item.getAlbumId();
+                String[] albumWhere = {aId.toString()};
+                Cursor albumCursor = getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, from, selection, albumWhere, MediaStore.Audio.Media.TRACK);
+                if (albumCursor != null) {
+                    changeSortNumber(contentValuesList, albumCursor.getCount());
+                    int c = 0;
+                    while (albumCursor.moveToNext()) {
+                        values.clear();
+                        String artist = albumCursor.getString(albumCursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST));
+                        String album = albumCursor.getString(albumCursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM));
+                        String title = albumCursor.getString(albumCursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE));
+                        String data = albumCursor.getString(albumCursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA));
+                        int duration = albumCursor.getInt(albumCursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION));
+                        int number = albumCursor.getInt(albumCursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TRACK));
+                        int year = albumCursor.getInt(albumCursor.getColumnIndexOrThrow(MediaStore.Audio.Media.YEAR));
+                        long albumId = albumCursor.getLong(albumCursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID));
+                        long trackId = albumCursor.getLong(albumCursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID));
+                        AudioListModel newItem = new AudioListModel(artist, album, title, data, duration, number, year, albumId, trackId);
+                        values.put(QueueDB.KEY_ARTIST, newItem.getArtist());
+                        values.put(QueueDB.KEY_ALBUM, newItem.getAlbum());
+                        values.put(QueueDB.KEY_TITLE, newItem.getTitle());
+                        values.put(QueueDB.KEY_DATA, newItem.getData());
+                        values.put(QueueDB.KEY_DURATION, newItem.getDuration());
+                        values.put(QueueDB.KEY_NUMBER, newItem.getNumber());
+                        values.put(QueueDB.KEY_YEAR, newItem.getYear());
+                        values.put(QueueDB.KEY_ALBUM_ID, newItem.getAlbumId());
+                        values.put(QueueDB.KEY_TRACK_ID, newItem.getTrackId());
+                        values.put(QueueDB.KEY_SORT, insertPosition + c);
+                        getContentResolver().insert(QueueProvider.CONTENT_URI, values);
+                        mQueueData.add(newItem);
+                        c++;
+                    }
+                }
             }
+        }
+    }
 
+    private void changeSortNumber(ArrayList<ContentValues> contentValuesList, int offset) {
+        for (ContentValues el : contentValuesList) {
+            Integer i = el.getAsInteger(QueueDB.KEY_SORT) + offset;
+            i++;
+            el.remove(QueueDB.KEY_SORT);
+            el.put(QueueDB.KEY_SORT, i);
+            Long id = el.getAsLong(QueueDB.KEY_ID);
+            String selection = QueueDB.KEY_ID + "=?";
+            String[] selectionArgs = {id.toString()};
+            getContentResolver().update(QueueProvider.CONTENT_URI, el, selection, selectionArgs);
         }
     }
 

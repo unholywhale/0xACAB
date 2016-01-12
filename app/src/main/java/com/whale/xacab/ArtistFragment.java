@@ -36,6 +36,7 @@ import java.util.ArrayList;
 
 public class ArtistFragment extends Fragment {
 
+    private int nextCounter = 0;
     private SelectionListener mListener;
     private String mArtistName;
     private ArrayList<AudioListModel> audioList = new ArrayList<>();
@@ -148,7 +149,8 @@ public class ArtistFragment extends Fragment {
         AnimatorSet animatorSet = new AnimatorSet();
         animatorSet.playTogether(arrowAnimation, numberAnimation);
         animatorSet.start();
-        mListener.onArtistItemSelected(audioList.get(position), MainActivity.ADD_NEXT);
+        mListener.onArtistItemSelected(audioList.get(position), MainActivity.ADD_NEXT, nextCounter);
+        nextCounter++;
     }
 
     private void addFirst(int position) {
@@ -267,22 +269,13 @@ public class ArtistFragment extends Fragment {
     public void onDetach() {
         super.onDetach();
         mListener = null;
+        nextCounter = 0;
     }
 
     public void setArtist(String artistName) {
         mArtistName = artistName;
     }
 
-//    @Override
-//    public void onListItemClick(ListView l, View v, int position, long id) {
-//        super.onListItemClick(l, v, position, id);
-//
-//        if (null != mListener) {
-//            // Notify the active callbacks interface (the activity, if the
-//            // fragment is attached to one) that an item has been selected.
-//            mListener.onArtistItemSelected(audioList.get(position));
-//        }
-//    }
 
     static class AudioListAdapter extends ArrayAdapter<AudioListModel> {
 
