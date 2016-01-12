@@ -804,8 +804,8 @@ public class MainActivity extends Activity implements SelectionListener {
                 String[] albumWhere = {aId.toString()};
                 Cursor albumCursor = getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, from, selection, albumWhere, MediaStore.Audio.Media.TRACK);
                 if (albumCursor != null) {
-                    changeSortNumber(contentValuesList, albumCursor.getCount());
-                    int c = 0;
+                    changeSortNumber(contentValuesList, albumCursor.getCount() + 1);
+                    int c = 1;
                     while (albumCursor.moveToNext()) {
                         values.clear();
                         String artist = albumCursor.getString(albumCursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST));
