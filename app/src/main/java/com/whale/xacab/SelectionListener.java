@@ -9,6 +9,7 @@ public interface SelectionListener {
     void onArtistItemSelected(AudioListModel item);
     void onArtistItemSelected(AudioListModel item, int mode);
     void onArtistItemSelected(AudioListModel item, int mode, int counter);
+    void checkEmpty();
     void onLibraryItemSelected(View item);
     void onQueueItemSelected(int position);
     void onSeekBarChanged(int newDuration);

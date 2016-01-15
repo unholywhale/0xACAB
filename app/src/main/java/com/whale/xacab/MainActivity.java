@@ -17,6 +17,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.graphics.BitmapFactory;
+import android.media.AudioManager;
 import android.media.session.MediaSession;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -62,6 +63,7 @@ public class MainActivity extends Activity implements SelectionListener {
     public boolean isShuffling = false;
     public boolean isRepeating = false;
     public boolean isLibrary = true;
+    private AudioManager mAudioManager;
     private Integer mCurrentQueuePosition = -1;
     private AudioListModel currentSong;
     private boolean mReorderMode = false;
@@ -78,6 +80,22 @@ public class MainActivity extends Activity implements SelectionListener {
     private View mButtons;
     private MediaSession mSession;
     private boolean mSelectMode = false;
+    private AudioManager.OnAudioFocusChangeListener afChangeListener = new AudioManager.OnAudioFocusChangeListener() {
+        @Override
+        public void onAudioFocusChange(int i) {
+            switch (i) {
+                case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+
+                    break;
+                case AudioManager.AUDIOFOCUS_GAIN:
+
+                    break;
+                case AudioManager.AUDIOFOCUS_LOSS:
+
+                    break;
+            }
+        }
+    };
     private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -88,6 +106,7 @@ public class MainActivity extends Activity implements SelectionListener {
                 String receiveValue = intent.getStringExtra(MusicService.SONG_STATUS);
                 if (receiveValue.equals(MusicService.SONG_STARTED)) {
                     isPlaying = true;
+                    //mAudioManager.requestAudioFocus(afChangeListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
                     changePlayStatus(MusicService.SONG_STARTED);
                     int position = intent.getIntExtra(MusicService.SONG_POSITION, -1);
                     int step = currentSong.getDuration() / 200;
@@ -102,6 +121,7 @@ public class MainActivity extends Activity implements SelectionListener {
 
                 } else if (receiveValue.equals(MusicService.SONG_STOPPED)) {
                     isPlaying = false;
+                    //mAudioManager.abandonAudioFocus(afChangeListener);
                     changePlayStatus(MusicService.SONG_STOPPED);
                 }
                 makeNotification();
@@ -116,6 +136,14 @@ public class MainActivity extends Activity implements SelectionListener {
             } else if (intent.getAction().equals(INTENT_SONG_PLAY)) {
                 musicServiceIntent.removeExtra(INTENT_EXTRA);
                 startService(musicServiceIntent);
+            } else if (intent.getAction().equals(AudioManager.ACTION_HEADSET_PLUG)) {
+                int state = intent.getIntExtra("state", -1);
+                if (state != -1) {
+                    if (state == 0) {
+                        musicServiceIntent.removeExtra(INTENT_EXTRA);
+                        startService(musicServiceIntent);
+                    }
+                }
             }
         }
     };
@@ -175,6 +203,7 @@ public class MainActivity extends Activity implements SelectionListener {
         setContentView(R.layout.activity_main);
         mSession = new MediaSession(this, "SESSION");
         mSession.setActive(true);
+        mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         setFragments();
         mButtonsContainer = (RelativeLayout) findViewById(R.id.main_buttons_container);
         changeButtons(R.layout.container_queue, R.id.container_queue_buttons);
@@ -183,6 +212,8 @@ public class MainActivity extends Activity implements SelectionListener {
         mIntentFilter.addAction(INTENT_SONG_PREV);
         mIntentFilter.addAction(INTENT_SONG_NEXT);
         mIntentFilter.addAction(INTENT_SONG_PLAY);
+        mIntentFilter.addAction(AudioManager.ACTION_HEADSET_PLUG);
+        registerReceiver(mBroadcastReceiver, mIntentFilter);
         db = new QueueDB(this);
         musicServiceIntent = new Intent(getApplicationContext(), MusicService.class);
         populateQueueData();
@@ -196,6 +227,23 @@ public class MainActivity extends Activity implements SelectionListener {
     }
 
 
+    @Override
+    public void checkEmpty() {
+        boolean enabled;
+        String suffix = "";
+        if (mQueueData.isEmpty()) {
+            enabled = false;
+            suffix = "_disabled";
+        } else {
+            enabled = true;
+        }
+        setMenuItemEnabled(R.id.action_reorder, enabled);
+        setMenuItemEnabled(R.id.action_clear_queue, enabled);
+        setMenuItemEnabled(R.id.action_select, enabled);
+        setMenuItemIcon(R.id.action_reorder, getResources().getIdentifier("ic_action_reorder" + suffix, "drawable", getPackageName()));
+        setMenuItemIcon(R.id.action_select, getResources().getIdentifier("ic_action_select" + suffix, "drawable", getPackageName()));
+        setMenuItemIcon(R.id.action_clear_queue, getResources().getIdentifier("ic_action_clear_queue" + suffix, "drawable", getPackageName()));
+    }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
@@ -299,7 +347,7 @@ public class MainActivity extends Activity implements SelectionListener {
     @Override
     protected void onResume() {
         super.onResume();
-        registerReceiver(mBroadcastReceiver, mIntentFilter);
+
     }
 
     @Override
@@ -596,6 +644,24 @@ public class MainActivity extends Activity implements SelectionListener {
             MenuItem item = mMenu.findItem(resourceId);
             if (item != null) {
                 item.setVisible(visible);
+            }
+        }
+    }
+
+    public void setMenuItemEnabled(int resourceId, boolean enabled) {
+        if (mMenu != null) {
+            MenuItem item = mMenu.findItem(resourceId);
+            if (item != null) {
+                item.setEnabled(enabled);
+            }
+        }
+    }
+
+    public void setMenuItemIcon(int resourceId, int iconId) {
+        if (mMenu != null) {
+            MenuItem item = mMenu.findItem(resourceId);
+            if (item != null) {
+                item.setIcon(iconId);
             }
         }
     }
@@ -920,7 +986,12 @@ public class MainActivity extends Activity implements SelectionListener {
                 getContentResolver().insert(QueueProvider.CONTENT_URI, values);
                 invalidateQueue();
             }
-
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    checkEmpty();
+                }
+            });
             return null;
         }
 
@@ -933,6 +1004,12 @@ public class MainActivity extends Activity implements SelectionListener {
             getContentResolver().delete(QueueProvider.CONTENT_URI, null, null);
             mQueueData.clear();
             mCurrentQueuePosition = -1;
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    checkEmpty();
+                }
+            });
             return null;
         }
     }

@@ -181,6 +181,7 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
             }
         });
 
+
         mAdd = (Button) view.findViewById(R.id.queue_add);
         mAdd.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -229,6 +230,7 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
     @Override
     public void onStart() {
         mListener.setQueueMenu();
+        mListener.checkEmpty();
         super.onStart();
     }
 
