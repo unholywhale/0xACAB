@@ -1,5 +1,6 @@
 package com.whale.xacab;
 
+import android.animation.Animator;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
@@ -32,6 +33,9 @@ import com.mobeta.android.dslv.DragSortController;
 import com.mobeta.android.dslv.DragSortListView;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 
 
 public class ArtistFragment extends Fragment {
@@ -117,38 +121,92 @@ public class ArtistFragment extends Fragment {
     }
 
     private void addLast(int position) {
-        View view = mList.getChildAt(position - mList.getFirstVisiblePosition());
-        ImageView rightIndicator = (ImageView) view.findViewById(R.id.artist_right_indicator);
-        TextView duration = (TextView) view.findViewById(R.id.track_duration);
-        ObjectAnimator arrowAnimation = ObjectAnimator.ofFloat(rightIndicator, "alpha", 1f);
-        arrowAnimation.setRepeatCount(1);
-        arrowAnimation.setRepeatMode(ValueAnimator.REVERSE);
-        arrowAnimation.setDuration(500);
-        ObjectAnimator durationAnimation = ObjectAnimator.ofFloat(duration, "alpha", 0f);
-        durationAnimation.setRepeatCount(1);
-        durationAnimation.setRepeatMode(ValueAnimator.REVERSE);
-        durationAnimation.setDuration(500);
-        AnimatorSet animatorSet = new AnimatorSet();
-        animatorSet.playTogether(arrowAnimation, durationAnimation);
-        animatorSet.start();
+        int itemPosition = position - mList.getFirstVisiblePosition();
+        View view = mList.getChildAt(itemPosition);
+        ArrayList<ObjectAnimator> animators = new ArrayList<>();
+        if (view.getId() == R.id.artist_list_header_layout) {
+            for (int i = itemPosition + 1; i <= mList.getLastVisiblePosition(); i++) {
+                View item = mList.getChildAt(i);
+                if (item.getId() == R.id.artist_list_header_layout) {
+                    break;
+                }
+                ImageView itemRightIndicator = (ImageView) item.findViewById(R.id.artist_right_indicator);
+                TextView itemDuration = (TextView) item.findViewById(R.id.track_duration);
+                ObjectAnimator itemArrowAnimation = ObjectAnimator.ofFloat(itemRightIndicator, "alpha", 1f);
+                itemArrowAnimation.setRepeatCount(1);
+                itemArrowAnimation.setRepeatMode(ValueAnimator.REVERSE);
+                itemArrowAnimation.setDuration(500);
+                animators.add(itemArrowAnimation);
+                ObjectAnimator itemDurationAnimation = ObjectAnimator.ofFloat(itemDuration, "alpha", 0f);
+                itemDurationAnimation.setRepeatCount(1);
+                itemDurationAnimation.setRepeatMode(ValueAnimator.REVERSE);
+                itemDurationAnimation.setDuration(500);
+                animators.add(itemDurationAnimation);
+            }
+            ObjectAnimator[] a = animators.toArray(new ObjectAnimator[animators.size()]);
+            AnimatorSet animatorSet = new AnimatorSet();
+            animatorSet.playTogether(a);
+            animatorSet.start();
+        } else {
+            ImageView rightIndicator = (ImageView) view.findViewById(R.id.artist_right_indicator);
+            TextView duration = (TextView) view.findViewById(R.id.track_duration);
+            ObjectAnimator arrowAnimation = ObjectAnimator.ofFloat(rightIndicator, "alpha", 1f);
+            arrowAnimation.setRepeatCount(1);
+            arrowAnimation.setRepeatMode(ValueAnimator.REVERSE);
+            arrowAnimation.setDuration(500);
+            ObjectAnimator durationAnimation = ObjectAnimator.ofFloat(duration, "alpha", 0f);
+            durationAnimation.setRepeatCount(1);
+            durationAnimation.setRepeatMode(ValueAnimator.REVERSE);
+            durationAnimation.setDuration(500);
+            AnimatorSet animatorSet = new AnimatorSet();
+            animatorSet.playTogether(arrowAnimation, durationAnimation);
+            animatorSet.start();
+        }
         mListener.onArtistItemSelected(audioList.get(position));
     }
 
     private void addNext(int position) {
-        View view = mList.getChildAt(position - mList.getFirstVisiblePosition());
-        ImageView leftIndicator = (ImageView) view.findViewById(R.id.artist_left_indicator);
-        TextView number = (TextView) view.findViewById(R.id.track_number);
-        ObjectAnimator arrowAnimation = ObjectAnimator.ofFloat(leftIndicator, "alpha", 1f);
-        arrowAnimation.setRepeatCount(1);
-        arrowAnimation.setRepeatMode(ValueAnimator.REVERSE);
-        arrowAnimation.setDuration(500);
-        ObjectAnimator numberAnimation = ObjectAnimator.ofFloat(number, "alpha", 0f);
-        numberAnimation.setRepeatCount(1);
-        numberAnimation.setRepeatMode(ValueAnimator.REVERSE);
-        numberAnimation.setDuration(500);
-        AnimatorSet animatorSet = new AnimatorSet();
-        animatorSet.playTogether(arrowAnimation, numberAnimation);
-        animatorSet.start();
+        int itemPosition = position - mList.getFirstVisiblePosition();
+        View view = mList.getChildAt(itemPosition);
+        ArrayList<ObjectAnimator> animators = new ArrayList<>();
+        if (view.getId() == R.id.artist_list_header_layout) {
+            for (int i = itemPosition + 1; i <= mList.getLastVisiblePosition(); i++) {
+                View item = mList.getChildAt(i);
+                if (item.getId() == R.id.artist_list_header_layout) {
+                    break;
+                }
+                ImageView itemLeftIndicator = (ImageView) item.findViewById(R.id.artist_left_indicator);
+                TextView itemNumber = (TextView) item.findViewById(R.id.track_number);
+                ObjectAnimator itemArrowAnimation = ObjectAnimator.ofFloat(itemLeftIndicator, "alpha", 1f);
+                itemArrowAnimation.setRepeatCount(1);
+                itemArrowAnimation.setRepeatMode(ValueAnimator.REVERSE);
+                itemArrowAnimation.setDuration(500);
+                animators.add(itemArrowAnimation);
+                ObjectAnimator itemNumberAnimation = ObjectAnimator.ofFloat(itemNumber, "alpha", 0f);
+                itemNumberAnimation.setRepeatCount(1);
+                itemNumberAnimation.setRepeatMode(ValueAnimator.REVERSE);
+                itemNumberAnimation.setDuration(500);
+                animators.add(itemNumberAnimation);
+            }
+            ObjectAnimator[] a = animators.toArray(new ObjectAnimator[animators.size()]);
+            AnimatorSet animatorSet = new AnimatorSet();
+            animatorSet.playTogether(a);
+            animatorSet.start();
+        } else {
+            ImageView leftIndicator = (ImageView) view.findViewById(R.id.artist_left_indicator);
+            TextView number = (TextView) view.findViewById(R.id.track_number);
+            ObjectAnimator arrowAnimation = ObjectAnimator.ofFloat(leftIndicator, "alpha", 1f);
+            arrowAnimation.setRepeatCount(1);
+            arrowAnimation.setRepeatMode(ValueAnimator.REVERSE);
+            arrowAnimation.setDuration(500);
+            ObjectAnimator numberAnimation = ObjectAnimator.ofFloat(number, "alpha", 0f);
+            numberAnimation.setRepeatCount(1);
+            numberAnimation.setRepeatMode(ValueAnimator.REVERSE);
+            numberAnimation.setDuration(500);
+            AnimatorSet animatorSet = new AnimatorSet();
+            animatorSet.playTogether(arrowAnimation, numberAnimation);
+            animatorSet.start();
+        }
         mListener.onArtistItemSelected(audioList.get(position), MainActivity.ADD_NEXT, nextCounter);
         nextCounter++;
     }

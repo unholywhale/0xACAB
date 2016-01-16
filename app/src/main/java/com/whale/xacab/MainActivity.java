@@ -55,6 +55,7 @@ public class MainActivity extends Activity implements SelectionListener {
     public final static String TAG_SEEK_BAR = "SEEK_BAR";
     private static final String IS_SHUFFLING = "IS_SHUFFLED";
     private static final String IS_REPEATING = "IS_REPEATING";
+    public static final String LAST_DIR = "lastDir";
     public static final int ADD_NEXT = 0;
     public static final int ADD_LAST = 1;
     public static String songStatus = MusicService.SONG_STOPPED;
@@ -67,6 +68,8 @@ public class MainActivity extends Activity implements SelectionListener {
     private Integer mCurrentQueuePosition = -1;
     private AudioListModel currentSong;
     private boolean mReorderMode = false;
+    private SharedPreferences mPreferences;
+    private SharedPreferences.Editor mPreferencesEditor;
     private Intent musicServiceIntent;
     private SeekBarFragment mSeekBarFragment;
     private LibraryFragment mLibraryFragment;
@@ -197,10 +200,28 @@ public class MainActivity extends Activity implements SelectionListener {
         }
     }
 
+    private void initializeSharedPreferences() {
+        mPreferences = getSharedPreferences(LAST_DIR, MODE_PRIVATE);
+
+    }
+
+    @Override
+    public void updateLastDir(String dir) {
+        mPreferencesEditor = mPreferences.edit();
+        mPreferencesEditor.putString(LAST_DIR, dir);
+        mPreferencesEditor.commit();
+    }
+
+    @Override
+    public String getLastDir() {
+        return mPreferences.getString(LAST_DIR, null);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        initializeSharedPreferences();
         mSession = new MediaSession(this, "SESSION");
         mSession.setActive(true);
         mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
@@ -838,6 +859,9 @@ public class MainActivity extends Activity implements SelectionListener {
             ArrayList<ContentValues> contentValuesList = new ArrayList<>();
             ContentValues cv;
             String[] columns = AudioListModel.getColumns();
+            if (item.isAlbum) {
+                counter = 0;
+            }
             Integer insertPosition = mCurrentQueuePosition + counter + 1;
             String where = QueueDB.KEY_SORT + " > " + insertPosition.toString();
             Cursor cursor = getContentResolver().query(QueueProvider.CONTENT_URI, columns, where, null, QueueDB.KEY_SORT);

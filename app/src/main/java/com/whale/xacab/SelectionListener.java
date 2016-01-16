@@ -9,6 +9,11 @@ public interface SelectionListener {
     void onArtistItemSelected(AudioListModel item);
     void onArtistItemSelected(AudioListModel item, int mode);
     void onArtistItemSelected(AudioListModel item, int mode, int counter);
+
+    void updateLastDir(String dir);
+
+    String getLastDir();
+
     void checkEmpty();
     void onLibraryItemSelected(View item);
     void onQueueItemSelected(int position);

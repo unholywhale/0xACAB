@@ -124,6 +124,7 @@ public class FilesFragment extends Fragment {
                 File file = mFiles.get(i);
                 if (file.isDirectory()) {
                     mCurrentPath += "/" + file.getName();
+                    mListener.updateLastDir(mCurrentPath);
                     populateFiles(mCurrentPath);
                     mAdapter.notifyDataSetChanged();
                 } else {
@@ -140,7 +141,11 @@ public class FilesFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        String path = Environment.getExternalStorageDirectory().toString();
+        String path = mListener.getLastDir();
+        if (path == null) {
+            path = Environment.getExternalStorageDirectory().toString();
+            mListener.updateLastDir(path);
+        }
         if (mCurrentPath == null) {
             mCurrentPath = path;
         }
@@ -204,7 +209,6 @@ public class FilesFragment extends Fragment {
         mListener.setSelectMode(false);
         getAdapter().setCheckBoxVisibility(false);
         getAdapter().notifyDataSetChanged();
-        Toast.makeText(getActivity(), counter.toString() + " files added", Toast.LENGTH_SHORT);
     }
 
     public void selectMode(boolean enabled) {
