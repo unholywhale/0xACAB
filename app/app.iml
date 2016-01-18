@@ -90,6 +90,7 @@
     <orderEntry type="jdk" jdkName="Android API 22 Platform" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" exported="" name="support-v4-18.0.0" level="project" />
+    <orderEntry type="library" exported="" name="lastfm-java-0.1.2" level="project" />
     <orderEntry type="library" exported="" name="drag-sort-listview-1.0" level="project" />
   </component>
 </module>

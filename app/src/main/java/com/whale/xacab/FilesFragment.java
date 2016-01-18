@@ -25,8 +25,6 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.whale.xacab.dummy.DummyContent;
-
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FilenameFilter;

@@ -25,4 +25,5 @@ dependencies {
     //compile 'com.android.support:support-v4:21.0.+'
     //compile 'com.android.support:design:22.2.0'
     compile 'asia.ivity.android:drag-sort-listview:1.0'
+    compile 'de.u-mass:lastfm-java:0.1.2'
 }

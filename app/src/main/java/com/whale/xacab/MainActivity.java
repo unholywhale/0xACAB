@@ -23,6 +23,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Debug;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -33,10 +34,20 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.net.Authenticator;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Queue;
 import java.util.Random;
+
+import de.umass.lastfm.Artist;
+import de.umass.lastfm.Caller;
+import de.umass.lastfm.Chart;
+import de.umass.lastfm.Session;
+import de.umass.lastfm.Track;
+import de.umass.lastfm.User;
+import de.umass.lastfm.scrobble.ScrobbleData;
+import de.umass.lastfm.scrobble.ScrobbleResult;
 
 
 public class MainActivity extends Activity implements SelectionListener {
@@ -53,6 +64,8 @@ public class MainActivity extends Activity implements SelectionListener {
     public static final String TAG_LIBRARY = "LIBRARY";
     public static final String TAG_FILES = "FILES";
     public final static String TAG_SEEK_BAR = "SEEK_BAR";
+    public static final String LAST_FM_API_KEY = "4ccec4fd02f294b545dd916296caccc5";//"fc557cf5add160581972fc82521a5e06";
+    public static final String LAST_FM_API_SECRET = "c3aead12e16598d69f26a24e60b7944e";//"bc81ea0e68d8250fa9770618e81d7529";
     private static final String IS_SHUFFLING = "IS_SHUFFLED";
     private static final String IS_REPEATING = "IS_REPEATING";
     public static final String LAST_DIR = "lastDir";
@@ -64,6 +77,7 @@ public class MainActivity extends Activity implements SelectionListener {
     public boolean isShuffling = false;
     public boolean isRepeating = false;
     public boolean isLibrary = true;
+    private LastFmWrapper mLastFm;
     private AudioManager mAudioManager;
     private Integer mCurrentQueuePosition = -1;
     private AudioListModel currentSong;
@@ -111,6 +125,7 @@ public class MainActivity extends Activity implements SelectionListener {
                     isPlaying = true;
                     //mAudioManager.requestAudioFocus(afChangeListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
                     changePlayStatus(MusicService.SONG_STARTED);
+                    mLastFm.startScrobbling(currentSong);
                     int position = intent.getIntExtra(MusicService.SONG_POSITION, -1);
                     int step = currentSong.getDuration() / 200;
                     if (position != -1) {
@@ -124,6 +139,7 @@ public class MainActivity extends Activity implements SelectionListener {
 
                 } else if (receiveValue.equals(MusicService.SONG_STOPPED)) {
                     isPlaying = false;
+                    mLastFm.pause();
                     //mAudioManager.abandonAudioFocus(afChangeListener);
                     changePlayStatus(MusicService.SONG_STOPPED);
                 }
@@ -150,6 +166,7 @@ public class MainActivity extends Activity implements SelectionListener {
             }
         }
     };
+
 
     @Override
     public int getCurrentQueuePosition() {
@@ -217,11 +234,18 @@ public class MainActivity extends Activity implements SelectionListener {
         return mPreferences.getString(LAST_DIR, null);
     }
 
+    public void initializeLastFm() {
+        String userAgent = "ACAB";
+        mLastFm = new LastFmWrapper(userAgent, LAST_FM_API_KEY, LAST_FM_API_SECRET, true);
+        mLastFm.authorize("alex-sonar", "tu8945t01");
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initializeSharedPreferences();
+        initializeLastFm();
         mSession = new MediaSession(this, "SESSION");
         mSession.setActive(true);
         mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
