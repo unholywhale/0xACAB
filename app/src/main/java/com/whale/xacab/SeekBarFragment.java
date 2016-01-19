@@ -106,8 +106,10 @@ public class SeekBarFragment extends Fragment {
 
                 @Override
                 public void onStopTrackingTouch(SeekBar seekBar) {
-                    int newDuration = mCurrentDuration * seekBar.getProgress() / MAX_PROGRESS;
-                    mListener.onSeekBarChanged(newDuration);
+                    if (mCurrentDuration != null) {
+                        int newDuration = mCurrentDuration * seekBar.getProgress() / MAX_PROGRESS;
+                        mListener.onSeekBarChanged(newDuration);
+                    }
                 }
             });
             mPlayerProgress = (TextView) view.findViewById(R.id.player_progress);

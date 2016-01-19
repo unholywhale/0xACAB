@@ -1,6 +1,10 @@
+<android.support.v4.widget.DrawerLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <LinearLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
+
         android:id="@+id/fragment_container"
         android:orientation="vertical"
         android:layout_width="match_parent"
@@ -35,3 +39,32 @@
         </RelativeLayout>
 
     </LinearLayout>
+    <RelativeLayout
+        android:id="@+id/navigation_drawer"
+        android:layout_gravity="start"
+        android:alpha="1"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <EditText
+            android:id="@+id/last_fm_user"
+            android:hint="Last.fm user"
+            android:layout_centerHorizontal="true"
+            android:layout_width="200dp"
+            android:layout_height="50dp"/>
+        <EditText
+            android:id="@+id/last_fm_password"
+            android:hint="Last.fm password"
+            android:inputType="textPassword"
+            android:layout_centerHorizontal="true"
+            android:layout_width="200dp"
+            android:layout_height="50dp"
+            android:layout_below="@id/last_fm_user"/>
+        <Button
+            android:id="@+id/last_fm_login"
+            android:text="Login"
+            android:layout_width="200dp"
+            android:layout_height="50dp"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@id/last_fm_password"/>
+    </RelativeLayout>
+</android.support.v4.widget.DrawerLayout>

@@ -1,5 +1,7 @@
 package com.whale.xacab;
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.FragmentManager;
@@ -29,6 +31,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -53,6 +57,7 @@ import de.umass.lastfm.scrobble.ScrobbleResult;
 public class MainActivity extends Activity implements SelectionListener {
 
     public final static String APP_TITLE = "0xACAB";
+    public static final String APP_ID = "com.whale.xacab";
     public final static String INTENT_SONG_STATUS = "com.whale.xacab.SONG_STOPPED";
     public final static String INTENT_SONG_NEXT = "com.whale.xacab.SONG_NEXT";
     public final static String INTENT_SONG_PREV = "com.whale.xacab.SONG_PREV";
@@ -66,6 +71,8 @@ public class MainActivity extends Activity implements SelectionListener {
     public final static String TAG_SEEK_BAR = "SEEK_BAR";
     public static final String LAST_FM_API_KEY = "4ccec4fd02f294b545dd916296caccc5";//"fc557cf5add160581972fc82521a5e06";
     public static final String LAST_FM_API_SECRET = "c3aead12e16598d69f26a24e60b7944e";//"bc81ea0e68d8250fa9770618e81d7529";
+    public static final String LAST_FM_SESSION = "lastFmSession";
+    public static final String LAST_FM_USER = "lastFmUser";
     private static final String IS_SHUFFLING = "IS_SHUFFLED";
     private static final String IS_REPEATING = "IS_REPEATING";
     public static final String LAST_DIR = "lastDir";
@@ -219,14 +226,18 @@ public class MainActivity extends Activity implements SelectionListener {
 
     private void initializeSharedPreferences() {
         mPreferences = getSharedPreferences(LAST_DIR, MODE_PRIVATE);
-
+        mPreferencesEditor = mPreferences.edit();
+//        mPreferencesEditor.remove(LAST_FM_SESSION);
+//        mPreferencesEditor.remove(LAST_FM_USER);
+//        mPreferencesEditor.commit();
     }
 
     @Override
     public void updateLastDir(String dir) {
-        mPreferencesEditor = mPreferences.edit();
-        mPreferencesEditor.putString(LAST_DIR, dir);
-        mPreferencesEditor.commit();
+        if (mPreferencesEditor != null) {
+            mPreferencesEditor.putString(LAST_DIR, dir);
+            mPreferencesEditor.commit();
+        }
     }
 
     @Override
@@ -236,8 +247,81 @@ public class MainActivity extends Activity implements SelectionListener {
 
     public void initializeLastFm() {
         String userAgent = "ACAB";
-        mLastFm = new LastFmWrapper(userAgent, LAST_FM_API_KEY, LAST_FM_API_SECRET, true);
-        mLastFm.authorize("alex-sonar", "tu8945t01");
+        checkLastFmLogin();
+//        Button lastFmLogin = (Button) findViewById(R.id.last_fm_login);
+//        lastFmLogin.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                EditText lastFmUser = (EditText) findViewById(R.id.last_fm_user);
+//                EditText lastFmPassword = (EditText) findViewById(R.id.last_fm_password);
+//                loginLastFm(lastFmUser.getText().toString(), lastFmPassword.getText().toString());
+//            }
+//        });
+        mLastFm = new LastFmWrapper(userAgent, LAST_FM_API_KEY, LAST_FM_API_SECRET, this, true);
+        String sessionKey = mPreferences.getString(LAST_FM_SESSION, null);
+        if (sessionKey != null) {
+            mLastFm.authorize(sessionKey);
+        }
+    }
+
+    public void loginLastFm(String user, String password) {
+        if (mLastFm != null) {
+            mLastFm.authorize(user, password);
+        }
+    }
+
+    @Override
+    public void saveLastFmSession(String sessionKey, String user) {
+        if (mPreferencesEditor != null) {
+            mPreferencesEditor.putString(LAST_FM_SESSION, sessionKey);
+            mPreferencesEditor.putString(LAST_FM_USER, user);
+            mPreferencesEditor.commit();
+            checkLastFmLogin();
+        }
+    }
+
+    private void checkLastFmLogin() {
+        final String user = mPreferences.getString(LAST_FM_USER, null);
+        final String session = mPreferences.getString(LAST_FM_SESSION, null);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                EditText lastFmUser = (EditText) findViewById(R.id.last_fm_user);
+                EditText lastFmPassword = (EditText) findViewById(R.id.last_fm_password);
+                Button lastFmLogin = (Button) findViewById(R.id.last_fm_login);
+                if (session != null) {
+                    lastFmUser.setEnabled(false);
+                    lastFmUser.setHint(user);
+                    lastFmPassword.setEnabled(false);
+                    lastFmPassword.setHint("");
+                    lastFmLogin.setText(R.string.logout);
+                    lastFmLogin.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            mPreferencesEditor.remove(LAST_FM_SESSION);
+                            mPreferencesEditor.remove(LAST_FM_USER);
+                            mPreferencesEditor.commit();
+                            checkLastFmLogin();
+                        }
+                    });
+                } else {
+                    lastFmUser.setEnabled(true);
+                    lastFmUser.setHint(R.string.last_fm_user);
+                    lastFmPassword.setEnabled(true);
+                    lastFmPassword.setHint(R.string.last_fm_password);
+                    lastFmLogin.setText(R.string.login);
+                    lastFmLogin.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            EditText lastFmUser = (EditText) findViewById(R.id.last_fm_user);
+                            EditText lastFmPassword = (EditText) findViewById(R.id.last_fm_password);
+                            loginLastFm(lastFmUser.getText().toString(), lastFmPassword.getText().toString());
+                            checkLastFmLogin();
+                        }
+                    });
+                }
+            }
+        });
     }
 
     @Override

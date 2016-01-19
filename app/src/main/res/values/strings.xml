@@ -7,6 +7,11 @@
     <string name="reorder">Reorder</string>
     <string name="clear">Clear</string>
     <string name="select">Select</string>
+    <string name="last_fm_user">Last.fm user</string>
+    <string name="last_fm_password">Last.fm password</string>
+    <string name="login">Login</string>
+    <string name="logout">Logout</string>
+    <string name="last_fm_logged_as">Logged as </string>
     <plurals name="Nalbums">
         <item quantity="one">%d album</item>
         <item quantity="other">%d albums</item>
