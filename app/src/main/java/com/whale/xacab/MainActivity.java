@@ -102,13 +102,13 @@ public class MainActivity extends Activity implements SelectionListener {
         public void onAudioFocusChange(int i) {
             switch (i) {
                 case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
-
+                    play();
                     break;
                 case AudioManager.AUDIOFOCUS_GAIN:
-
+                    play();
                     break;
                 case AudioManager.AUDIOFOCUS_LOSS:
-
+                    play();
                     break;
             }
         }
@@ -153,14 +153,12 @@ public class MainActivity extends Activity implements SelectionListener {
                     prevSong();
                 }
             } else if (intent.getAction().equals(INTENT_SONG_PLAY)) {
-                musicServiceIntent.removeExtra(INTENT_EXTRA);
-                startService(musicServiceIntent);
+                play();
             } else if (intent.getAction().equals(AudioManager.ACTION_HEADSET_PLUG)) {
                 int state = intent.getIntExtra("state", -1);
                 if (state != -1) {
                     if (state == 0) {
-                        musicServiceIntent.removeExtra(INTENT_EXTRA);
-                        startService(musicServiceIntent);
+                        play();
                     }
                 }
             }
@@ -326,6 +324,7 @@ public class MainActivity extends Activity implements SelectionListener {
         mSession = new MediaSession(this, "SESSION");
         mSession.setActive(true);
         mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        mAudioManager.requestAudioFocus(afChangeListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
         setFragments();
         mButtonsContainer = (RelativeLayout) findViewById(R.id.main_buttons_container);
         changeButtons(R.layout.container_queue, R.id.container_queue_buttons);
@@ -498,71 +497,6 @@ public class MainActivity extends Activity implements SelectionListener {
             }
             AddToQueueNextTask task = new AddToQueueNextTask(counter);
             task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, item);
-//            ArrayList<ContentValues> contentValuesList = new ArrayList<>();
-//            ContentValues cv;
-//            String[] columns = AudioListModel.getColumns();
-//            Integer insertPosition = mCurrentQueuePosition + counter + 1;
-//            String where = QueueDB.KEY_SORT + " > " + insertPosition.toString();
-//            Cursor cursor = getContentResolver().query(QueueProvider.CONTENT_URI, columns, where, null, QueueDB.KEY_SORT);
-//            while (cursor.moveToNext()) {
-////                String title = cursor.getString(cursor.getColumnIndexOrThrow(QueueDB.KEY_TITLE));
-////                int sort = cursor.getInt(cursor.getColumnIndexOrThrow(QueueDB.KEY_SORT));
-//                cv = new ContentValues();
-//                DatabaseUtils.cursorRowToContentValues(cursor, cv);
-//                contentValuesList.add(cv);
-//            }
-//            if (!item.isAlbum) {
-//                changeSortNumber(contentValuesList, 0);
-//                item.setSort(insertPosition + 1);
-//                onArtistItemSelected(item);
-//            } else {
-//                ContentValues values = new ContentValues();
-//                String[] from = new String[]{
-//                        MediaStore.Audio.Media.TITLE,
-//                        MediaStore.Audio.Media.ALBUM,
-//                        MediaStore.Audio.Media.ALBUM_ID,
-//                        MediaStore.Audio.Media.YEAR,
-//                        MediaStore.Audio.Media.ARTIST,
-//                        MediaStore.Audio.Media.DATA,
-//                        MediaStore.Audio.Media.DURATION,
-//                        MediaStore.Audio.Media.TRACK,
-//                        MediaStore.Audio.Media._ID
-//                };
-//                String selection = MediaStore.Audio.Media.ALBUM_ID + "=?";
-//                Long aId = item.getAlbumId();
-//                String[] albumWhere = {aId.toString()};
-//                Cursor albumCursor = getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, from, selection, albumWhere, MediaStore.Audio.Media.TRACK);
-//                if (albumCursor != null) {
-//                    changeSortNumber(contentValuesList, albumCursor.getCount());
-//                    int c = 0;
-//                    while (albumCursor.moveToNext()) {
-//                        values.clear();
-//                        String artist = albumCursor.getString(albumCursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST));
-//                        String album = albumCursor.getString(albumCursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM));
-//                        String title = albumCursor.getString(albumCursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE));
-//                        String data = albumCursor.getString(albumCursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA));
-//                        int duration = albumCursor.getInt(albumCursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION));
-//                        int number = albumCursor.getInt(albumCursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TRACK));
-//                        int year = albumCursor.getInt(albumCursor.getColumnIndexOrThrow(MediaStore.Audio.Media.YEAR));
-//                        long albumId = albumCursor.getLong(albumCursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID));
-//                        long trackId = albumCursor.getLong(albumCursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID));
-//                        AudioListModel newItem = new AudioListModel(artist, album, title, data, duration, number, year, albumId, trackId);
-//                        values.put(QueueDB.KEY_ARTIST, newItem.getArtist());
-//                        values.put(QueueDB.KEY_ALBUM, newItem.getAlbum());
-//                        values.put(QueueDB.KEY_TITLE, newItem.getTitle());
-//                        values.put(QueueDB.KEY_DATA, newItem.getData());
-//                        values.put(QueueDB.KEY_DURATION, newItem.getDuration());
-//                        values.put(QueueDB.KEY_NUMBER, newItem.getNumber());
-//                        values.put(QueueDB.KEY_YEAR, newItem.getYear());
-//                        values.put(QueueDB.KEY_ALBUM_ID, newItem.getAlbumId());
-//                        values.put(QueueDB.KEY_TRACK_ID, newItem.getTrackId());
-//                        values.put(QueueDB.KEY_SORT, insertPosition + c);
-//                        getContentResolver().insert(QueueProvider.CONTENT_URI, values);
-//                        mQueueData.add(newItem);
-//                        c++;
-//                    }
-//                }
-//            }
         }
     }
 
@@ -674,8 +608,7 @@ public class MainActivity extends Activity implements SelectionListener {
         playButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                musicServiceIntent.removeExtra(INTENT_EXTRA);
-                startService(musicServiceIntent);
+                play();
             }
         });
         if (repeatButton != null) {
@@ -710,6 +643,11 @@ public class MainActivity extends Activity implements SelectionListener {
         ((ViewGroup) buttons.getParent()).removeView(buttons);
         mButtonsContainer.removeAllViews();
         mButtonsContainer.addView(buttons);
+    }
+
+    private void play() {
+        musicServiceIntent.removeExtra(INTENT_EXTRA);
+        startService(musicServiceIntent);
     }
 
 //    public void openQueueFragment() {
