@@ -179,7 +179,9 @@ public class SeekBarFragment extends Fragment {
                 mActivity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        mPlayerProgress.setText(MusicUtils.makeTimeString(getActivity().getApplicationContext(), mProgress / 1000));
+                        if (getActivity() != null) {
+                            mPlayerProgress.setText(MusicUtils.makeTimeString(getActivity().getApplicationContext(), mProgress / 1000));
+                        }
                     }
                 });
             }

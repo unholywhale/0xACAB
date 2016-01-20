@@ -44,14 +44,6 @@ import java.util.HashMap;
 import java.util.Queue;
 import java.util.Random;
 
-import de.umass.lastfm.Artist;
-import de.umass.lastfm.Caller;
-import de.umass.lastfm.Chart;
-import de.umass.lastfm.Session;
-import de.umass.lastfm.Track;
-import de.umass.lastfm.User;
-import de.umass.lastfm.scrobble.ScrobbleData;
-import de.umass.lastfm.scrobble.ScrobbleResult;
 
 
 public class MainActivity extends Activity implements SelectionListener {
@@ -84,6 +76,7 @@ public class MainActivity extends Activity implements SelectionListener {
     public boolean isShuffling = false;
     public boolean isRepeating = false;
     public boolean isLibrary = true;
+    private NotificationManager mNotificationManager;
     private LastFmWrapper mLastFm;
     private AudioManager mAudioManager;
     private Integer mCurrentQueuePosition = -1;
@@ -342,6 +335,7 @@ public class MainActivity extends Activity implements SelectionListener {
         mIntentFilter.addAction(INTENT_SONG_NEXT);
         mIntentFilter.addAction(INTENT_SONG_PLAY);
         mIntentFilter.addAction(AudioManager.ACTION_HEADSET_PLUG);
+        mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         registerReceiver(mBroadcastReceiver, mIntentFilter);
         db = new QueueDB(this);
         musicServiceIntent = new Intent(getApplicationContext(), MusicService.class);
@@ -482,6 +476,7 @@ public class MainActivity extends Activity implements SelectionListener {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        mNotificationManager.cancelAll();
         unregisterReceiver(mBroadcastReceiver);
     }
 
@@ -636,8 +631,7 @@ public class MainActivity extends Activity implements SelectionListener {
                 .setContentText(currentSong.getArtist())
                 .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher))
                 .build();
-        NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        manager.notify(1, notification);
+        mNotificationManager.notify(1, notification);
     }
 
     @Override
@@ -735,7 +729,8 @@ public class MainActivity extends Activity implements SelectionListener {
         if (mReorderMode) {
             reorderMode();
         } else {
-            super.onBackPressed();
+            moveTaskToBack(true);
+            //super.onBackPressed();
         }
     }
 
