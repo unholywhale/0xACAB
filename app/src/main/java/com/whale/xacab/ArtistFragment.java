@@ -222,6 +222,12 @@ public class ArtistFragment extends Fragment {
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+        mListener.setFragmentTitle(mArtistName);
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 

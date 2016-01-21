@@ -155,6 +155,7 @@ public class FilesFragment extends Fragment {
     @Override
     public void onStart() {
         mListener.setFilesMenu();
+        mListener.setFragmentTitle(R.string.files_header);
         super.onStart();
     }
 

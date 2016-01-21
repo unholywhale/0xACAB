@@ -94,6 +94,7 @@ public class LibraryFragment extends Fragment implements LoaderManager.LoaderCal
     @Override
     public void onStart() {
         mListener.setLibraryMenu();
+        mListener.setFragmentTitle(R.string.library_header);
         super.onStart();
     }
 

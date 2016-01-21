@@ -19,7 +19,7 @@
             android:id="@+id/library_artists_action"
             android:layout_width="48dp"
             android:layout_height="36dp"
-            android:src="@drawable/ic_action_options"
+            android:src="@drawable/ic_arrow_right"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
             />

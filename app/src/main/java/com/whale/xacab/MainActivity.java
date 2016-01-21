@@ -16,6 +16,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.graphics.BitmapFactory;
@@ -25,6 +26,8 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Debug;
 import android.provider.MediaStore;
+import android.support.v4.app.ActionBarDrawerToggle;
+import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -76,6 +79,8 @@ public class MainActivity extends Activity implements SelectionListener {
     public boolean isShuffling = false;
     public boolean isRepeating = false;
     public boolean isLibrary = true;
+    private ActionBarDrawerToggle mDrawerToggle;
+    private DrawerLayout mDrawerLayout;
     private NotificationManager mNotificationManager;
     private LastFmWrapper mLastFm;
     private AudioManager mAudioManager;
@@ -292,6 +297,7 @@ public class MainActivity extends Activity implements SelectionListener {
                             mPreferencesEditor.remove(LAST_FM_SESSION);
                             mPreferencesEditor.remove(LAST_FM_USER);
                             mPreferencesEditor.commit();
+                            mLastFm.stop();
                             checkLastFmLogin();
                         }
                     });
@@ -300,6 +306,7 @@ public class MainActivity extends Activity implements SelectionListener {
                     lastFmUser.setHint(R.string.last_fm_user);
                     lastFmPassword.setEnabled(true);
                     lastFmPassword.setHint(R.string.last_fm_password);
+                    lastFmPassword.setText("");
                     lastFmLogin.setText(R.string.login);
                     lastFmLogin.setOnClickListener(new View.OnClickListener() {
                         @Override
@@ -316,6 +323,18 @@ public class MainActivity extends Activity implements SelectionListener {
     }
 
     @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        mDrawerToggle.onConfigurationChanged(newConfig);
+    }
+
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        mDrawerToggle.syncState();
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -323,6 +342,26 @@ public class MainActivity extends Activity implements SelectionListener {
         initializeLastFm();
         mSession = new MediaSession(this, "SESSION");
         mSession.setActive(true);
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mDrawerToggle = new ActionBarDrawerToggle(
+                this,
+                mDrawerLayout,
+                R.drawable.ic_drawer,
+                R.string.drawer_open,
+                R.string.drawer_close) {
+            @Override
+            public void onDrawerOpened(View drawerView) {
+                super.onDrawerOpened(drawerView);
+            }
+
+            @Override
+            public void onDrawerClosed(View drawerView) {
+                super.onDrawerClosed(drawerView);
+            }
+        };
+        mDrawerLayout.setDrawerListener(mDrawerToggle);
+        getActionBar().setDisplayHomeAsUpEnabled(true);
+        getActionBar().setHomeButtonEnabled(true);
         mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         mAudioManager.requestAudioFocus(afChangeListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
         setFragments();
@@ -354,9 +393,15 @@ public class MainActivity extends Activity implements SelectionListener {
         boolean enabled;
         String suffix = "";
         if (mQueueData.isEmpty()) {
+            if (mQueueFragment.isAdded()) {
+                mQueueFragment.showAddButton();
+            }
             enabled = false;
             suffix = "_disabled";
         } else {
+            if (mQueueFragment.isAdded()) {
+                mQueueFragment.hideAddButton();
+            }
             enabled = true;
         }
         setMenuItemEnabled(R.id.action_reorder, enabled);
@@ -451,7 +496,8 @@ public class MainActivity extends Activity implements SelectionListener {
                 int year = cursor.getInt(cursor.getColumnIndexOrThrow(QueueDB.KEY_YEAR));
                 long albumId = cursor.getLong(cursor.getColumnIndexOrThrow(QueueDB.KEY_ALBUM_ID));
                 long trackId = cursor.getLong(cursor.getColumnIndexOrThrow(QueueDB.KEY_TRACK_ID));
-                AudioListModel song = new AudioListModel(artist, album, title, data, duration, number, year, albumId, trackId);
+                int sort = cursor.getInt(cursor.getColumnIndexOrThrow(QueueDB.KEY_SORT));
+                AudioListModel song = new AudioListModel(artist, album, title, data, duration, number, year, albumId, trackId, sort);
                 mQueueData.add(song);
             }
             cursor.close();
@@ -535,6 +581,11 @@ public class MainActivity extends Activity implements SelectionListener {
     @Override
     public void setFragmentTitle(String title) {
         setTitle(title);
+    }
+
+    @Override
+    public void setFragmentTitle(int resourceId) {
+        setTitle(resourceId);
     }
 
     public void makeNotification() {
@@ -804,7 +855,7 @@ public class MainActivity extends Activity implements SelectionListener {
         FragmentTransaction transaction = getFragmentManager().beginTransaction();
         transaction.replace(R.id.main_activity_container, mQueueFragment, TAG_QUEUE);
         transaction.commit();  // Do not add to backstack
-        setTitle(R.string.queue_header);
+        //setTitle(R.string.queue_header);
     }
 
     private void openSeekBarFragment() {
@@ -820,7 +871,7 @@ public class MainActivity extends Activity implements SelectionListener {
         transaction.replace(R.id.main_activity_container, mLibraryFragment, TAG_LIBRARY);
         transaction.addToBackStack(TAG_LIBRARY);
         transaction.commit();
-        setTitle(R.string.library_header);
+        //setTitle(R.string.library_header);
     }
 
     private void openFilesFragment() {
@@ -830,7 +881,7 @@ public class MainActivity extends Activity implements SelectionListener {
         transaction.replace(R.id.main_activity_container, mFilesFragment, TAG_FILES);
         transaction.addToBackStack(TAG_FILES);
         transaction.commit();
-        setTitle(R.string.files_header);
+        //setTitle(R.string.files_header);
     }
 
     private void openArtistFragment(String artist) {
@@ -840,7 +891,7 @@ public class MainActivity extends Activity implements SelectionListener {
         transaction.replace(R.id.main_activity_container, mArtistFragment);
         transaction.addToBackStack(null);
         transaction.commit();
-        setTitle(artist);
+        //setTitle(artist);
     }
 
     @Override
@@ -861,6 +912,9 @@ public class MainActivity extends Activity implements SelectionListener {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
+        if (mDrawerToggle.onOptionsItemSelected(item)) {
+            return true;
+        }
         int id = item.getItemId();
         switch (id) {
             case R.id.action_clear_queue:
@@ -1092,6 +1146,21 @@ public class MainActivity extends Activity implements SelectionListener {
                 String where = QueueDB.KEY_ID + "=?;";
                 String[] args = {holder.id.toString()};
                 getContentResolver().delete(QueueProvider.CONTENT_URI, where, args);
+            }
+            String[] columns = AudioListModel.getColumns();
+            ArrayList<ContentValues> contentValues = new ArrayList<>();
+            ContentValues cv = new ContentValues();
+            Cursor cursor = getContentResolver().query(QueueProvider.CONTENT_URI, columns, null, null, QueueDB.KEY_SORT);
+            int counter = 1;
+            while (cursor.moveToNext()) {
+                DatabaseUtils.cursorRowToContentValues(cursor, cv);
+                cv.remove(QueueDB.KEY_SORT);
+                cv.put(QueueDB.KEY_SORT, counter);
+                Long id = cv.getAsLong(QueueDB.KEY_ID);
+                String selection = QueueDB.KEY_ID + "=?";
+                String[] selectionArgs = {id.toString()};
+                getContentResolver().update(QueueProvider.CONTENT_URI, cv, selection, selectionArgs);
+                counter++;
             }
             mSelectMode = false;
             runOnUiThread(new Runnable() {

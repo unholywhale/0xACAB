@@ -12,6 +12,8 @@
     <string name="login">Login</string>
     <string name="logout">Logout</string>
     <string name="last_fm_logged_as">Logged as </string>
+    <string name="drawer_open">Open drawer</string>
+    <string name="drawer_close">Close drawer</string>
     <plurals name="Nalbums">
         <item quantity="one">%d album</item>
         <item quantity="other">%d albums</item>

@@ -83,38 +83,47 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
 
         @Override
         public void onScrollTop() {
-            if (mAdd.getVisibility() == View.INVISIBLE) {
-                Runnable action = new Runnable() {
-                    @Override
-                    public void run() {
-                        mAdd.setVisibility(View.VISIBLE);
-                        invalidateOptions();
-                    }
-                };
-                mAdd.animate()
-                        .translationY(0)
-                        .alpha(1)
-                        .withStartAction(action)
-                        .start();
-            }
+            showAddButton();
         }
 
         @Override
         public void onScrollBottom() {
-            if (mAdd.getVisibility() == View.VISIBLE) {
-                Runnable action = new Runnable() {
-                    @Override
-                    public void run() {
-                        mAdd.setVisibility(View.INVISIBLE);
-                        invalidateOptions();
-                    }
-                };
-                mAdd.animate()
-                        .translationY(100)
-                        .alpha(0)
-                        .withEndAction(action)
-                        .start();
-            }
+            hideAddButton();
+        }
+    }
+
+    public void showAddButton() {
+        if (mAdd.getVisibility() == View.INVISIBLE) {
+            Runnable action = new Runnable() {
+                @Override
+                public void run() {
+                    mAdd.setVisibility(View.VISIBLE);
+                    invalidateOptions();
+                }
+            };
+            mAdd.animate()
+                    .translationY(0)
+                    .alpha(1)
+                    .withStartAction(action)
+                    .start();
+        }
+
+    }
+
+    public void hideAddButton() {
+        if (mAdd.getVisibility() == View.VISIBLE) {
+            Runnable action = new Runnable() {
+                @Override
+                public void run() {
+                    mAdd.setVisibility(View.INVISIBLE);
+                    invalidateOptions();
+                }
+            };
+            mAdd.animate()
+                    .translationY(100)
+                    .alpha(0)
+                    .withEndAction(action)
+                    .start();
         }
     }
 
@@ -231,6 +240,7 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
     public void onStart() {
         mListener.setQueueMenu();
         mListener.checkEmpty();
+        mListener.setFragmentTitle(R.string.queue_header);
         super.onStart();
     }
 
@@ -288,11 +298,12 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
     }
 
     public void reorderMode(boolean enabled) {
+        mAdapter.setDragMode(enabled);
         if (enabled) {
             mList.setDropListener(mDropListener);
             mList.setRemoveListener(mRemoveListener);
             DragSortController controller = new DragSortController(mList);
-            controller.setDragHandleId(R.id.queue_number);
+            controller.setDragHandleId(R.id.queue_drag);
             controller.setBackgroundColor(R.color.background_color);
             mList.setFloatViewManager(controller);
             mList.setOnTouchListener(controller);
@@ -305,6 +316,7 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
 
         private Integer counter = 0;
         private boolean mCheckBoxVisible = false;
+        private boolean isDragging = false;
         private HashMap<Integer, QueueHashHolder>  hashMapChecked = new HashMap<>();
 
         @Override
@@ -379,6 +391,7 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
             holder.duration = (TextView) view.findViewById(R.id.queue_duration);
             holder.data = (TextView) view.findViewById(R.id.queue_data);
             holder.playing = (ImageView) view.findViewById(R.id.queue_playing);
+            holder.drag = (ImageView) view.findViewById(R.id.queue_drag);
             holder.checked = (CheckBox) view.findViewById(R.id.queue_checked);
             holder.checked.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
@@ -425,6 +438,7 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
                 if (mCheckBoxVisible) {
                     holder.playing.setVisibility(View.INVISIBLE);
                     holder.number.setVisibility(View.INVISIBLE);
+                    holder.drag.setVisibility(View.INVISIBLE);
                     holder.checked.setVisibility(View.VISIBLE);
                     QueueHashHolder queueHashHolder = hashMapChecked.get(cursor.getPosition());
                     if (queueHashHolder == null) {
@@ -440,7 +454,14 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
                     } else {
                         holder.checked.setChecked(false);
                     }
+                } else if (isDragging) {
+                    holder.checked.setVisibility(View.INVISIBLE);
+                    holder.checked.setChecked(false);
+                    holder.number.setVisibility(View.INVISIBLE);
+                    holder.playing.setVisibility(View.INVISIBLE);
+                    holder.drag.setVisibility(View.VISIBLE);
                 } else {
+                    holder.drag.setVisibility(View.INVISIBLE);
                     holder.checked.setVisibility(View.INVISIBLE);
                     holder.checked.setChecked(false);
                     if (cursor.getPosition() == (mListener.getCurrentQueuePosition())) {
@@ -461,6 +482,11 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
             }
         }
 
+        public void setDragMode(boolean isDragging) {
+            this.isDragging = isDragging;
+            this.notifyDataSetChanged();
+        }
+
         public class QueueHolder {
             TextView number;
             TextView title;
@@ -468,6 +494,7 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
             TextView duration;
             TextView data;
             ImageView playing;
+            ImageView drag;
             CheckBox checked;
             ImageView delete;
             ImageView info;
