@@ -667,7 +667,11 @@ public class MainActivity extends Activity implements SelectionListener {
         if (mReorderMode) {
             reorderMode();
         } else {
-            moveTaskToBack(true);
+            if (getFragmentManager().findFragmentByTag(TAG_QUEUE).isAdded()) {
+                moveTaskToBack(true);
+            } else {
+                super.onBackPressed();
+            }
             //super.onBackPressed();
         }
     }
