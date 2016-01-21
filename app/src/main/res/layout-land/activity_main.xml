@@ -1,0 +1,79 @@
+<android.support.v4.widget.DrawerLayout
+    android:id="@+id/drawer_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <LinearLayout
+
+        android:id="@+id/fragment_container"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="7">
+            <FrameLayout
+                android:id="@+id/main_activity_container"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="4"
+            android:background="@color/background_color_back">
+            <RelativeLayout
+                android:id="@+id/main_buttons_container"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content">
+            </RelativeLayout>
+            <FrameLayout
+                android:id="@+id/seek_bar_container"
+                android:layout_below="@id/main_buttons_container"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </RelativeLayout>
+
+    </LinearLayout>
+    <RelativeLayout
+        android:id="@+id/navigation_drawer"
+        android:layout_gravity="start"
+        android:background="@color/background_color"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <ImageView
+            android:id="@+id/last_fm_icon"
+            android:src="@mipmap/ic_last_fm_logo"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_alignParentStart="true"/>
+        <EditText
+            android:id="@+id/last_fm_user"
+            android:hint="Last.fm user"
+            android:layout_toEndOf="@id/last_fm_icon"
+            android:layout_width="200dp"
+            android:layout_height="50dp"/>
+        <EditText
+            android:id="@+id/last_fm_password"
+            android:hint="Last.fm password"
+            android:inputType="textPassword"
+            android:layout_width="200dp"
+            android:layout_height="50dp"
+            android:layout_toEndOf="@id/last_fm_icon"
+            android:layout_below="@id/last_fm_user"/>
+        <Button
+            android:id="@+id/last_fm_login"
+            android:text="Login"
+            android:layout_width="200dp"
+            android:layout_height="50dp"
+            android:layout_centerHorizontal="true"
+            android:layout_toEndOf="@id/last_fm_icon"
+            android:layout_below="@id/last_fm_password"/>
+    </RelativeLayout>
+</android.support.v4.widget.DrawerLayout>
