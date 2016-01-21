@@ -165,7 +165,6 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
         mAdapter = new QueueAdapter(getActivity().getApplicationContext(), null, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
         mList = (DragSortListView) view.findViewById(R.id.queue_list);
 
-
         mList.setOnTouchListener(new QueueGestureHelper(getActivity().getApplicationContext()));
 
         mList.setOnItemClickListener(new ListView.OnItemClickListener() {

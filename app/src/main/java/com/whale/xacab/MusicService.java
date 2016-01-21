@@ -50,6 +50,11 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         sendBroadcast(mBroadcastIntent);
     }
 
+    private void getPosition() {
+        mBroadcastIntent.putExtra(SONG_POSITION, mediaPlayer.getCurrentPosition());
+        sendBroadcast(mBroadcastIntent);
+    }
+
     private void nextSong() {
         Intent intent = new Intent();
         intent.setAction(MainActivity.INTENT_SONG_NEXT);
@@ -62,44 +67,49 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         if (mediaPlayer != null) {
             mStartID = startId;
             String songSource = intent.getStringExtra(MainActivity.INTENT_EXTRA);
+            boolean getPosition = intent.getBooleanExtra(MainActivity.INTENT_GET_POSITION, false);
             int duration = intent.getIntExtra(MainActivity.INTENT_DURATION, -1);
-            try {
-                if (mediaPlayer.isPlaying()) {
-                    if (duration != -1) {
-                        mediaPlayer.seekTo(duration);
-                        mediaPlayer.start();
-                        songStarted();
-                    } else if (songSource == null) {
-                        mediaPlayer.pause();
-                        songStopped();
-                    } else if (!songSource.equals(currentSong)) {
-                        mediaPlayer.stop();
-                        mediaPlayer.reset();
-                        mediaPlayer.setDataSource(songSource);
-                        mediaPlayer.prepareAsync();
-                        currentSong = songSource;
+            if (getPosition) {
+                getPosition();
+            } else {
+                try {
+                    if (mediaPlayer.isPlaying()) {
+                        if (duration != -1) {
+                            mediaPlayer.seekTo(duration);
+                            mediaPlayer.start();
+                            songStarted();
+                        } else if (songSource == null) {
+                            mediaPlayer.pause();
+                            songStopped();
+                        } else if (!songSource.equals(currentSong)) {
+                            mediaPlayer.stop();
+                            mediaPlayer.reset();
+                            mediaPlayer.setDataSource(songSource);
+                            mediaPlayer.prepareAsync();
+                            currentSong = songSource;
+                        } else {
+                            mediaPlayer.pause();
+                            songStopped();
+                        }
                     } else {
-                        mediaPlayer.pause();
-                        songStopped();
+                        if (duration != -1) {
+                            mediaPlayer.seekTo(duration);
+                        } else if (songSource == null) {
+                            mediaPlayer.start();
+                            songStarted();
+                        } else if (songSource.equals(currentSong)) {
+                            mediaPlayer.start();
+                            songStarted();
+                        } else {
+                            mediaPlayer.reset();
+                            mediaPlayer.setDataSource(songSource);
+                            mediaPlayer.prepareAsync();
+                            currentSong = songSource;
+                        }
                     }
-                } else {
-                    if (duration != -1) {
-                        mediaPlayer.seekTo(duration);
-                    } else if (songSource == null) {
-                        mediaPlayer.start();
-                        songStarted();
-                    } else if (songSource.equals(currentSong)) {
-                        mediaPlayer.start();
-                        songStarted();
-                    } else {
-                        mediaPlayer.reset();
-                        mediaPlayer.setDataSource(songSource);
-                        mediaPlayer.prepareAsync();
-                        currentSong = songSource;
-                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
             }
         }
         return START_NOT_STICKY;

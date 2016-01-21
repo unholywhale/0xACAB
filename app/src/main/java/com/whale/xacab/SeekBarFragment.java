@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,7 +23,7 @@ public class SeekBarFragment extends Fragment {
     private TextView mPlayerDuration;
     private TextView mPlayerInfo;
     private String mInfo;
-    private int mProgress = 0;
+    private Integer mProgress;
     private int mStep;
     private Integer mCurrentDuration;
     private boolean isPlaying;
@@ -55,6 +56,16 @@ public class SeekBarFragment extends Fragment {
         }
     }
 
+    public void cancelTasks() {
+        if (mSeekBarRefresh != null) {
+            mSeekBarRefresh.cancel(true);
+        }
+        if (mProgressRefresh != null) {
+            mProgressRefresh.cancel(true);
+        }
+    }
+
+
     public void setCurrentDuration(int duration) {
         mCurrentDuration = duration;
     }
@@ -78,16 +89,16 @@ public class SeekBarFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
-        if (savedInstanceState == null) {
-            mActivity = (MainActivity) getActivity();
-        }
+        //if (savedInstanceState == null) {
+        mActivity = (MainActivity) getActivity();
+
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_seek_bar, container, false);
-        //if (savedInstanceState == null) {
+
             mPlayerInfo = (TextView) view.findViewById(R.id.player_info);
             mSeekBar = (SeekBar) view.findViewById(R.id.player_slider);
             mSeekBar.setMax(MAX_PROGRESS);
@@ -115,12 +126,17 @@ public class SeekBarFragment extends Fragment {
             mPlayerProgress = (TextView) view.findViewById(R.id.player_progress);
             mPlayerDuration = (TextView) view.findViewById(R.id.player_duration);
             if (mCurrentDuration != null) {
-                mPlayerDuration.setText(MusicUtils.makeTimeString(mActivity.getApplicationContext(), mCurrentDuration / 1000));
+                mPlayerDuration.setText(MusicUtils.makeTimeString(getActivity().getApplicationContext(), mCurrentDuration / 1000));
+            }
+            if (mProgress != null) {
+                mPlayerProgress.setText(MusicUtils.makeTimeString(getActivity().getApplicationContext(), mProgress / 1000));
+            } else {
+                mProgress = 0;
             }
             if (mInfo != null) {
                 mPlayerInfo.setText(mInfo);
             }
-        //}
+
         return view;
     }
 
@@ -147,7 +163,8 @@ public class SeekBarFragment extends Fragment {
         @Override
         protected Void doInBackground(Integer... params) {
             Integer step = params[0];
-            while (mActivity.isPlaying) {
+            while (mActivity.isPlaying && !isCancelled()) {
+                Log.d("IS_PLAYING", "yes");
                 try {
                     Thread.sleep(mStep);
                 } catch (InterruptedException e) {
@@ -169,7 +186,7 @@ public class SeekBarFragment extends Fragment {
 
         @Override
         protected Void doInBackground(Integer... params) {
-            while (mActivity.isPlaying) {
+            while (mActivity.isPlaying && !isCancelled()) {
                 try {
                     Thread.sleep(500);
                 } catch (InterruptedException e) {
@@ -179,8 +196,8 @@ public class SeekBarFragment extends Fragment {
                 mActivity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        if (getActivity() != null) {
-                            mPlayerProgress.setText(MusicUtils.makeTimeString(getActivity().getApplicationContext(), mProgress / 1000));
+                        if (mActivity != null) {
+                            mPlayerProgress.setText(MusicUtils.makeTimeString(mActivity, mProgress / 1000));
                         }
                     }
                 });

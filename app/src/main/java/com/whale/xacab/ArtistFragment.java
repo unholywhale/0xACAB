@@ -125,7 +125,7 @@ public class ArtistFragment extends Fragment {
         View view = mList.getChildAt(itemPosition);
         ArrayList<ObjectAnimator> animators = new ArrayList<>();
         if (view.getId() == R.id.artist_list_header_layout) {
-            for (int i = itemPosition + 1; i <= mList.getLastVisiblePosition(); i++) {
+            for (int i = itemPosition + 1; i <= mList.getLastVisiblePosition() - itemPosition; i++) {
                 View item = mList.getChildAt(i);
                 if (item.getId() == R.id.artist_list_header_layout) {
                     break;

@@ -70,15 +70,18 @@ public class MainActivity extends Activity implements SelectionListener {
     public static final String LAST_FM_USER = "lastFmUser";
     private static final String IS_SHUFFLING = "IS_SHUFFLED";
     private static final String IS_REPEATING = "IS_REPEATING";
+    private static final String IS_PLAYING = "IS_PLAYING";
     public static final String LAST_DIR = "lastDir";
     public static final int ADD_NEXT = 0;
     public static final int ADD_LAST = 1;
+    public static final String INTENT_GET_POSITION = "GET_DURATION";
     public static String songStatus = MusicService.SONG_STOPPED;
     public QueueDB db;
     public boolean isPlaying = false;
     public boolean isShuffling = false;
     public boolean isRepeating = false;
     public boolean isLibrary = true;
+    public boolean mOrientationChange = false;
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
     private NotificationManager mNotificationManager;
@@ -102,22 +105,7 @@ public class MainActivity extends Activity implements SelectionListener {
     private View mButtons;
     private MediaSession mSession;
     private boolean mSelectMode = false;
-    private AudioManager.OnAudioFocusChangeListener afChangeListener = new AudioManager.OnAudioFocusChangeListener() {
-        @Override
-        public void onAudioFocusChange(int i) {
-            switch (i) {
-                case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
-                    play();
-                    break;
-                case AudioManager.AUDIOFOCUS_GAIN:
-                    play();
-                    break;
-                case AudioManager.AUDIOFOCUS_LOSS:
-                    play();
-                    break;
-            }
-        }
-    };
+    private AudioManager.OnAudioFocusChangeListener afChangeListener;
     private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -134,11 +122,6 @@ public class MainActivity extends Activity implements SelectionListener {
                     int position = intent.getIntExtra(MusicService.SONG_POSITION, -1);
                     int step = currentSong.getDuration() / 200;
                     if (position != -1) {
-//                        mProgress = position;
-//                        mSeekBar.setProgress(position / step);
-//                        mPlayerProgress.setText(MusicUtils.makeTimeString(getApplicationContext(), mProgress / 1000));
-//                        mPlayerDuration.setText(MusicUtils.makeTimeString(getApplicationContext(),
-//                                currentSong.getDuration() / 1000));
                         mSeekBarFragment.startTasks(currentSong.getDuration(), position, step, currentSong.getArtist(), currentSong.getTitle());
                     }
 
@@ -147,6 +130,12 @@ public class MainActivity extends Activity implements SelectionListener {
                     mLastFm.pause();
                     //mAudioManager.abandonAudioFocus(afChangeListener);
                     changePlayStatus(MusicService.SONG_STOPPED);
+                } else {
+                    int position = intent.getIntExtra(MusicService.SONG_POSITION, -1);
+                    int step = currentSong.getDuration() / 200;
+                    if (position != -1) {
+                        mSeekBarFragment.startTasks(currentSong.getDuration(), position, step, currentSong.getArtist(), currentSong.getTitle());
+                    }
                 }
                 makeNotification();
             } else if (intent.getAction().equals(INTENT_SONG_NEXT)) {
@@ -162,8 +151,10 @@ public class MainActivity extends Activity implements SelectionListener {
             } else if (intent.getAction().equals(AudioManager.ACTION_HEADSET_PLUG)) {
                 int state = intent.getIntExtra("state", -1);
                 if (state != -1) {
-                    if (state == 0) {
-                        play();
+                    if (state == 0 && isPlaying && !mOrientationChange) {
+                        pause();
+                    } else if (mOrientationChange) {
+                        mOrientationChange = false;
                     }
                 }
             }
@@ -340,6 +331,35 @@ public class MainActivity extends Activity implements SelectionListener {
         setContentView(R.layout.activity_main);
         initializeSharedPreferences();
         initializeLastFm();
+        if (savedInstanceState != null) {
+            mOrientationChange = true;
+        }
+        afChangeListener = new AudioManager.OnAudioFocusChangeListener() {
+            @Override
+            public void onAudioFocusChange(int i) {
+                switch (i) {
+                    case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+                        if (isPlaying) {
+                            pause();
+                        }
+                        break;
+                    case AudioManager.AUDIOFOCUS_GAIN:
+                        if (!isPlaying) {
+                            play();
+                        }
+                        break;
+                    case AudioManager.AUDIOFOCUS_LOSS:
+                        if (!mOrientationChange) {
+                            if (isPlaying) {
+                                pause();
+                            }
+                        } else {
+                            mOrientationChange = false;
+                        }
+                        break;
+                }
+            }
+        };
         mSession = new MediaSession(this, "SESSION");
         mSession.setActive(true);
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -385,8 +405,32 @@ public class MainActivity extends Activity implements SelectionListener {
             openSeekBarFragment();
             openQueueFragment();
         }
+        if (savedInstanceState != null) {
+            mCurrentQueuePosition = savedInstanceState.getInt(CURRENT_QUEUE_POSITION);
+            if (mCurrentQueuePosition != -1) {
+                currentSong = mQueueData.get(mCurrentQueuePosition);
+            }
+            isShuffling = savedInstanceState.getBoolean(IS_SHUFFLING);
+            isRepeating = savedInstanceState.getBoolean(IS_REPEATING);
+            isPlaying = savedInstanceState.getBoolean(IS_PLAYING);
+            setProgressAsyncTasks();
+            invalidateQueue();
+            invalidateButtons();
+        }
     }
 
+    private void setProgressAsyncTasks() {
+        if (isPlaying) {
+            musicServiceIntent.removeExtra(INTENT_EXTRA);
+            musicServiceIntent.putExtra(INTENT_GET_POSITION, true);
+            startService(musicServiceIntent);
+//            int position = mCurrentQueuePosition;
+//            int step = currentSong.getDuration() / 200;
+//            if (position != -1) {
+//                mSeekBarFragment.startTasks(currentSong.getDuration(), position, step, currentSong.getArtist(), currentSong.getTitle());
+//            }
+        }
+    }
 
     @Override
     public void checkEmpty() {
@@ -400,7 +444,7 @@ public class MainActivity extends Activity implements SelectionListener {
             suffix = "_disabled";
         } else {
             if (mQueueFragment.isAdded()) {
-                mQueueFragment.hideAddButton();
+                //mQueueFragment.hideAddButton();
             }
             enabled = true;
         }
@@ -417,20 +461,16 @@ public class MainActivity extends Activity implements SelectionListener {
         outState.putInt(CURRENT_QUEUE_POSITION, mCurrentQueuePosition);
         outState.putBoolean(IS_SHUFFLING, isShuffling);
         outState.putBoolean(IS_REPEATING, isRepeating);
+        outState.putBoolean(IS_PLAYING, isPlaying);
+        mAudioManager.abandonAudioFocus(afChangeListener);
+        mSeekBarFragment.cancelTasks();
         super.onSaveInstanceState(outState);
     }
 
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
-        mCurrentQueuePosition = savedInstanceState.getInt(CURRENT_QUEUE_POSITION);
-        if (mCurrentQueuePosition != -1) {
-            currentSong = mQueueData.get(mCurrentQueuePosition);
-        }
-        isShuffling = savedInstanceState.getBoolean(IS_SHUFFLING);
-        isRepeating = savedInstanceState.getBoolean(IS_REPEATING);
-        invalidateQueue();
-        invalidateButtons();
+
     }
 
     private void setFragments() {
@@ -509,6 +549,7 @@ public class MainActivity extends Activity implements SelectionListener {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         mMenu = menu;
+        checkEmpty();
         return true;
     }
 
@@ -659,7 +700,11 @@ public class MainActivity extends Activity implements SelectionListener {
         playButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                play();
+                if (isPlaying) {
+                    pause();
+                } else {
+                    play();
+                }
             }
         });
         if (repeatButton != null) {
@@ -698,6 +743,14 @@ public class MainActivity extends Activity implements SelectionListener {
 
     private void play() {
         musicServiceIntent.removeExtra(INTENT_EXTRA);
+        musicServiceIntent.removeExtra(INTENT_GET_POSITION);
+        startService(musicServiceIntent);
+    }
+
+    private void pause() {
+        mSeekBarFragment.cancelTasks();
+        musicServiceIntent.removeExtra(INTENT_EXTRA);
+        musicServiceIntent.removeExtra(INTENT_GET_POSITION);
         startService(musicServiceIntent);
     }
 
