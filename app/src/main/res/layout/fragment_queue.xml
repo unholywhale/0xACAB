@@ -32,4 +32,14 @@
         android:layout_marginBottom="15dp"
         android:layout_alignParentEnd="true"
         android:layout_alignBottom="@id/queue_list"/>
+    <TextView
+        android:id="@+id/queue_empty"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_centerInParent="true"
+        android:text="No songs in the queue"
+        android:textColor="@color/text_light_color"
+        android:textSize="19.0sp"
+        android:layout_marginTop="20dp"
+        android:visibility="gone" />
 </RelativeLayout>

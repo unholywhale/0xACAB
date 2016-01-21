@@ -52,6 +52,7 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
     private final static int QUEUE_LOADER = 1;
     private QueueAdapter mAdapter;
     private DragSortListView mList;
+    private TextView mEmptyView;
     private Button mAdd;
 
     public static QueueFragment newInstance() {
@@ -199,6 +200,7 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
         });
 
         mList.setAdapter(mAdapter);
+        mEmptyView = (TextView) view.findViewById(R.id.queue_empty);
         return view;
     }
 
@@ -260,6 +262,11 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
         mAdapter.swapCursor(cursor);
+        if (mAdapter.isEmpty()) {
+            mEmptyView.setVisibility(View.VISIBLE);
+        } else {
+            mEmptyView.setVisibility(View.GONE);
+        }
     }
 
     @Override
