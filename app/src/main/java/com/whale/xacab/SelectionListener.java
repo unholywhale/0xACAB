@@ -6,6 +6,7 @@ import android.view.View;
 public interface SelectionListener {
     void openLibrary(boolean librarySwitch);
     void deleteSelected();
+    void addBulk(AudioListModel[] items);
     void onArtistItemSelected(AudioListModel item);
     void onArtistItemSelected(AudioListModel item, int mode);
     void onArtistItemSelected(AudioListModel item, int mode, int counter);

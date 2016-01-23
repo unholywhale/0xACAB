@@ -262,11 +262,11 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
         mAdapter.swapCursor(cursor);
-        if (mAdapter.isEmpty()) {
-            mEmptyView.setVisibility(View.VISIBLE);
-        } else {
-            mEmptyView.setVisibility(View.GONE);
-        }
+//        if (mAdapter.isEmpty()) {
+//            mEmptyView.setVisibility(View.VISIBLE);
+//        } else {
+//            mEmptyView.setVisibility(View.GONE);
+//        }
     }
 
     @Override

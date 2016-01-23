@@ -253,6 +253,9 @@ public class MainActivity extends Activity implements SelectionListener {
 
     public void loginLastFm(String user, String password) {
         if (mLastFm != null) {
+            mPreferencesEditor.remove(LAST_FM_SESSION);
+            mPreferencesEditor.remove(LAST_FM_USER);
+            mPreferencesEditor.commit();
             mLastFm.authorize(user, password);
         }
     }
@@ -278,9 +281,10 @@ public class MainActivity extends Activity implements SelectionListener {
                 Button lastFmLogin = (Button) findViewById(R.id.last_fm_login);
                 if (session != null) {
                     lastFmUser.setEnabled(false);
-                    lastFmUser.setHint(user);
+                    lastFmUser.setHint("Logged in as");
+                    lastFmUser.setText("");
                     lastFmPassword.setEnabled(false);
-                    lastFmPassword.setHint("");
+                    lastFmPassword.setHint(user);
                     lastFmLogin.setText(R.string.logout);
                     lastFmLogin.setOnClickListener(new View.OnClickListener() {
                         @Override
@@ -587,7 +591,10 @@ public class MainActivity extends Activity implements SelectionListener {
         }
     }
 
-
+    @Override
+    public void addBulk(AudioListModel[] items) {
+        new AddToQueueBulkTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, items);
+    }
 
     @Override
     public void onArtistItemSelected(AudioListModel item) {
@@ -996,6 +1003,8 @@ public class MainActivity extends Activity implements SelectionListener {
         return super.onOptionsItemSelected(item);
     }
 
+
+
     private class AddToQueueNextTask extends AsyncTask<AudioListModel, Void, Void> {
 
         private int counter;
@@ -1091,6 +1100,41 @@ public class MainActivity extends Activity implements SelectionListener {
                 String[] selectionArgs = {id.toString()};
                 getContentResolver().update(QueueProvider.CONTENT_URI, el, selection, selectionArgs);
             }
+        }
+    }
+
+    private class AddToQueueBulkTask extends AsyncTask<AudioListModel[], Void, Void> {
+
+
+        @Override
+        protected Void doInBackground(AudioListModel[]... audioListModels) {
+            AudioListModel[] items = audioListModels[0];
+            ContentValues values = new ContentValues();
+            for (int i = 0; i < items.length; i++) {
+                values.put(QueueDB.KEY_ARTIST, items[i].getArtist());
+                values.put(QueueDB.KEY_ALBUM, items[i].getAlbum());
+                values.put(QueueDB.KEY_TITLE, items[i].getTitle());
+                values.put(QueueDB.KEY_DATA, items[i].getData());
+                values.put(QueueDB.KEY_DURATION, items[i].getDuration());
+                values.put(QueueDB.KEY_NUMBER, items[i].getNumber());
+                values.put(QueueDB.KEY_YEAR, items[i].getYear());
+                values.put(QueueDB.KEY_ALBUM_ID, items[i].getAlbumId());
+                values.put(QueueDB.KEY_TRACK_ID, items[i].getTrackId());
+                if (items[i].getSort() != -1) {
+                    values.put(QueueDB.KEY_SORT, items[i].getSort());
+                } else {
+                    values.put(QueueDB.KEY_SORT, mQueueData.size() + i + 1);
+                }
+                getContentResolver().insert(QueueProvider.CONTENT_URI, values);
+            }
+            invalidateQueue();
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    checkEmpty();
+                }
+            });
+            return null;
         }
     }
 

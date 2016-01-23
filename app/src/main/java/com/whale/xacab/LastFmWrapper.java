@@ -133,15 +133,21 @@ public class LastFmWrapper {
 
         @Override
         protected Void doInBackground(Void... voids) {
+            int c = 0;
             while (session == null) {
                 try {
-                    Thread.sleep(500);
                     session = Authenticator.getMobileSession(user, password, apiKey, apiSecret);
+                    Thread.sleep(500);
                     if (session != null) {
                         callback.saveLastFmSession(session.getKey(), user);
                         Log.d("LSESSION", "ok");
                     } else {
                         Log.d("LSESSION", "fail");
+                        if (c == 3) {
+                            break;
+                        } else {
+                            c++;
+                        }
                     }
                 } catch (InterruptedException e) {
                     e.printStackTrace();

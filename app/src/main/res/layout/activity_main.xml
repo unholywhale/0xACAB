@@ -56,12 +56,14 @@
             android:id="@+id/last_fm_user"
             android:hint="Last.fm user"
             android:layout_centerHorizontal="true"
+            android:gravity="center"
             android:layout_width="200dp"
             android:layout_height="50dp"/>
         <EditText
             android:id="@+id/last_fm_password"
             android:hint="Last.fm password"
             android:inputType="textPassword"
+            android:gravity="center"
             android:layout_centerHorizontal="true"
             android:layout_width="200dp"
             android:layout_height="50dp"

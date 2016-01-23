@@ -197,13 +197,15 @@ public class FilesFragment extends Fragment {
 
     public void addItems() {
         Integer counter = 0;
+        AudioListModel[] items = new AudioListModel[getAdapter().hashMapChecked.size()];
         for (FilesAdapter.FileHashHolder holder : getAdapter().hashMapChecked.values()) {
             if (holder.isChecked) {
                 AudioListModel item = getAudioData(mFiles.get(holder.position));
-                mListener.onArtistItemSelected(item);
+                items[counter] = item;
+                counter++;
             }
-            counter++;
         }
+        mListener.addBulk(items);
         selectMode(false);
         mListener.setSelectMode(false);
         getAdapter().setCheckBoxVisibility(false);
