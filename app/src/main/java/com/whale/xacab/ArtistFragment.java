@@ -90,8 +90,9 @@ public class ArtistFragment extends Fragment {
             try {
                 float diffY = e2.getY() - e1.getY();
                 float diffX = e2.getX() - e1.getX();
-                if (Math.abs(diffX) > Math.abs(diffY)) {
+                if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffY) < 80) {
                     if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
+                        //result = true;
                         int position = mListView.pointToPosition((int) e1.getX(),(int) e1.getY());
                         View v = mListView.getChildAt(position - mListView.getFirstVisiblePosition());
                         if (diffX > 0) {
