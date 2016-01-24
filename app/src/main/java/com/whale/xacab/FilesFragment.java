@@ -1,13 +1,10 @@
 package com.whale.xacab;
 
-import android.app.ActionBar;
 import android.app.Activity;
 import android.app.Fragment;
 import android.content.Context;
-import android.media.Image;
 import android.media.MediaMetadataRetriever;
 import android.os.Bundle;
-import android.app.ListFragment;
 import android.os.Environment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -21,18 +18,13 @@ import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.io.FilenameFilter;
-import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 
 
 public class FilesFragment extends Fragment {
@@ -41,7 +33,7 @@ public class FilesFragment extends Fragment {
     private SelectionListener mListener;
     private String mCurrentPath;
     private Button mAddButton;
-    private ImageButton mSwitch;
+    private ImageButton mBack;
     private ListView mList;
     private ArrayList<File> mFiles = new ArrayList<>();
 
@@ -55,14 +47,14 @@ public class FilesFragment extends Fragment {
 
         @Override
         public void onScrollTop() {
-            if (mSwitch.getVisibility() == View.INVISIBLE) {
+            if (mBack.getVisibility() == View.INVISIBLE) {
                 Runnable action = new Runnable() {
                     @Override
                     public void run() {
-                        mSwitch.setVisibility(View.VISIBLE);
+                        mBack.setVisibility(View.VISIBLE);
                     }
                 };
-                mSwitch.animate()
+                mBack.animate()
                         .translationY(0)
                         .alpha(1)
                         .withStartAction(action)
@@ -72,14 +64,14 @@ public class FilesFragment extends Fragment {
 
         @Override
         public void onScrollBottom() {
-            if (mSwitch.getVisibility() == View.VISIBLE) {
+            if (mBack.getVisibility() == View.VISIBLE) {
                 Runnable action = new Runnable() {
                     @Override
                     public void run() {
-                        mSwitch.setVisibility(View.INVISIBLE);
+                        mBack.setVisibility(View.INVISIBLE);
                     }
                 };
-                mSwitch.animate()
+                mBack.animate()
                         .translationY(100)
                         .alpha(0)
                         .withEndAction(action)
@@ -98,11 +90,12 @@ public class FilesFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_files, null);
-        mSwitch = (ImageButton) view.findViewById(R.id.files_switch);
-        mSwitch.setOnClickListener(new View.OnClickListener() {
+        mBack = (ImageButton) view.findViewById(R.id.files_back);
+        mBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mListener.openLibrary(true);
+                getActivity().onBackPressed();
+                //mListener.openLibrary(true);
             }
         });
         mAddButton = (Button) view.findViewById(R.id.files_add);

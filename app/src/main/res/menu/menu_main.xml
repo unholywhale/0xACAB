@@ -18,8 +18,8 @@
           android:title="Files"
           android:showAsAction="ifRoom"
           android:visible="false"/>-->
-    <item android:id="@+id/action_close"
-          android:icon="@drawable/ic_action_close"
+    <item android:id="@+id/action_switch"
+          android:icon="@drawable/ic_action_files"
           android:title="Close"
           android:showAsAction="ifRoom"
           android:visible="false"/>

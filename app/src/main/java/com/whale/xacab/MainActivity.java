@@ -225,6 +225,9 @@ public class MainActivity extends Activity implements SelectionListener {
 
     @Override
     public String getLastDir() {
+        if (mPreferences == null) {
+            mPreferences = getSharedPreferences(LAST_DIR, MODE_PRIVATE);
+        }
         return mPreferences.getString(LAST_DIR, null);
     }
 
@@ -804,7 +807,8 @@ public class MainActivity extends Activity implements SelectionListener {
         setMenuItemVisibility(R.id.action_reorder, false);
         setMenuItemVisibility(R.id.action_clear_queue, false);
         setMenuItemVisibility(R.id.action_select, false);
-        setMenuItemVisibility(R.id.action_close, true);
+        setMenuItemVisibility(R.id.action_switch, true);
+        setMenuItemIcon(R.id.action_switch, R.drawable.ic_action_files);
 //        setMenuItemVisibility(R.id.action_library_switch, true);
     }
 
@@ -813,7 +817,8 @@ public class MainActivity extends Activity implements SelectionListener {
         setMenuItemVisibility(R.id.action_reorder, false);
         setMenuItemVisibility(R.id.action_clear_queue, false);
         setMenuItemVisibility(R.id.action_select, true);
-        setMenuItemVisibility(R.id.action_close, true);
+        setMenuItemVisibility(R.id.action_switch, true);
+        setMenuItemIcon(R.id.action_switch, R.drawable.ic_library_icon);
 //        setMenuItemVisibility(R.id.action_library_switch, true);
     }
 
@@ -822,7 +827,7 @@ public class MainActivity extends Activity implements SelectionListener {
         setMenuItemVisibility(R.id.action_reorder, true);
         setMenuItemVisibility(R.id.action_clear_queue, true);
         setMenuItemVisibility(R.id.action_select, true);
-        setMenuItemVisibility(R.id.action_close, false);
+        setMenuItemVisibility(R.id.action_switch, false);
 //        setMenuItemVisibility(R.id.action_library_switch, false);
     }
 
@@ -995,8 +1000,9 @@ public class MainActivity extends Activity implements SelectionListener {
                     deleteSelected();
                 }
                 break;
-            case R.id.action_close:
-                closeLibrary();
+            case R.id.action_switch:
+//                closeLibrary();
+                openLibrary(true);
                 break;
             case R.id.action_select:
                 selectMode();

@@ -9,7 +9,6 @@ import android.content.Loader;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.app.ListFragment;
 import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -17,13 +16,10 @@ import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.Button;
 import android.widget.CursorAdapter;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
-
-import java.io.File;
 
 
 public class LibraryFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
@@ -31,7 +27,7 @@ public class LibraryFragment extends Fragment implements LoaderManager.LoaderCal
     private final static int LIBRARY_LOADER = 2;
     private SelectionListener mListener;
     private LibraryAdapter mAdapter;
-    private ImageButton mSwitch;
+    private ImageButton mBack;
     private ListView mList;
 
     private class LibraryGestureHelper extends GestureHelper {
@@ -42,14 +38,14 @@ public class LibraryFragment extends Fragment implements LoaderManager.LoaderCal
 
         @Override
         public void onScrollTop() {
-            if (mSwitch.getVisibility() == View.INVISIBLE) {
+            if (mBack.getVisibility() == View.INVISIBLE) {
                 Runnable action = new Runnable() {
                     @Override
                     public void run() {
-                        mSwitch.setVisibility(View.VISIBLE);
+                        mBack.setVisibility(View.VISIBLE);
                     }
                 };
-                mSwitch.animate()
+                mBack.animate()
                         .translationY(0)
                         .alpha(1)
                         .withStartAction(action)
@@ -59,14 +55,14 @@ public class LibraryFragment extends Fragment implements LoaderManager.LoaderCal
 
         @Override
         public void onScrollBottom() {
-            if (mSwitch.getVisibility() == View.VISIBLE) {
+            if (mBack.getVisibility() == View.VISIBLE) {
                 Runnable action = new Runnable() {
                     @Override
                     public void run() {
-                        mSwitch.setVisibility(View.INVISIBLE);
+                        mBack.setVisibility(View.INVISIBLE);
                     }
                 };
-                mSwitch.animate()
+                mBack.animate()
                         .translationY(100)
                         .alpha(0)
                         .withEndAction(action)
@@ -118,11 +114,12 @@ public class LibraryFragment extends Fragment implements LoaderManager.LoaderCal
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_library, null);
-        mSwitch = (ImageButton) view.findViewById(R.id.library_switch);
-        mSwitch.setOnClickListener(new View.OnClickListener() {
+        mBack = (ImageButton) view.findViewById(R.id.library_back);
+        mBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mListener.openLibrary(true);
+//                mListener.openLibrary(true);
+                getActivity().onBackPressed();
             }
         });
         mList = (ListView) view.findViewById(R.id.library_list);

@@ -25,6 +25,7 @@ import android.view.animation.AnimationSet;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -45,6 +46,7 @@ public class ArtistFragment extends Fragment {
     private String mArtistName;
     private ArrayList<AudioListModel> audioList = new ArrayList<>();
     private LayoutInflater mInflater;
+    private ImageButton mBack;
     private ListView mList;
     private AudioListAdapter mAdapter;
 
@@ -78,11 +80,44 @@ public class ArtistFragment extends Fragment {
 
         @Override
         public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-            if (Math.abs(distanceX) > 30) {
-                return true;
+//            if (Math.abs(distanceX) > 30) {
+//                return true;
+//            }
+            if (Math.abs(distanceY) > 50) {
+                if (distanceY < 0) {  // scroll top
+                    if (mBack.getVisibility() == View.INVISIBLE) {
+                        Runnable action = new Runnable() {
+                            @Override
+                            public void run() {
+                                mBack.setVisibility(View.VISIBLE);
+                            }
+                        };
+                        mBack.animate()
+                                .translationY(0)
+                                .alpha(1)
+                                .withStartAction(action)
+                                .start();
+                    }
+                } else { // scroll bottom
+                    if (mBack.getVisibility() == View.VISIBLE) {
+                        Runnable action = new Runnable() {
+                            @Override
+                            public void run() {
+                                mBack.setVisibility(View.INVISIBLE);
+                            }
+                        };
+                        mBack.animate()
+                                .translationY(100)
+                                .alpha(0)
+                                .withEndAction(action)
+                                .start();
+                    }
+                }
             }
             return super.onScroll(e1, e2, distanceX, distanceY);
         }
+
+
 
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
@@ -289,6 +324,13 @@ public class ArtistFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mInflater = inflater;
         View view = mInflater.inflate(R.layout.fragment_artist, null);
+        mBack = (ImageButton) view.findViewById(R.id.artist_back);
+        mBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                getActivity().onBackPressed();
+            }
+        });
         mAdapter = new AudioListAdapter(getActivity(), R.layout.fragment_artist_list_item, R.layout.fragment_artist_list_header, audioList);
         mList = (ListView) view.findViewById(R.id.artist_list);
         final ArtistGestureListener gestureListener = new ArtistGestureListener(this, mList);
