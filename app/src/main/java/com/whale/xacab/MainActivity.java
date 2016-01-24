@@ -817,6 +817,8 @@ public class MainActivity extends Activity implements SelectionListener {
         setMenuItemVisibility(R.id.action_reorder, false);
         setMenuItemVisibility(R.id.action_clear_queue, false);
         setMenuItemVisibility(R.id.action_select, true);
+        setMenuItemEnabled(R.id.action_select, true);
+        setMenuItemIcon(R.id.action_select, R.drawable.ic_action_select);
         setMenuItemVisibility(R.id.action_switch, true);
         setMenuItemIcon(R.id.action_switch, R.drawable.ic_library_icon);
 //        setMenuItemVisibility(R.id.action_library_switch, true);

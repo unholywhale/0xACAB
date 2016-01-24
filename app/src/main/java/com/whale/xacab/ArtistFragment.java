@@ -83,7 +83,7 @@ public class ArtistFragment extends Fragment {
 //            if (Math.abs(distanceX) > 30) {
 //                return true;
 //            }
-            if (Math.abs(distanceY) > 50) {
+            if (Math.abs(distanceY) > 30) {
                 if (distanceY < 0) {  // scroll top
                     if (mBack.getVisibility() == View.INVISIBLE) {
                         Runnable action = new Runnable() {
