@@ -1,7 +1,5 @@
 package com.whale.xacab;
 
-import android.accounts.Account;
-import android.accounts.AccountManager;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.FragmentManager;
@@ -23,12 +21,11 @@ import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.media.session.MediaSession;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
-import android.os.Debug;
 import android.provider.MediaStore;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.widget.DrawerLayout;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -41,10 +38,8 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.net.Authenticator;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Queue;
 import java.util.Random;
 
 
@@ -74,6 +69,7 @@ public class MainActivity extends Activity implements SelectionListener {
     public static final String LAST_DIR = "lastDir";
     public static final int ADD_NEXT = 0;
     public static final int ADD_LAST = 1;
+    public static final int ADD_FIRST = 2;
     public static final String INTENT_GET_POSITION = "GET_DURATION";
     public static String songStatus = MusicService.SONG_STOPPED;
     public QueueDB db;
@@ -577,28 +573,43 @@ public class MainActivity extends Activity implements SelectionListener {
 
     @Override
     public void onArtistItemSelected(AudioListModel item, int mode, int counter) {
+        String msgText;
+        if (item.isAlbum) {
+            msgText = "Album \"" + item.getAlbum() + "\" by \"" + item.getArtist() + "\"";
+        } else {
+            msgText = "\"" + item.getTitle() + "\" by \"" + item.getArtist() + "\"";
+        }
         if (mode == ADD_LAST) {
-            onArtistItemSelected(item);
-            Toast.makeText(this, "Added last", Toast.LENGTH_SHORT).show();
+            new AddToQueueTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, item);
+            msgText += " added last";
+            Toast.makeText(this, msgText, Toast.LENGTH_SHORT).show();
         } else if (mode == ADD_NEXT) {
             if (mCurrentQueuePosition == -1) {
-                onArtistItemSelected(item);
-                Toast.makeText(this, "Added last", Toast.LENGTH_SHORT).show();
-                return;
+                new AddToQueueTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, item);
+                msgText += " added last";
+                Toast.makeText(this, msgText, Toast.LENGTH_SHORT).show();
+            } else {
+                AddToQueueInsertTask task = new AddToQueueInsertTask(counter);
+                task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, item);
+                msgText += " added next";
+                Toast.makeText(this, msgText, Toast.LENGTH_SHORT).show();
             }
-            AddToQueueNextTask task = new AddToQueueNextTask(counter);
+        } else if (mode == ADD_FIRST) {
+            AddToQueueInsertTask task = new AddToQueueInsertTask(0, 0);
             task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, item);
+            msgText += " added first";
+            Toast.makeText(this, msgText, Toast.LENGTH_SHORT).show();
         }
+    }
+
+    @Override
+    public void onArtistItemSelected(AudioListModel item) {
+        onArtistItemSelected(item, ADD_LAST, 0);
     }
 
     @Override
     public void addBulk(AudioListModel[] items) {
         new AddToQueueBulkTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, items);
-    }
-
-    @Override
-    public void onArtistItemSelected(AudioListModel item) {
-        new AddToQueueTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, item);
     }
 
     private void clearQueue() {
@@ -1005,13 +1016,21 @@ public class MainActivity extends Activity implements SelectionListener {
 
 
 
-    private class AddToQueueNextTask extends AsyncTask<AudioListModel, Void, Void> {
+    private class AddToQueueInsertTask extends AsyncTask<AudioListModel, Void, Void> {
 
         private int counter;
+        private int current;
 
-        public AddToQueueNextTask(int counter) {
+        public AddToQueueInsertTask(int counter) {
             super();
             this.counter = counter;
+            this.current = mCurrentQueuePosition;
+        }
+
+        public AddToQueueInsertTask(int counter, int insertPosition) {
+            super();
+            this.counter = counter;
+            this.current = insertPosition - 1;
         }
 
         @Override
@@ -1023,7 +1042,7 @@ public class MainActivity extends Activity implements SelectionListener {
             if (item.isAlbum) {
                 counter = 0;
             }
-            Integer insertPosition = mCurrentQueuePosition + counter + 1;
+            Integer insertPosition = current + counter + 1;
             String where = QueueDB.KEY_SORT + " > " + insertPosition.toString();
             Cursor cursor = getContentResolver().query(QueueProvider.CONTENT_URI, columns, where, null, QueueDB.KEY_SORT);
             while (cursor.moveToNext()) {
@@ -1034,9 +1053,25 @@ public class MainActivity extends Activity implements SelectionListener {
                 contentValuesList.add(cv);
             }
             if (!item.isAlbum) {
-                changeSortNumber(contentValuesList, 0);
+                changeSortNumber(contentValuesList, 1);
                 item.setSort(insertPosition + 1);
-                onArtistItemSelected(item);
+                ContentValues values = new ContentValues();
+                values.put(QueueDB.KEY_ARTIST, item.getArtist());
+                values.put(QueueDB.KEY_ALBUM, item.getAlbum());
+                values.put(QueueDB.KEY_TITLE, item.getTitle());
+                values.put(QueueDB.KEY_DATA, item.getData());
+                values.put(QueueDB.KEY_DURATION, item.getDuration());
+                values.put(QueueDB.KEY_NUMBER, item.getNumber());
+                values.put(QueueDB.KEY_YEAR, item.getYear());
+                values.put(QueueDB.KEY_ALBUM_ID, item.getAlbumId());
+                values.put(QueueDB.KEY_TRACK_ID, item.getTrackId());
+                if (item.getSort() != -1) {
+                    values.put(QueueDB.KEY_SORT, item.getSort());
+                } else {
+                    values.put(QueueDB.KEY_SORT, mQueueData.size() + 1);
+                }
+                getContentResolver().insert(QueueProvider.CONTENT_URI, values);
+                invalidateQueue();
             } else {
                 ContentValues values = new ContentValues();
                 String[] from = new String[]{
@@ -1092,7 +1127,7 @@ public class MainActivity extends Activity implements SelectionListener {
         private void changeSortNumber(ArrayList<ContentValues> contentValuesList, int offset) {
             for (ContentValues el : contentValuesList) {
                 Integer i = el.getAsInteger(QueueDB.KEY_SORT) + offset;
-                i++;
+                //i++;
                 el.remove(QueueDB.KEY_SORT);
                 el.put(QueueDB.KEY_SORT, i);
                 Long id = el.getAsLong(QueueDB.KEY_ID);

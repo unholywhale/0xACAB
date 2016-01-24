@@ -92,16 +92,14 @@ public class ArtistFragment extends Fragment {
                 float diffX = e2.getX() - e1.getX();
                 if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffY) < 80) {
                     if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
-                        //result = true;
+                        result = true;
                         int position = mListView.pointToPosition((int) e1.getX(),(int) e1.getY());
                         View v = mListView.getChildAt(position - mListView.getFirstVisiblePosition());
                         if (diffX > 0) {
-                            mFragment.addLast(position);
-                            Log.d("SWIPE", "right");
+                            mFragment.addNext(position);
                             //mHelper.onSwipeRight();
                         } else {
-                            mFragment.addNext(position);
-                            Log.d("SWIPE", "left");
+                            mFragment.addFirst(position);
                             //mHelper.onSwipeLeft();
                         }
                     }
@@ -121,9 +119,52 @@ public class ArtistFragment extends Fragment {
         }
     }
 
-    private void addLast(int position) {
+    private void animateLeft(int position) {
         int itemPosition = position - mList.getFirstVisiblePosition();
+        View view = mList.getChildAt(itemPosition);
+        ArrayList<ObjectAnimator> animators = new ArrayList<>();
+        if (view.getId() == R.id.artist_list_header_layout) {
+            for (int i = itemPosition + 1; i <= mList.getLastVisiblePosition() - mList.getFirstVisiblePosition(); i++) {
+                View item = mList.getChildAt(i);
+                if (item.getId() == R.id.artist_list_header_layout) {
+                    break;
+                }
+                ImageView itemLeftIndicator = (ImageView) item.findViewById(R.id.artist_left_indicator);
+                TextView itemNumber = (TextView) item.findViewById(R.id.track_number);
+                ObjectAnimator itemArrowAnimation = ObjectAnimator.ofFloat(itemLeftIndicator, "alpha", 1f);
+                itemArrowAnimation.setRepeatCount(1);
+                itemArrowAnimation.setRepeatMode(ValueAnimator.REVERSE);
+                itemArrowAnimation.setDuration(500);
+                animators.add(itemArrowAnimation);
+                ObjectAnimator itemNumberAnimation = ObjectAnimator.ofFloat(itemNumber, "alpha", 0f);
+                itemNumberAnimation.setRepeatCount(1);
+                itemNumberAnimation.setRepeatMode(ValueAnimator.REVERSE);
+                itemNumberAnimation.setDuration(500);
+                animators.add(itemNumberAnimation);
+            }
+            ObjectAnimator[] a = animators.toArray(new ObjectAnimator[animators.size()]);
+            AnimatorSet animatorSet = new AnimatorSet();
+            animatorSet.playTogether(a);
+            animatorSet.start();
+        } else {
+            ImageView leftIndicator = (ImageView) view.findViewById(R.id.artist_left_indicator);
+            TextView number = (TextView) view.findViewById(R.id.track_number);
+            ObjectAnimator arrowAnimation = ObjectAnimator.ofFloat(leftIndicator, "alpha", 1f);
+            arrowAnimation.setRepeatCount(1);
+            arrowAnimation.setRepeatMode(ValueAnimator.REVERSE);
+            arrowAnimation.setDuration(500);
+            ObjectAnimator numberAnimation = ObjectAnimator.ofFloat(number, "alpha", 0f);
+            numberAnimation.setRepeatCount(1);
+            numberAnimation.setRepeatMode(ValueAnimator.REVERSE);
+            numberAnimation.setDuration(500);
+            AnimatorSet animatorSet = new AnimatorSet();
+            animatorSet.playTogether(arrowAnimation, numberAnimation);
+            animatorSet.start();
+        }
+    }
 
+    private void animateRight(int position) {
+        int itemPosition = position - mList.getFirstVisiblePosition();
         View view = mList.getChildAt(itemPosition);
         ArrayList<ObjectAnimator> animators = new ArrayList<>();
         if (view.getId() == R.id.artist_list_header_layout) {
@@ -164,57 +205,23 @@ public class ArtistFragment extends Fragment {
             animatorSet.playTogether(arrowAnimation, durationAnimation);
             animatorSet.start();
         }
+    }
+
+    private void addLast(int position) {
+        animateLeft(position);
+        animateRight(position);
         mListener.onArtistItemSelected(audioList.get(position));
     }
 
     private void addNext(int position) {
-        int itemPosition = position - mList.getFirstVisiblePosition();
-        View view = mList.getChildAt(itemPosition);
-        ArrayList<ObjectAnimator> animators = new ArrayList<>();
-        if (view.getId() == R.id.artist_list_header_layout) {
-            for (int i = itemPosition + 1; i <= mList.getLastVisiblePosition(); i++) {
-                View item = mList.getChildAt(i);
-                if (item.getId() == R.id.artist_list_header_layout) {
-                    break;
-                }
-                ImageView itemLeftIndicator = (ImageView) item.findViewById(R.id.artist_left_indicator);
-                TextView itemNumber = (TextView) item.findViewById(R.id.track_number);
-                ObjectAnimator itemArrowAnimation = ObjectAnimator.ofFloat(itemLeftIndicator, "alpha", 1f);
-                itemArrowAnimation.setRepeatCount(1);
-                itemArrowAnimation.setRepeatMode(ValueAnimator.REVERSE);
-                itemArrowAnimation.setDuration(500);
-                animators.add(itemArrowAnimation);
-                ObjectAnimator itemNumberAnimation = ObjectAnimator.ofFloat(itemNumber, "alpha", 0f);
-                itemNumberAnimation.setRepeatCount(1);
-                itemNumberAnimation.setRepeatMode(ValueAnimator.REVERSE);
-                itemNumberAnimation.setDuration(500);
-                animators.add(itemNumberAnimation);
-            }
-            ObjectAnimator[] a = animators.toArray(new ObjectAnimator[animators.size()]);
-            AnimatorSet animatorSet = new AnimatorSet();
-            animatorSet.playTogether(a);
-            animatorSet.start();
-        } else {
-            ImageView leftIndicator = (ImageView) view.findViewById(R.id.artist_left_indicator);
-            TextView number = (TextView) view.findViewById(R.id.track_number);
-            ObjectAnimator arrowAnimation = ObjectAnimator.ofFloat(leftIndicator, "alpha", 1f);
-            arrowAnimation.setRepeatCount(1);
-            arrowAnimation.setRepeatMode(ValueAnimator.REVERSE);
-            arrowAnimation.setDuration(500);
-            ObjectAnimator numberAnimation = ObjectAnimator.ofFloat(number, "alpha", 0f);
-            numberAnimation.setRepeatCount(1);
-            numberAnimation.setRepeatMode(ValueAnimator.REVERSE);
-            numberAnimation.setDuration(500);
-            AnimatorSet animatorSet = new AnimatorSet();
-            animatorSet.playTogether(arrowAnimation, numberAnimation);
-            animatorSet.start();
-        }
+        animateRight(position);
         mListener.onArtistItemSelected(audioList.get(position), MainActivity.ADD_NEXT, nextCounter);
         nextCounter++;
     }
 
     private void addFirst(int position) {
-
+        animateLeft(position);
+        mListener.onArtistItemSelected(audioList.get(position), MainActivity.ADD_FIRST);
     }
 
     @Override
@@ -263,23 +270,8 @@ public class ArtistFragment extends Fragment {
             int year = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.YEAR));
             long albumId = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID));
             long trackId = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID));
-/*
-            Uri artworkUri = Uri.parse("content://media/external/audio/albumart");
-            Uri albumArtUri = ContentUris.withAppendedId(artworkUri, albumId);
-*/
 
             Bitmap bitmap = null;
-/*            try {
-                bitmap = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), albumArtUri);
-                bitmap = Bitmap.createScaledBitmap(bitmap, 180, 180, true);
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-                bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.default_album);
-                bitmap = Bitmap.createScaledBitmap(bitmap, 180, 180, true);
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }*/
             if (!currentAlbum.equals(album)) {
                 AudioListModel albumAudioItem = new AudioListModel(artist, album, year, albumId, bitmap);
                 audioList.add(albumAudioItem);
@@ -307,14 +299,12 @@ public class ArtistFragment extends Fragment {
                 return gestureDetector.onTouchEvent(motionEvent);
             }
         });
-//        mList.setOnItemClickListener(new ListView.OnItemClickListener() {
-//            @Override
-//            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//                if (mListener != null) {
-//                    mListener.onArtistItemSelected(audioList.get(position));
-//                }
-//            }
-//        });
+        mList.setOnItemClickListener(new ListView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                addLast(position);
+            }
+        });
         mList.setAdapter(mAdapter);
         return view;
     }
