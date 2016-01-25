@@ -24,6 +24,17 @@
         android:layout_alignParentEnd="true"
         android:layout_alignBottom="@id/files_list"/>
     <ImageButton
+        android:id="@+id/files_check_all"
+        android:background="@drawable/round_button"
+        android:src="@drawable/ic_check_all"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_marginEnd="15dp"
+        android:layout_marginBottom="5dp"
+        android:layout_alignParentEnd="true"
+        android:layout_above="@id/files_add"
+        android:visibility="invisible"/>
+    <ImageButton
         android:id="@+id/files_back"
         android:background="@drawable/round_button"
         android:src="@drawable/ic_back_disabled"

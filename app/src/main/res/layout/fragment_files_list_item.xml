@@ -32,5 +32,24 @@
         android:layout_toEndOf="@id/files_dir_icon"
         android:layout_centerVertical="true"
         android:paddingStart="5dp"/>
-
+    <!--<ImageView
+        android:id="@+id/files_left_indicator"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:src="@drawable/ic_arrow_left"
+        android:alpha="0"
+        android:paddingStart="5dp"
+        android:layout_alignParentStart="true"
+        android:layout_centerVertical="true"
+        android:visibility="invisible"/>
+    <ImageView
+        android:id="@+id/files_right_indicator"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:src="@drawable/ic_arrow_right"
+        android:alpha="0"
+        android:paddingEnd="5dp"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:visibility="invisible"/>-->
 </RelativeLayout>
