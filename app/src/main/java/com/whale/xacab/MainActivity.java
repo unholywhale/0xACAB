@@ -1154,21 +1154,23 @@ public class MainActivity extends Activity implements SelectionListener {
             AudioListModel[] items = audioListModels[0];
             ContentValues values = new ContentValues();
             for (int i = 0; i < items.length; i++) {
-                values.put(QueueDB.KEY_ARTIST, items[i].getArtist());
-                values.put(QueueDB.KEY_ALBUM, items[i].getAlbum());
-                values.put(QueueDB.KEY_TITLE, items[i].getTitle());
-                values.put(QueueDB.KEY_DATA, items[i].getData());
-                values.put(QueueDB.KEY_DURATION, items[i].getDuration());
-                values.put(QueueDB.KEY_NUMBER, items[i].getNumber());
-                values.put(QueueDB.KEY_YEAR, items[i].getYear());
-                values.put(QueueDB.KEY_ALBUM_ID, items[i].getAlbumId());
-                values.put(QueueDB.KEY_TRACK_ID, items[i].getTrackId());
-                if (items[i].getSort() != -1) {
-                    values.put(QueueDB.KEY_SORT, items[i].getSort());
-                } else {
-                    values.put(QueueDB.KEY_SORT, mQueueData.size() + i + 1);
+                if (items[i] != null) {
+                    values.put(QueueDB.KEY_ARTIST, items[i].getArtist());
+                    values.put(QueueDB.KEY_ALBUM, items[i].getAlbum());
+                    values.put(QueueDB.KEY_TITLE, items[i].getTitle());
+                    values.put(QueueDB.KEY_DATA, items[i].getData());
+                    values.put(QueueDB.KEY_DURATION, items[i].getDuration());
+                    values.put(QueueDB.KEY_NUMBER, items[i].getNumber());
+                    values.put(QueueDB.KEY_YEAR, items[i].getYear());
+                    values.put(QueueDB.KEY_ALBUM_ID, items[i].getAlbumId());
+                    values.put(QueueDB.KEY_TRACK_ID, items[i].getTrackId());
+                    if (items[i].getSort() != -1) {
+                        values.put(QueueDB.KEY_SORT, items[i].getSort());
+                    } else {
+                        values.put(QueueDB.KEY_SORT, mQueueData.size() + i + 1);
+                    }
+                    getContentResolver().insert(QueueProvider.CONTENT_URI, values);
                 }
-                getContentResolver().insert(QueueProvider.CONTENT_URI, values);
             }
             invalidateQueue();
             runOnUiThread(new Runnable() {
