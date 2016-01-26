@@ -9,14 +9,22 @@
         android:focusable="false"
         android:focusableInTouchMode="false"
         android:layout_marginStart="5dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_width="@dimen/checkbox_size"
+        android:layout_height="@dimen/checkbox_size"/>
+    <View
+        android:id="@+id/files_placeholder"
+        android:layout_width="@dimen/checkbox_size"
+        android:layout_height="@dimen/checkbox_size"
+        android:layout_alignParentStart="true"
+        android:layout_centerVertical="true"
+        android:layout_marginStart="5dp"
+        android:visibility="invisible"/>
     <ImageView
         android:id="@+id/files_dir_icon"
         android:src="@drawable/ic_action_files"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
+        android:layout_toEndOf="@id/files_placeholder"
         android:layout_centerVertical="true"
         android:layout_marginStart="5dp"/>
     <ImageView
@@ -24,7 +32,7 @@
         android:src="@drawable/ic_file_icon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
+        android:layout_toEndOf="@id/files_placeholder"
         android:layout_centerVertical="true"
         android:layout_marginStart="5dp"/>
     <TextView

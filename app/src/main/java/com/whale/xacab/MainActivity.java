@@ -63,6 +63,9 @@ public class MainActivity extends Activity implements SelectionListener {
     public static final String LAST_FM_API_SECRET = "c3aead12e16598d69f26a24e60b7944e";//"bc81ea0e68d8250fa9770618e81d7529";
     public static final String LAST_FM_SESSION = "lastFmSession";
     public static final String LAST_FM_USER = "lastFmUser";
+    public static final String DEFAULT_MODE = "defaultMode";
+    public static final String MODE_LIBRARY = "library";
+    public static final String MODE_FILES = "files";
     private static final String IS_SHUFFLING = "IS_SHUFFLED";
     private static final String IS_REPEATING = "IS_REPEATING";
     private static final String IS_PLAYING = "IS_PLAYING";
@@ -209,6 +212,14 @@ public class MainActivity extends Activity implements SelectionListener {
 
     private void initializeSharedPreferences() {
         mPreferences = getSharedPreferences(LAST_DIR, MODE_PRIVATE);
+        String mode = mPreferences.getString(DEFAULT_MODE, null);
+        if (mode != null) {
+            if (mode.equals(MODE_LIBRARY)) {
+                isLibrary = true;
+            } else if (mode.equals(MODE_FILES)) {
+                isLibrary = false;
+            }
+        }
         mPreferencesEditor = mPreferences.edit();
 //        mPreferencesEditor.remove(LAST_FM_SESSION);
 //        mPreferencesEditor.remove(LAST_FM_USER);
@@ -981,9 +992,19 @@ public class MainActivity extends Activity implements SelectionListener {
         if (isLibrary) {
 //            librarySwitchButton.setIcon(R.drawable.ic_action_files_disabled);
             openLibraryFragment();
+            if (mPreferencesEditor == null) {
+                mPreferencesEditor = mPreferences.edit();
+            }
+            mPreferencesEditor.putString(DEFAULT_MODE, MODE_LIBRARY);
+            mPreferencesEditor.commit();
         } else {
 //            librarySwitchButton.setIcon(R.drawable.ic_action_files);
             openFilesFragment();
+            if (mPreferencesEditor == null) {
+                mPreferencesEditor = mPreferences.edit();
+            }
+            mPreferencesEditor.putString(DEFAULT_MODE, MODE_FILES);
+            mPreferencesEditor.commit();
         }
     }
 

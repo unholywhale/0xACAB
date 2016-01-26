@@ -20,6 +20,7 @@ import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import java.io.File;
@@ -235,20 +236,24 @@ public class FilesFragment extends Fragment {
         mCheckButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mAdapter.setCheckBoxVisibility(true, true);
+                if (mAdapter.getChecked().size() != mAdapter.getCount() - 1) { // except ".."
+                    mAdapter.setCheckBoxVisibility(true, true);
+                } else {
+                    mAdapter.setCheckBoxVisibility(true, false);
+                }
             }
         });
         mAdapter = new FilesAdapter(getActivity(), R.layout.fragment_files_list_item, mFiles);
         mList = (ListView) view.findViewById(R.id.files_list);
         mList.setAdapter(mAdapter);
-        final FilesGestureListener gestureListener = new FilesGestureListener(this, mList);
-        final GestureDetector gestureDetector = new GestureDetector(getActivity().getApplicationContext(), gestureListener);
-        mList.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View view, MotionEvent motionEvent) {
-                return gestureDetector.onTouchEvent(motionEvent);
-            }
-        });
+//        final FilesGestureListener gestureListener = new FilesGestureListener(this, mList);
+//        final GestureDetector gestureDetector = new GestureDetector(getActivity().getApplicationContext(), gestureListener);
+//        mList.setOnTouchListener(new View.OnTouchListener() {
+//            @Override
+//            public boolean onTouch(View view, MotionEvent motionEvent) {
+//                return gestureDetector.onTouchEvent(motionEvent);
+//            }
+//        });
         //mList.setOnTouchListener(new FilesGestureHelper(getActivity().getApplicationContext()));
         mList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -262,9 +267,9 @@ public class FilesFragment extends Fragment {
                     mAdapter.notifyDataSetChanged();
                     mAdapter.setCheckboxes();
                 } else {
-                    selectMode(true);
-                    mAdapter.setChecked(view);
-                    mAdapter.setCheckBoxVisibility(true);
+//                    selectMode(true);
+//                    mAdapter.setChecked(view);
+//                    mAdapter.setCheckBoxVisibility(true);
                     //AudioListModel item = getAudioData(file);
                     //addLast(position);
                     //mListener.onArtistItemSelected(item);
@@ -514,6 +519,15 @@ public class FilesFragment extends Fragment {
                         FileHashHolder fh = (FileHashHolder) cb.getTag();
                         fh.isChecked = cb.isChecked();
                         checkboxes.set(fh.position, fh);
+                        if (!fh.isChecked) {
+                            if (getChecked().size() == 0) {
+                                selectMode(false);
+                            } else {
+                                selectMode(true);
+                            }
+                        } else {
+                            selectMode(true);
+                        }
                     }
                 });
             } else {
@@ -527,27 +541,42 @@ public class FilesFragment extends Fragment {
             FileHashHolder fh = checkboxes.get(position);
             holder.checked.setChecked(fh.isChecked);
             holder.checked.setTag(fh);
-            if (mCheckBoxVisible) {
-                if (!file.getName().equals("..")) {
-                    holder.dirIcon.setVisibility(View.INVISIBLE);
-                    holder.fileIcon.setVisibility(View.INVISIBLE);
-                    holder.checked.setVisibility(View.VISIBLE);
-                } else {
-                    holder.dirIcon.setVisibility(View.VISIBLE);
-                    holder.checked.setVisibility(View.INVISIBLE);
-                    //holder.checked.setChecked(false);
-                }
+            RelativeLayout.LayoutParams params;
+            int checkboxSize = getResources().getDimensionPixelSize(R.dimen.checkbox_size);
+            if (file.isDirectory()) {
+                holder.dirIcon.setVisibility(View.VISIBLE);
+                holder.fileIcon.setVisibility(View.INVISIBLE);
+                params = (RelativeLayout.LayoutParams) holder.checked.getLayoutParams();
+                params.width = checkboxSize;
+                holder.checked.setLayoutParams(params);
             } else {
-                holder.checked.setVisibility(View.INVISIBLE);
-                holder.checked.setChecked(false);
-                if (file.isDirectory()) {
-                    holder.dirIcon.setVisibility(View.VISIBLE);
-                    holder.fileIcon.setVisibility(View.INVISIBLE);
-                } else {
-                    holder.dirIcon.setVisibility(View.INVISIBLE);
-                    holder.fileIcon.setVisibility(View.VISIBLE);
-                }
+                holder.dirIcon.setVisibility(View.INVISIBLE);
+                holder.fileIcon.setVisibility(View.VISIBLE);
+                params = (RelativeLayout.LayoutParams) holder.checked.getLayoutParams();
+                params.width = mList.getWidth();
+                holder.checked.setLayoutParams(params);
             }
+//            if (mCheckBoxVisible) {
+//                if (!file.getName().equals("..")) {
+//                    holder.dirIcon.setVisibility(View.INVISIBLE);
+//                    holder.fileIcon.setVisibility(View.INVISIBLE);
+//                    holder.checked.setVisibility(View.VISIBLE);
+//                } else {
+//                    holder.dirIcon.setVisibility(View.VISIBLE);
+//                    holder.checked.setVisibility(View.INVISIBLE);
+//                    //holder.checked.setChecked(false);
+//                }
+//            } else {
+//                holder.checked.setVisibility(View.INVISIBLE);
+//                holder.checked.setChecked(false);
+//                if (file.isDirectory()) {
+//                    holder.dirIcon.setVisibility(View.VISIBLE);
+//                    holder.fileIcon.setVisibility(View.INVISIBLE);
+//                } else {
+//                    holder.dirIcon.setVisibility(View.INVISIBLE);
+//                    holder.fileIcon.setVisibility(View.VISIBLE);
+//                }
+//            }
             holder.title.setText(file.getName());
             return row;
         }
@@ -576,10 +605,7 @@ public class FilesFragment extends Fragment {
 
         public void setCheckBoxVisibility(boolean visible, boolean checkAll) {
             mCheckBoxVisible = visible;
-            mCheckAll = checkAll;
-            if (checkAll) {
-                checkAll(true);
-            }
+            checkAll(checkAll);
             notifyDataSetChanged();
         }
 
