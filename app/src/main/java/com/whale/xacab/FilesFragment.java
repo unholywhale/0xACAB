@@ -27,6 +27,8 @@ import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
 import java.util.TreeMap;
 
 
@@ -258,6 +260,7 @@ public class FilesFragment extends Fragment {
                     populateFiles(mCurrentPath);
                     selectMode(false);
                     mAdapter.notifyDataSetChanged();
+                    mAdapter.setCheckboxes();
                 } else {
                     selectMode(true);
                     mAdapter.setChecked(view);
@@ -337,10 +340,8 @@ public class FilesFragment extends Fragment {
     public void addItems() {
         Integer counter = 0;
         FileHandler fileHandler = new FileHandler();
-        for (FilesAdapter.FileHashHolder holder : getAdapter().treeMapChecked.values()) {
-            if (holder.isChecked) {
-                fileHandler.addResult(mFiles.get(holder.position));
-            }
+        for (Integer i : getAdapter().getChecked()) {
+            fileHandler.addResult(mFiles.get(i));
         }
         ArrayList<AudioListModel> result = fileHandler.getResult();
         AudioListModel[] items = result.toArray(new AudioListModel[result.size()]);
@@ -361,7 +362,7 @@ public class FilesFragment extends Fragment {
                     }
                 };
                 mAddButton.animate()
-                        .translationY(0)
+                        //.translationY(0)
                         .alpha(1)
                         .withStartAction(action)
                         .start();
@@ -387,7 +388,7 @@ public class FilesFragment extends Fragment {
                     }
                 };
                 mAddButton.animate()
-                        .translationY(100)
+                        //.translationY(100)
                         .alpha(0)
                         .withEndAction(action)
                         .start();
@@ -449,18 +450,27 @@ public class FilesFragment extends Fragment {
         boolean mCheckBoxVisible = false;
         boolean mCheckAll = false;
         ArrayList<File> rows = null;
+        ArrayList<FileHashHolder> checkboxes = new ArrayList<>();
         private TreeMap<Integer, FileHashHolder> treeMapChecked = new TreeMap<>();
 
         public void setChecked(View view) {
             FileHolder holder = (FileHolder) view.getTag();
             if (holder != null) {
-                holder.checked.setChecked(true);
+                FileHashHolder fh = (FileHashHolder) holder.checked.getTag();
+                fh.isChecked = true;
+                checkboxes.set(fh.position, fh);
+                notifyDataSetChanged();
             }
         }
 
         public class FileHashHolder {
             Integer position;
             Boolean isChecked;
+
+            public FileHashHolder(Integer position, Boolean isChecked) {
+                this.position = position;
+                this.isChecked = isChecked;
+            }
         }
 
         public FilesAdapter(Context context, int resource, ArrayList<File> rows) {
@@ -468,40 +478,24 @@ public class FilesFragment extends Fragment {
             this.context = context;
             this.layoutResourceId = resource;
             this.rows = rows;
+            setCheckboxes();
         }
 
-        public FileHolder getHolder(View row, final int position, final boolean isDir) {
+        public void setCheckboxes() {
+            checkboxes.clear();
+            for (int i = 0; i < rows.size(); i++) {
+                checkboxes.add(new FileHashHolder(i, false));
+            }
+        }
+
+        public FileHolder getHolder(final View row, final int position, final boolean isDir) {
             FileHolder holder = new FileHolder();
             holder.checked = (CheckBox) row.findViewById(R.id.files_checked);
-            holder.checked.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
-                    //if (!isDir) {
-                        FileHashHolder fileHashHolder = (FileHashHolder) compoundButton.getTag();
-                        if (fileHashHolder == null) {
-                            fileHashHolder = new FileHashHolder();
-                            fileHashHolder.position = position;
-                        }
-                        if (fileHashHolder.position != ListView.INVALID_POSITION) {
-                            fileHashHolder.isChecked = isChecked;
-                            if (isChecked) {
-                                treeMapChecked.put(fileHashHolder.position, fileHashHolder);
-                            } else if (treeMapChecked.get(fileHashHolder.position) != null) {
-                                treeMapChecked.remove(fileHashHolder.position);
-                            }
-                        }
-                    //}
-                }
-            });
-
             holder.dirIcon = (ImageView) row.findViewById(R.id.files_dir_icon);
             holder.fileIcon = (ImageView) row.findViewById(R.id.files_file_icon);
             holder.title = (TextView) row.findViewById(R.id.files_title);
             return holder;
         }
-
-        public TreeMap<Integer, FileHashHolder> getTreeMapChecked() { return treeMapChecked; }
-
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
@@ -513,6 +507,15 @@ public class FilesFragment extends Fragment {
                 row = inflater.inflate(R.layout.fragment_files_list_item, parent, false);
                 holder = getHolder(row, position, file.isDirectory());
                 row.setTag(holder);
+                holder.checked.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        CheckBox cb = (CheckBox) view;
+                        FileHashHolder fh = (FileHashHolder) cb.getTag();
+                        fh.isChecked = cb.isChecked();
+                        checkboxes.set(fh.position, fh);
+                    }
+                });
             } else {
                 holder = (FileHolder) row.getTag();
             }
@@ -521,28 +524,14 @@ public class FilesFragment extends Fragment {
             } else {
                 holder.title.setTextColor(getResources().getColor(R.color.text_light_color));
             }
-            FileHashHolder fileHashHolder = treeMapChecked.get(position);
-            if (fileHashHolder == null) {
-                fileHashHolder = new FileHashHolder();
-                fileHashHolder.position = position;
-                if (mCheckAll) {
-                    fileHashHolder.isChecked = true;
-                } else {
-                    fileHashHolder.isChecked = false;
-                }
-                holder.checked.setTag(fileHashHolder);
-            }
+            FileHashHolder fh = checkboxes.get(position);
+            holder.checked.setChecked(fh.isChecked);
+            holder.checked.setTag(fh);
             if (mCheckBoxVisible) {
                 if (!file.getName().equals("..")) {
                     holder.dirIcon.setVisibility(View.INVISIBLE);
                     holder.fileIcon.setVisibility(View.INVISIBLE);
                     holder.checked.setVisibility(View.VISIBLE);
-
-                    if (fileHashHolder.isChecked != null) {
-                        holder.checked.setChecked(fileHashHolder.isChecked);
-                    } else {
-                        holder.checked.setChecked(false);
-                    }
                 } else {
                     holder.dirIcon.setVisibility(View.VISIBLE);
                     holder.checked.setVisibility(View.INVISIBLE);
@@ -550,6 +539,7 @@ public class FilesFragment extends Fragment {
                 }
             } else {
                 holder.checked.setVisibility(View.INVISIBLE);
+                holder.checked.setChecked(false);
                 if (file.isDirectory()) {
                     holder.dirIcon.setVisibility(View.VISIBLE);
                     holder.fileIcon.setVisibility(View.INVISIBLE);
@@ -567,10 +557,21 @@ public class FilesFragment extends Fragment {
                 View view = this.getView(i, null, null);
                 FileHolder holder = (FileHolder) view.getTag();
                 if (!holder.title.getText().equals("..")) {
-                    holder.checked.setChecked(checked);
+                    FileHashHolder fh = new FileHashHolder(i, checked);
+                    checkboxes.set(i, fh);
                 }
             }
-            //this.notifyDataSetChanged();
+            this.notifyDataSetChanged();
+        }
+
+        public ArrayList<Integer> getChecked() {
+            ArrayList<Integer> checkedList = new ArrayList<>();
+            for (int i = 0; i < checkboxes.size(); i++) {
+                if (checkboxes.get(i).isChecked) {
+                    checkedList.add(i);
+                }
+            }
+            return checkedList;
         }
 
         public void setCheckBoxVisibility(boolean visible, boolean checkAll) {
@@ -578,9 +579,6 @@ public class FilesFragment extends Fragment {
             mCheckAll = checkAll;
             if (checkAll) {
                 checkAll(true);
-            }
-            if (!mCheckBoxVisible) {
-                treeMapChecked.clear();
             }
             notifyDataSetChanged();
         }
@@ -590,7 +588,6 @@ public class FilesFragment extends Fragment {
         }
 
         class FileHolder {
-            Boolean isDir;
             CheckBox checked;
             ImageView dirIcon;
             ImageView fileIcon;
@@ -624,16 +621,18 @@ public class FilesFragment extends Fragment {
                         result.add(item);
                     }
                 } else {
-                    File f[] = file.listFiles(new FileFilter() {
-                        @Override
-                        public boolean accept(File f) {
-                            return f.isDirectory() || f.getName().toLowerCase().endsWith(".mp3");
+                    if (!file.getName().equals("..")) {
+                        File f[] = file.listFiles(new FileFilter() {
+                            @Override
+                            public boolean accept(File f) {
+                                return f.isDirectory() || f.getName().toLowerCase().endsWith(".mp3");
+                            }
+                        });
+                        ArrayList<File> fileList = new ArrayList<>();
+                        Collections.addAll(fileList, f);
+                        for (File fi : fileList) {
+                            addResult(fi);
                         }
-                    });
-                    ArrayList<File> fileList = new ArrayList<>();
-                    Collections.addAll(fileList, f);
-                    for (File fi : fileList) {
-                        addResult(fi);
                     }
                 }
             }
