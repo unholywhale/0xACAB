@@ -2,11 +2,13 @@ package com.whale.xacab;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.media.MediaMetadataRetriever;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
@@ -26,6 +28,7 @@ import android.widget.TextView;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -261,7 +264,11 @@ public class FilesFragment extends Fragment {
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
                 File file = mFiles.get(position);
                 if (file.isDirectory()) {
-                    mCurrentPath += "/" + file.getName();
+                    try {
+                        mCurrentPath = (new File(mCurrentPath)).getCanonicalPath() + "/" + file.getName();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                     mListener.updateLastDir(mCurrentPath);
                     populateFiles(mCurrentPath);
                     selectMode(false);
@@ -311,10 +318,15 @@ public class FilesFragment extends Fragment {
 
     private void populateFiles(String path) {
         mFiles.clear();
+        File f = new File(path);
+        if (!f.exists()) {
+            mCurrentPath = Environment.getExternalStorageDirectory().toString();
+            path = mCurrentPath;
+            f = new File(path);
+        }
         if (!path.equals(Environment.getExternalStorageDirectory().toString())) {
             mFiles.add(new File("..", ".."));
         }
-        File f = new File(path);
         File file[] = f.listFiles(new FileFilter() {
             @Override
             public boolean accept(File file) {
@@ -345,16 +357,18 @@ public class FilesFragment extends Fragment {
 
     public void addItems() {
         Integer counter = 0;
-        FileHandler fileHandler = new FileHandler();
-        for (Integer i : getAdapter().getChecked()) {
-            fileHandler.addResult(mFiles.get(i));
-        }
-        ArrayList<AudioListModel> result = fileHandler.getResult();
-        AudioListModel[] items = result.toArray(new AudioListModel[result.size()]);
-        mListener.addBulk(items);
-        selectMode(false);
-        mListener.setSelectMode(false);
-        getAdapter().notifyDataSetChanged();
+        AddFilesTask addFilesTask = new AddFilesTask(getActivity(), mFiles, getAdapter().getChecked());
+        addFilesTask.execute();
+//        FileHandler fileHandler = new FileHandler();
+//        for (Integer i : getAdapter().getChecked()) {
+//            fileHandler.addResult(mFiles.get(i));
+//        }
+//        ArrayList<AudioListModel> result = fileHandler.getResult();
+//        AudioListModel[] items = result.toArray(new AudioListModel[result.size()]);
+//        mListener.addBulk(items);
+//        selectMode(false);
+//        mListener.setSelectMode(false);
+//        getAdapter().notifyDataSetChanged();
     }
 
     public void selectMode(boolean enabled) {
@@ -542,7 +556,7 @@ public class FilesFragment extends Fragment {
             holder.checked.setChecked(fh.isChecked);
             holder.checked.setTag(fh);
             RelativeLayout.LayoutParams params;
-            int checkboxSize = getResources().getDimensionPixelSize(R.dimen.checkbox_size);
+            int checkboxSize = getResources().getDimensionPixelSize(R.dimen.checkbox_size) * 2;
             if (file.isDirectory()) {
                 holder.dirIcon.setVisibility(View.VISIBLE);
                 holder.fileIcon.setVisibility(View.INVISIBLE);
@@ -593,6 +607,10 @@ public class FilesFragment extends Fragment {
             this.notifyDataSetChanged();
         }
 
+        private void uncheckAll() {
+            checkAll(false);
+        }
+
         public ArrayList<Integer> getChecked() {
             ArrayList<Integer> checkedList = new ArrayList<>();
             for (int i = 0; i < checkboxes.size(); i++) {
@@ -621,63 +639,19 @@ public class FilesFragment extends Fragment {
         }
     }
 
-    public class FileHandler {
-        private ArrayList<File> files;
-        private ArrayList<AudioListModel> result;
-
-        public FileHandler() {
-            files = new ArrayList<>();
-            result = new ArrayList<>();
-        }
-
-        public FileHandler(ArrayList<File> files) {
-            this.files = files;
-            result = new ArrayList<>();
-        }
-
-        public void add(File file) {
-            files.add(file);
-        }
-
-        public void addResult(File file) {
-            if (file != null) {
-                if (!file.isDirectory()) {
-                    AudioListModel item = getAudioData(file);
-                    if (item != null) {
-                        result.add(item);
-                    }
-                } else {
-                    if (!file.getName().equals("..")) {
-                        File f[] = file.listFiles(new FileFilter() {
-                            @Override
-                            public boolean accept(File f) {
-                                return f.isDirectory() || f.getName().toLowerCase().endsWith(".mp3");
-                            }
-                        });
-                        ArrayList<File> fileList = new ArrayList<>();
-                        Collections.addAll(fileList, f);
-                        for (File fi : fileList) {
-                            addResult(fi);
-                        }
-                    }
-                }
-            }
-        }
-
-        public ArrayList<AudioListModel> getResult() {
-            return result;
-        }
-    }
-
-    private class AddFilesTask extends AsyncTask<ArrayList<File>, Void, Void> {
+    private class AddFilesTask extends AsyncTask<Void, Void, Void> {
 
         private Activity activity;
         private ArrayList<File> files = new ArrayList<>();
+        private ArrayList<Integer> checked = new ArrayList<>();
         private ArrayList<AudioListModel> result = new ArrayList<>();
+        private ProgressDialog progressDialog;
         private Integer filesCount = 0;
 
-        public AddFilesTask(Activity activity) {
-
+        public AddFilesTask(Activity activity, ArrayList<File> files, ArrayList<Integer> checked) {
+            this.activity = activity;
+            this.files = files;
+            this.checked = checked;
         }
 
         private void getFileCount(File file) {
@@ -703,9 +677,38 @@ public class FilesFragment extends Fragment {
         }
 
         @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            for (int i = 0; i < checked.size(); i++) {
+                int checkedPosition = checked.get(i);
+                getFileCount(files.get(checkedPosition));
+            }
+            progressDialog = new ProgressDialog(activity);
+            progressDialog.setMax(filesCount);
+            progressDialog.setMessage("Loading files...");
+            progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+            progressDialog.setIndeterminate(false);
+            progressDialog.setCancelable(true);
+            progressDialog.show();
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            progressDialog.dismiss();
+            AudioListModel[] items = result.toArray(new AudioListModel[result.size()]);
+            mListener.addBulk(items);
+            selectMode(false);
+            getAdapter().uncheckAll();
+            mListener.setSelectMode(false);
+            getAdapter().notifyDataSetChanged();
+        }
+
+        @Override
         protected void onProgressUpdate(Void... values) {
             super.onProgressUpdate(values);
-
+            progressDialog.incrementProgressBy(1);
+            progressDialog.incrementSecondaryProgressBy(1);
         }
 
         public void addResult(File file) {
@@ -714,7 +717,7 @@ public class FilesFragment extends Fragment {
                     AudioListModel item = getAudioData(file);
                     if (item != null) {
                         result.add(item);
-                        onProgressUpdate();
+                        publishProgress(null);
                     }
                 } else {
                     if (!file.getName().equals("..")) {
@@ -734,19 +737,14 @@ public class FilesFragment extends Fragment {
             }
         }
 
+
         @Override
-        protected Void doInBackground(ArrayList<File>... arrayLists) {
-            ArrayList<File> files = arrayLists[0];
-            FileHandler fileHandler = new FileHandler();
-            for (Integer i : getAdapter().getChecked()) {
-                fileHandler.addResult(files.get(i));
+        protected Void doInBackground(Void... voids) {
+            for (int i = 0; i < checked.size(); i++) {
+                int checkedPosition = checked.get(i);
+                addResult(files.get(checkedPosition));
             }
-            ArrayList<AudioListModel> result = fileHandler.getResult();
-            AudioListModel[] items = result.toArray(new AudioListModel[result.size()]);
-            mListener.addBulk(items);
-            selectMode(false);
-            mListener.setSelectMode(false);
-            getAdapter().notifyDataSetChanged();
+
             return null;
         }
     }
