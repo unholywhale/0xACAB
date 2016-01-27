@@ -102,6 +102,7 @@ public class LastFmWrapper {
                         Log.d("LFAIL", "fail");
                         return false;
                     }
+                    break;
                 }
             }
             int now = (int) (System.currentTimeMillis() / 1000);

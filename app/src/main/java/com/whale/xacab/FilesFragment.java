@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.content.Context;
 import android.media.MediaMetadataRetriever;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
@@ -353,7 +354,6 @@ public class FilesFragment extends Fragment {
         mListener.addBulk(items);
         selectMode(false);
         mListener.setSelectMode(false);
-        getAdapter().setCheckBoxVisibility(false);
         getAdapter().notifyDataSetChanged();
     }
 
@@ -667,8 +667,89 @@ public class FilesFragment extends Fragment {
         public ArrayList<AudioListModel> getResult() {
             return result;
         }
-
-
     }
+
+    private class AddFilesTask extends AsyncTask<ArrayList<File>, Void, Void> {
+
+        private Activity activity;
+        private ArrayList<File> files = new ArrayList<>();
+        private ArrayList<AudioListModel> result = new ArrayList<>();
+        private Integer filesCount = 0;
+
+        public AddFilesTask(Activity activity) {
+
+        }
+
+        private void getFileCount(File file) {
+            if (file != null) {
+                if (!file.isDirectory()) {
+                    filesCount++;
+                } else {
+                    if (!file.getName().equals("..")) {
+                        File f[] = file.listFiles(new FileFilter() {
+                            @Override
+                            public boolean accept(File f) {
+                                return f.isDirectory() || f.getName().toLowerCase().endsWith(".mp3");
+                            }
+                        });
+                        ArrayList<File> fileList = new ArrayList<>();
+                        Collections.addAll(fileList, f);
+                        for (File fi : fileList) {
+                            this.getFileCount(fi);
+                        }
+                    }
+                }
+            }
+        }
+
+        @Override
+        protected void onProgressUpdate(Void... values) {
+            super.onProgressUpdate(values);
+
+        }
+
+        public void addResult(File file) {
+            if (file != null) {
+                if (!file.isDirectory()) {
+                    AudioListModel item = getAudioData(file);
+                    if (item != null) {
+                        result.add(item);
+                        onProgressUpdate();
+                    }
+                } else {
+                    if (!file.getName().equals("..")) {
+                        File f[] = file.listFiles(new FileFilter() {
+                            @Override
+                            public boolean accept(File f) {
+                                return f.isDirectory() || f.getName().toLowerCase().endsWith(".mp3");
+                            }
+                        });
+                        ArrayList<File> fileList = new ArrayList<>();
+                        Collections.addAll(fileList, f);
+                        for (File fi : fileList) {
+                            addResult(fi);
+                        }
+                    }
+                }
+            }
+        }
+
+        @Override
+        protected Void doInBackground(ArrayList<File>... arrayLists) {
+            ArrayList<File> files = arrayLists[0];
+            FileHandler fileHandler = new FileHandler();
+            for (Integer i : getAdapter().getChecked()) {
+                fileHandler.addResult(files.get(i));
+            }
+            ArrayList<AudioListModel> result = fileHandler.getResult();
+            AudioListModel[] items = result.toArray(new AudioListModel[result.size()]);
+            mListener.addBulk(items);
+            selectMode(false);
+            mListener.setSelectMode(false);
+            getAdapter().notifyDataSetChanged();
+            return null;
+        }
+    }
+
 
 }

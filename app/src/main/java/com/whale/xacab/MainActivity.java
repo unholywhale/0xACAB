@@ -696,6 +696,7 @@ public class MainActivity extends Activity implements SelectionListener {
     public void onQueueItemSelected(int position) {
         mCurrentQueuePosition = position;
         currentSong = mQueueData.get(position);
+        musicServiceIntent.removeExtra(INTENT_GET_POSITION);
         musicServiceIntent.putExtra(INTENT_EXTRA, currentSong.getData());
         startService(musicServiceIntent);
         getContentResolver().notifyChange(QueueProvider.CONTENT_URI, null);
