@@ -23,6 +23,8 @@ import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.TreeSet;
 
@@ -130,7 +132,21 @@ public class LibraryFragment extends Fragment implements LoaderManager.LoaderCal
             }
         });
         mAddButton = (Button) view.findViewById(R.id.library_add);
+        mAddButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                addItems();
+                selectMode(false);
+                mAdapter.uncheckAll();
+            }
+        });
         mCheckButton = (ImageButton) view.findViewById(R.id.library_check_all);
+        mCheckButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mAdapter.checkAll();
+            }
+        });
         mList = (ListView) view.findViewById(R.id.library_list);
         getLoaderManager().initLoader(LIBRARY_LOADER, null, this);
         mAdapter = new LibraryAdapter(getActivity().getApplicationContext(), null, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
@@ -147,6 +163,56 @@ public class LibraryFragment extends Fragment implements LoaderManager.LoaderCal
             }
         });
         return view;
+    }
+
+    private void addItems() {
+        ArrayList<AudioListModel> items = new ArrayList<>();
+        ArrayList<String> checked = mAdapter.getCheckedArtists();
+        String[] columns = new String[] {
+                MediaStore.Audio.Media.TITLE,
+                MediaStore.Audio.Media.ALBUM,
+                MediaStore.Audio.Media.ALBUM_ID,
+                MediaStore.Audio.Media.YEAR,
+                MediaStore.Audio.Media.ARTIST,
+                MediaStore.Audio.Media.DATA,
+                MediaStore.Audio.Media.DURATION,
+                MediaStore.Audio.Media.TRACK,
+                MediaStore.Audio.Media._ID
+        };
+        String where = "";
+        boolean first = true;
+        for (String artist : checked) {
+            if (first) {
+                first = false;
+                where = MediaStore.Audio.Media.ARTIST + "=?";
+                continue;
+            }
+            where += " OR " + MediaStore.Audio.Media.ARTIST + "=?";
+        }
+        String[] whereArgs = checked.toArray(new String[checked.size()]);
+        String orderBy = MediaStore.Audio.Media.ARTIST + " ASC, "
+                + MediaStore.Audio.Media.ALBUM_ID + " ASC, "
+                + MediaStore.Audio.Media.TRACK + " ASC";
+        Cursor cursor = getActivity().getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, columns, where, whereArgs, orderBy);
+        while (cursor.moveToNext()) {
+            items.add(getItem(cursor));
+        }
+        AudioListModel[] itemsArray = items.toArray(new AudioListModel[items.size()]);
+        mListener.addBulk(itemsArray);
+    }
+
+    private AudioListModel getItem(Cursor cursor) {
+        String artist = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST));
+        String album = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM));
+        String title = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE));
+        String data = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA));
+        int duration = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION));
+        int year = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.YEAR));
+        long albumId = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID));
+        long trackId = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID));
+
+        AudioListModel audioItem = new AudioListModel(artist, album, title, data, duration, 0, year, albumId, trackId);
+        return audioItem;
     }
 
     private void selectMode(boolean enabled) {
@@ -263,6 +329,10 @@ public class LibraryFragment extends Fragment implements LoaderManager.LoaderCal
             super(context, c, flags);
         }
 
+        public ArrayList<String> getCheckedArtists() {
+            return checkedArtists;
+        }
+
         @Override
         public View newView(Context context, Cursor cursor, ViewGroup parent) {
             View view = LayoutInflater.from(context).inflate(R.layout.fragment_library_list_item, parent, false);
@@ -281,6 +351,25 @@ public class LibraryFragment extends Fragment implements LoaderManager.LoaderCal
             } else {
                 checkedArtists.remove(artist);
             }
+        }
+
+        private void checkAll() {
+            if (checkedArtists.size() == this.getCount()) {
+                uncheckAll();
+            } else {
+                checkedArtists.clear();
+                for (int i = 0; i < this.getCount(); i++) {
+                    View view = this.getView(i, null, null);
+                    LibraryHolder holder = (LibraryHolder) view.getTag();
+                    checkedArtists.add(holder.artist.getText().toString());
+                }
+                notifyDataSetChanged();
+            }
+        }
+
+        private void uncheckAll() {
+            checkedArtists.clear();
+            notifyDataSetChanged();
         }
 
         @Override
