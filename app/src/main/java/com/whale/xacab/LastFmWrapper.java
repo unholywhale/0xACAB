@@ -5,6 +5,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 
+import java.io.Serializable;
 import java.util.logging.XMLFormatter;
 
 import de.umass.lastfm.Authenticator;
@@ -15,11 +16,12 @@ import de.umass.lastfm.scrobble.ScrobbleData;
 import de.umass.lastfm.scrobble.ScrobbleResult;
 import de.umass.lastfm.scrobble.Scrobbler;
 
-public class LastFmWrapper {
+public class LastFmWrapper implements Serializable {
     public static final String TAG_ARTIST = "artist";
     public static final String TAG_TITLE = "title";
     public static final String TAG_ALBUM = "album";
     private AudioListModel currentTrack;
+    private MainActivity activity;
     private String userAgent;
     private String apiKey;
     private String apiSecret;
@@ -31,7 +33,8 @@ public class LastFmWrapper {
     private boolean isPaused = false;
 
 
-    public LastFmWrapper(String userAgent, String apiKey, String apiSecret, SelectionListener callback, boolean debugMode) {
+    public LastFmWrapper(MainActivity activity, String userAgent, String apiKey, String apiSecret, SelectionListener callback, boolean debugMode) {
+        this.activity = activity;
         this.userAgent = userAgent;
         this.apiKey = apiKey;
         this.apiSecret = apiSecret;
@@ -57,6 +60,10 @@ public class LastFmWrapper {
 
     public void pause() {
         isPaused = true;
+    }
+
+    public void unpause() {
+        isPaused = false;
     }
 
     private void updatePlaying() {
@@ -87,7 +94,8 @@ public class LastFmWrapper {
             int scrobbleDuration = currentTrack.getDuration() / 2;
             long currentTrackId = currentTrack.getTrackId();
             long pauseTime = 0;
-            while (System.currentTimeMillis() - pauseTime < startTime + scrobbleDuration || System.currentTimeMillis() - pauseTime < startTime + (60 * 4 * 1000)) {
+            boolean scrobbled = false;
+            while (!scrobbled) {
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
@@ -100,19 +108,42 @@ public class LastFmWrapper {
                     Log.d("LSTATUS", "ok");
                     if (currentTrack == null || currentTrackId != currentTrack.getTrackId()) {
                         Log.d("LFAIL", "fail");
-                        return false;
+                        break;
                     }
+                }
+                if (System.currentTimeMillis() - pauseTime > startTime + scrobbleDuration || System.currentTimeMillis() - pauseTime > startTime + (60 * 4 * 1000)) {
+                    scrobbled = true;
                     break;
                 }
             }
-            int now = (int) (System.currentTimeMillis() / 1000);
-            ScrobbleData data = new ScrobbleData(currentTrack.getArtist(), currentTrack.getTitle(), now, 0, currentTrack.getAlbum(), currentTrack.getArtist(), "3fba46e5-a32c-460d-8548-65cdfeeebf52", currentTrack.getNumber(), null, true);
-            ScrobbleResult result = Track.scrobble(data, session);
-            Boolean ok = result.isSuccessful();
-            Boolean ign = result.isIgnored();
+//            while (System.currentTimeMillis() - pauseTime < startTime + scrobbleDuration || System.currentTimeMillis() - pauseTime < startTime + (60 * 4 * 1000)) {
+//                try {
+//                    Thread.sleep(1000);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//                if (isPaused) {
+//                    pauseTime += 1000;
+//                    Log.d("LSTATUS", "pause");
+//                } else {
+//                    Log.d("LSTATUS", "ok");
+//                    if (currentTrack == null || currentTrackId != currentTrack.getTrackId()) {
+//                        Log.d("LFAIL", "fail");
+//                        return false;
+//                    }
+//                    break;
+//                }
+//            }
+            if (scrobbled) {
+                int now = (int) (System.currentTimeMillis() / 1000);
+                ScrobbleData data = new ScrobbleData(currentTrack.getArtist(), currentTrack.getTitle(), now, 0, currentTrack.getAlbum(), currentTrack.getArtist(), "3fba46e5-a32c-460d-8548-65cdfeeebf52", currentTrack.getNumber(), null, true);
+                ScrobbleResult result = Track.scrobble(data, session);
+                Boolean ok = result.isSuccessful();
+                Boolean ign = result.isIgnored();
 
-            Log.d("SCROBBLE", ok.toString());
-            Log.d("SCROBBLEIGN", ign.toString());
+                Log.d("SCROBBLE", ok.toString());
+                Log.d("SCROBBLEIGN", ign.toString());
+            }
             return true;
         }
     }

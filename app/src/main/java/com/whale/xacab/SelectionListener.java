@@ -12,6 +12,7 @@ public interface SelectionListener {
     void onArtistItemSelected(AudioListModel item, int mode, int counter);
     void updateLastDir(String dir);
     String getLastDir();
+    int getQueueSize();
     void saveLastFmSession(String sessionKey, String user);
     void checkEmpty();
     void onLibraryItemSelected(View item);

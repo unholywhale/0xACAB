@@ -13,6 +13,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     public static final String SONG_POSITION = "SONG_POSITION";
     public static final String SONG_STOPPED = "SONG_STOPPED";
     public static final String SONG_STARTED = "SONG_STARTED";
+    public static final String SONG_NEW = "SONG_NEW";
     private final String TAG = "MusicService";
     private MediaPlayer mediaPlayer;
     private int mStartID;
@@ -50,7 +51,13 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
         sendBroadcast(mBroadcastIntent);
     }
 
+    private void newSong() {
+        mBroadcastIntent.putExtra(SONG_STATUS, SONG_NEW);
+        sendBroadcast(mBroadcastIntent);
+    }
+
     private void getPosition() {
+        mBroadcastIntent.putExtra(SONG_STATUS, SONG_POSITION);
         mBroadcastIntent.putExtra(SONG_POSITION, mediaPlayer.getCurrentPosition());
         sendBroadcast(mBroadcastIntent);
     }
@@ -135,6 +142,7 @@ public class MusicService extends Service implements MediaPlayer.OnPreparedListe
     @Override
     public void onPrepared(MediaPlayer mp) {
         mp.start();
+        newSong();
         songStarted();
     }
 

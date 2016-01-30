@@ -3,6 +3,7 @@ package com.whale.xacab;
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.ProgressDialog;
+import android.content.ContentValues;
 import android.content.Context;
 import android.media.MediaMetadataRetriever;
 import android.os.AsyncTask;
@@ -319,7 +320,7 @@ public class FilesFragment extends Fragment {
     private void populateFiles(String path) {
         mFiles.clear();
         File f = new File(path);
-        if (!f.exists()) {
+        if (!f.exists() || !f.canExecute()) {
             mCurrentPath = Environment.getExternalStorageDirectory().toString();
             path = mCurrentPath;
             f = new File(path);
@@ -449,15 +450,15 @@ public class FilesFragment extends Fragment {
         Integer duration = Integer.parseInt(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
         Integer number = 0;
         try {
-            number = Integer.parseInt(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CD_TRACK_NUMBER));
+//            number = Integer.parseInt(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CD_TRACK_NUMBER));
         } catch (NumberFormatException nf) {
-            Log.e("number", nf.getMessage());
+//            Log.e("number", nf.getMessage());
         }
         Integer year = 0;
         try {
-            year = Integer.parseInt(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_YEAR));
+//            year = Integer.parseInt(mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_YEAR));
         } catch (NumberFormatException nf) {
-            Log.e("year", nf.getMessage());
+//            Log.e("year", nf.getMessage());
         }
         return new AudioListModel(artist, album, title, file.getPath(), duration, number, year, 0, 0);
     }
@@ -647,6 +648,7 @@ public class FilesFragment extends Fragment {
         private ArrayList<AudioListModel> result = new ArrayList<>();
         private ProgressDialog progressDialog;
         private Integer filesCount = 0;
+        private int queueSize;
 
         public AddFilesTask(Activity activity, ArrayList<File> files, ArrayList<Integer> checked) {
             this.activity = activity;
@@ -701,6 +703,7 @@ public class FilesFragment extends Fragment {
             selectMode(false);
             getAdapter().uncheckAll();
             mListener.setSelectMode(false);
+            mListener.invalidateQueue();
             getAdapter().notifyDataSetChanged();
         }
 
@@ -740,6 +743,7 @@ public class FilesFragment extends Fragment {
 
         @Override
         protected Void doInBackground(Void... voids) {
+            queueSize = mListener.getQueueSize();
             for (int i = 0; i < checked.size(); i++) {
                 int checkedPosition = checked.get(i);
                 addResult(files.get(checkedPosition));

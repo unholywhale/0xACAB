@@ -21,7 +21,6 @@ import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.media.session.MediaSession;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.ActionBarDrawerToggle;
@@ -36,7 +35,6 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -47,14 +45,16 @@ import java.util.Random;
 public class MainActivity extends Activity implements SelectionListener {
 
     public final static String APP_TITLE = "0xACAB";
+    public static final String USER_AGENT = "ACAB";
     public static final String APP_ID = "com.whale.xacab";
-    public final static String INTENT_SONG_STATUS = "com.whale.xacab.SONG_STOPPED";
+    public final static String INTENT_SONG_STATUS = "com.whale.xacab.SONG_STATUS";
     public final static String INTENT_SONG_NEXT = "com.whale.xacab.SONG_NEXT";
     public final static String INTENT_SONG_PREV = "com.whale.xacab.SONG_PREV";
     public final static String INTENT_SONG_PLAY = "com.whale.xacab.SONG_PLAY";
     public final static String INTENT_EXTRA = "SONG_SOURCE";
     public final static String INTENT_DURATION = "SONG_DURATION";
     public final static String CURRENT_QUEUE_POSITION = "CURRENT_QUEUE_POSITION";
+    public static final String TAG_HOLDER = "HOLDER";
     public final static String TAG_QUEUE = "QUEUE";
     public static final String TAG_LIBRARY = "LIBRARY";
     public static final String TAG_FILES = "FILES";
@@ -84,6 +84,7 @@ public class MainActivity extends Activity implements SelectionListener {
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
     private NotificationManager mNotificationManager;
+    private HolderFragment mHolderFragment;
     private LastFmWrapper mLastFm;
     private AudioManager mAudioManager;
     private Integer mCurrentQueuePosition = -1;
@@ -113,11 +114,13 @@ public class MainActivity extends Activity implements SelectionListener {
                     return;
                 }
                 String receiveValue = intent.getStringExtra(MusicService.SONG_STATUS);
-                if (receiveValue.equals(MusicService.SONG_STARTED)) {
+                if (receiveValue.equals(MusicService.SONG_NEW)) {
+                    mLastFm.startScrobbling(currentSong);
+                } else if (receiveValue.equals(MusicService.SONG_STARTED)) {
                     isPlaying = true;
+                    mLastFm.unpause();
                     //mAudioManager.requestAudioFocus(afChangeListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
                     changePlayStatus(MusicService.SONG_STARTED);
-                    mLastFm.startScrobbling(currentSong);
                     int position = intent.getIntExtra(MusicService.SONG_POSITION, -1);
                     int step = currentSong.getDuration() / 200;
                     if (position != -1) {
@@ -129,7 +132,7 @@ public class MainActivity extends Activity implements SelectionListener {
                     mLastFm.pause();
                     //mAudioManager.abandonAudioFocus(afChangeListener);
                     changePlayStatus(MusicService.SONG_STOPPED);
-                } else {
+                } else if (receiveValue.endsWith(MusicService.SONG_POSITION)){
                     int position = intent.getIntExtra(MusicService.SONG_POSITION, -1);
                     int step = currentSong.getDuration() / 200;
                     if (position != -1) {
@@ -242,6 +245,11 @@ public class MainActivity extends Activity implements SelectionListener {
         return mPreferences.getString(LAST_DIR, null);
     }
 
+    @Override
+    public int getQueueSize() {
+        return mQueueData.size();
+    }
+
     public void initializeLastFm() {
         String userAgent = "ACAB";
         checkLastFmLogin();
@@ -254,10 +262,14 @@ public class MainActivity extends Activity implements SelectionListener {
 //                loginLastFm(lastFmUser.getText().toString(), lastFmPassword.getText().toString());
 //            }
 //        });
-        mLastFm = new LastFmWrapper(userAgent, LAST_FM_API_KEY, LAST_FM_API_SECRET, this, true);
-        String sessionKey = mPreferences.getString(LAST_FM_SESSION, null);
-        if (sessionKey != null) {
-            mLastFm.authorize(sessionKey);
+
+        mLastFm = mHolderFragment.getLastFm();
+        if (mLastFm == null) {
+            mLastFm = new LastFmWrapper(this, userAgent, LAST_FM_API_KEY, LAST_FM_API_SECRET, this, true);
+            String sessionKey = mPreferences.getString(LAST_FM_SESSION, null);
+            if (sessionKey != null) {
+                mLastFm.authorize(sessionKey);
+            }
         }
     }
 
@@ -342,12 +354,152 @@ public class MainActivity extends Activity implements SelectionListener {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        initializeSharedPreferences();
-        initializeLastFm();
         if (savedInstanceState != null) {
             mOrientationChange = true;
         }
+        setContentView(R.layout.activity_main);
+        initializeSharedPreferences();
+        setAudioFocusHandling();
+        setNotifications();
+        setActionBarDrawer();
+        setFragments();
+        initializeLastFm();
+        setButtons();
+        setIntentFilter();
+        db = new QueueDB(this);
+        musicServiceIntent = new Intent(getApplicationContext(), MusicService.class);
+        setupQueue();
+        if (savedInstanceState == null) {
+            openSeekBarFragment();
+            openQueueFragment();
+        }
+        if (savedInstanceState != null) {
+            restoreState(savedInstanceState);
+            setProgressAsyncTasks();
+            invalidateQueue();
+            invalidateButtons();
+        }
+    }
+
+    private void setupQueue() {
+        populateQueueData();
+        if (mCurrentQueuePosition != -1) {
+            currentSong = mQueueData.get(mCurrentQueuePosition);
+        }
+    }
+
+    private void restoreState(Bundle savedInstanceState) {
+        mCurrentQueuePosition = savedInstanceState.getInt(CURRENT_QUEUE_POSITION);
+        if (mCurrentQueuePosition != -1) {
+            currentSong = mQueueData.get(mCurrentQueuePosition);
+        }
+        isShuffling = savedInstanceState.getBoolean(IS_SHUFFLING);
+        isRepeating = savedInstanceState.getBoolean(IS_REPEATING);
+        isPlaying = savedInstanceState.getBoolean(IS_PLAYING);
+    }
+
+    private void setNotifications() {
+        mSession = new MediaSession(this, "SESSION");
+        mSession.setActive(true);
+        mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+    }
+
+    private void setButtons() {
+        mButtonsContainer = (RelativeLayout) findViewById(R.id.main_buttons_container);
+        LayoutInflater inflater = getLayoutInflater();
+        View queueLayout = inflater.inflate(R.layout.container_queue, null);
+        View buttons = queueLayout.findViewById(R.id.container_queue_buttons);
+        mButtons = buttons;
+
+        ImageView playButton = (ImageView) buttons.findViewById(R.id.player_play);
+        ImageView nextButton = (ImageView) buttons.findViewById(R.id.player_next);
+        ImageView previousButton = (ImageView) buttons.findViewById(R.id.player_previous);
+        final ImageView repeatButton = (ImageView) buttons.findViewById(R.id.player_repeat);
+        final ImageView shuffleButton = (ImageView) buttons.findViewById(R.id.player_shuffle);
+        if (nextButton != null) {
+            nextButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    nextSong();
+                }
+            });
+        }
+        if (previousButton != null) {
+            previousButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    prevSong();
+                }
+            });
+        }
+        playButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (isPlaying) {
+                    pause();
+                } else {
+                    play();
+                }
+            }
+        });
+        if (repeatButton != null) {
+            repeatButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (isRepeating) {
+                        isRepeating = false;
+                        repeatButton.setImageResource(R.drawable.ic_action_repeat_disabled);
+                    } else {
+                        isRepeating = true;
+                        repeatButton.setImageResource(R.drawable.ic_action_repeat);
+                    }
+                }
+            });
+        }
+        if (shuffleButton != null) {
+            shuffleButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (isShuffling) {
+                        isShuffling = false;
+                        shuffleButton.setImageResource(R.drawable.ic_action_shuffle_disabled);
+                    } else {
+                        isShuffling = true;
+                        shuffleButton.setImageResource(R.drawable.ic_action_shuffle);
+                    }
+                }
+            });
+        }
+        changePlayStatus(songStatus);
+        ((ViewGroup) buttons.getParent()).removeView(buttons);
+        mButtonsContainer.removeAllViews();
+        mButtonsContainer.addView(buttons);
+    }
+
+    private void setActionBarDrawer() {
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mDrawerToggle = new ActionBarDrawerToggle(
+                this,
+                mDrawerLayout,
+                R.drawable.ic_drawer,
+                R.string.drawer_open,
+                R.string.drawer_close) {
+            @Override
+            public void onDrawerOpened(View drawerView) {
+                super.onDrawerOpened(drawerView);
+            }
+
+            @Override
+            public void onDrawerClosed(View drawerView) {
+                super.onDrawerClosed(drawerView);
+            }
+        };
+        mDrawerLayout.setDrawerListener(mDrawerToggle);
+        getActionBar().setDisplayHomeAsUpEnabled(true);
+        getActionBar().setHomeButtonEnabled(true);
+    }
+
+    private void setAudioFocusHandling() {
         afChangeListener = new AudioManager.OnAudioFocusChangeListener() {
             @Override
             public void onAudioFocusChange(int i) {
@@ -374,63 +526,18 @@ public class MainActivity extends Activity implements SelectionListener {
                 }
             }
         };
-        mSession = new MediaSession(this, "SESSION");
-        mSession.setActive(true);
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        mDrawerToggle = new ActionBarDrawerToggle(
-                this,
-                mDrawerLayout,
-                R.drawable.ic_drawer,
-                R.string.drawer_open,
-                R.string.drawer_close) {
-            @Override
-            public void onDrawerOpened(View drawerView) {
-                super.onDrawerOpened(drawerView);
-            }
-
-            @Override
-            public void onDrawerClosed(View drawerView) {
-                super.onDrawerClosed(drawerView);
-            }
-        };
-        mDrawerLayout.setDrawerListener(mDrawerToggle);
-        getActionBar().setDisplayHomeAsUpEnabled(true);
-        getActionBar().setHomeButtonEnabled(true);
         mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         mAudioManager.requestAudioFocus(afChangeListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
-        setFragments();
-        mButtonsContainer = (RelativeLayout) findViewById(R.id.main_buttons_container);
-        changeButtons(R.layout.container_queue, R.id.container_queue_buttons);
+    }
+
+    private void setIntentFilter() {
         mIntentFilter = new IntentFilter();
         mIntentFilter.addAction(INTENT_SONG_STATUS);
         mIntentFilter.addAction(INTENT_SONG_PREV);
         mIntentFilter.addAction(INTENT_SONG_NEXT);
         mIntentFilter.addAction(INTENT_SONG_PLAY);
         mIntentFilter.addAction(AudioManager.ACTION_HEADSET_PLUG);
-        mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         registerReceiver(mBroadcastReceiver, mIntentFilter);
-        db = new QueueDB(this);
-        musicServiceIntent = new Intent(getApplicationContext(), MusicService.class);
-        populateQueueData();
-        if (mCurrentQueuePosition != -1) {
-            currentSong = mQueueData.get(mCurrentQueuePosition);
-        }
-        if (savedInstanceState == null) {
-            openSeekBarFragment();
-            openQueueFragment();
-        }
-        if (savedInstanceState != null) {
-            mCurrentQueuePosition = savedInstanceState.getInt(CURRENT_QUEUE_POSITION);
-            if (mCurrentQueuePosition != -1) {
-                currentSong = mQueueData.get(mCurrentQueuePosition);
-            }
-            isShuffling = savedInstanceState.getBoolean(IS_SHUFFLING);
-            isRepeating = savedInstanceState.getBoolean(IS_REPEATING);
-            isPlaying = savedInstanceState.getBoolean(IS_PLAYING);
-            setProgressAsyncTasks();
-            invalidateQueue();
-            invalidateButtons();
-        }
     }
 
     private void setProgressAsyncTasks() {
@@ -478,6 +585,7 @@ public class MainActivity extends Activity implements SelectionListener {
         outState.putBoolean(IS_PLAYING, isPlaying);
         mAudioManager.abandonAudioFocus(afChangeListener);
         mSeekBarFragment.cancelTasks();
+        mHolderFragment.setLastFM(mLastFm);
         super.onSaveInstanceState(outState);
     }
 
@@ -497,6 +605,13 @@ public class MainActivity extends Activity implements SelectionListener {
         mQueueFragment = (QueueFragment) fm.findFragmentByTag(TAG_QUEUE);
         if (mQueueFragment == null) {
             mQueueFragment = new QueueFragment();
+        }
+        mHolderFragment = (HolderFragment) fm.findFragmentByTag(TAG_HOLDER);
+        if (mHolderFragment == null) {
+            mHolderFragment = new HolderFragment();
+            fm.beginTransaction()
+                    .add(mHolderFragment, TAG_HOLDER)
+                    .commit();
         }
         mArtistFragment = new ArtistFragment();
         mLibraryFragment = new LibraryFragment();
@@ -570,7 +685,12 @@ public class MainActivity extends Activity implements SelectionListener {
     @Override
     protected void onResume() {
         super.onResume();
+    }
 
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        setProgressAsyncTasks();
     }
 
     @Override
@@ -587,32 +707,32 @@ public class MainActivity extends Activity implements SelectionListener {
 
     @Override
     public void onArtistItemSelected(AudioListModel item, int mode, int counter) {
-        String msgText;
-        if (item.isAlbum) {
-            msgText = "Album \"" + item.getAlbum() + "\" by \"" + item.getArtist() + "\"";
-        } else {
-            msgText = "\"" + item.getTitle() + "\" by \"" + item.getArtist() + "\"";
-        }
+//        String msgText;
+//        if (item.isAlbum) {
+//            msgText = "Album \"" + item.getAlbum() + "\" by \"" + item.getArtist() + "\"";
+//        } else {
+//            msgText = "\"" + item.getTitle() + "\" by \"" + item.getArtist() + "\"";
+//        }
         if (mode == ADD_LAST) {
             new AddToQueueTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, item);
-            msgText += " added last";
-            Toast.makeText(this, msgText, Toast.LENGTH_SHORT).show();
+//            msgText += " added last";
+//            Toast.makeText(this, msgText, Toast.LENGTH_SHORT).show();
         } else if (mode == ADD_NEXT) {
             if (mCurrentQueuePosition == -1) {
                 new AddToQueueTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, item);
-                msgText += " added last";
-                Toast.makeText(this, msgText, Toast.LENGTH_SHORT).show();
+//                msgText += " added last";
+//                Toast.makeText(this, msgText, Toast.LENGTH_SHORT).show();
             } else {
                 AddToQueueInsertTask task = new AddToQueueInsertTask(counter);
                 task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, item);
-                msgText += " added next";
-                Toast.makeText(this, msgText, Toast.LENGTH_SHORT).show();
+//                msgText += " added next";
+  //              Toast.makeText(this, msgText, Toast.LENGTH_SHORT).show();
             }
         } else if (mode == ADD_FIRST) {
             AddToQueueInsertTask task = new AddToQueueInsertTask(0, 0);
             task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, item);
-            msgText += " added first";
-            Toast.makeText(this, msgText, Toast.LENGTH_SHORT).show();
+//            msgText += " added first";
+    //        Toast.makeText(this, msgText, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -702,77 +822,6 @@ public class MainActivity extends Activity implements SelectionListener {
         getContentResolver().notifyChange(QueueProvider.CONTENT_URI, null);
     }
 
-
-    private void changeButtons(int layoutId, int id) {
-        LayoutInflater inflater = getLayoutInflater();
-        View queueLayout = inflater.inflate(layoutId, null);
-        View buttons = queueLayout.findViewById(id);
-        mButtons = buttons;
-
-        ImageView playButton = (ImageView) buttons.findViewById(R.id.player_play);
-        ImageView nextButton = (ImageView) buttons.findViewById(R.id.player_next);
-        ImageView previousButton = (ImageView) buttons.findViewById(R.id.player_previous);
-        final ImageView repeatButton = (ImageView) buttons.findViewById(R.id.player_repeat);
-        final ImageView shuffleButton = (ImageView) buttons.findViewById(R.id.player_shuffle);
-        if (nextButton != null) {
-            nextButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    nextSong();
-                }
-            });
-        }
-        if (previousButton != null) {
-            previousButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    prevSong();
-                }
-            });
-        }
-        playButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (isPlaying) {
-                    pause();
-                } else {
-                    play();
-                }
-            }
-        });
-        if (repeatButton != null) {
-            repeatButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (isRepeating) {
-                        isRepeating = false;
-                        repeatButton.setImageResource(R.drawable.ic_action_repeat_disabled);
-                    } else {
-                        isRepeating = true;
-                        repeatButton.setImageResource(R.drawable.ic_action_repeat);
-                    }
-                }
-            });
-        }
-        if (shuffleButton != null) {
-            shuffleButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (isShuffling) {
-                        isShuffling = false;
-                        shuffleButton.setImageResource(R.drawable.ic_action_shuffle_disabled);
-                    } else {
-                        isShuffling = true;
-                        shuffleButton.setImageResource(R.drawable.ic_action_shuffle);
-                    }
-                }
-            });
-        }
-        changePlayStatus(songStatus);
-        ((ViewGroup) buttons.getParent()).removeView(buttons);
-        mButtonsContainer.removeAllViews();
-        mButtonsContainer.addView(buttons);
-    }
 
     private void play() {
         musicServiceIntent.removeExtra(INTENT_EXTRA);
@@ -1276,7 +1325,9 @@ public class MainActivity extends Activity implements SelectionListener {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    checkEmpty();
+                    if (mQueueFragment.isAdded()) {
+                        checkEmpty();
+                    }
                 }
             });
             return null;
