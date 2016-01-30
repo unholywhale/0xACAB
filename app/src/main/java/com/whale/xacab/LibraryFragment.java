@@ -16,10 +16,15 @@ import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.CursorAdapter;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import java.util.ArrayList;
+import java.util.TreeSet;
 
 
 public class LibraryFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
@@ -27,6 +32,8 @@ public class LibraryFragment extends Fragment implements LoaderManager.LoaderCal
     private final static int LIBRARY_LOADER = 2;
     private SelectionListener mListener;
     private LibraryAdapter mAdapter;
+    private Button mAddButton;
+    private ImageButton mCheckButton;
     private ImageButton mBack;
     private ListView mList;
 
@@ -122,11 +129,13 @@ public class LibraryFragment extends Fragment implements LoaderManager.LoaderCal
                 getActivity().onBackPressed();
             }
         });
+        mAddButton = (Button) view.findViewById(R.id.library_add);
+        mCheckButton = (ImageButton) view.findViewById(R.id.library_check_all);
         mList = (ListView) view.findViewById(R.id.library_list);
         getLoaderManager().initLoader(LIBRARY_LOADER, null, this);
         mAdapter = new LibraryAdapter(getActivity().getApplicationContext(), null, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
         mList.setAdapter(mAdapter);
-        mList.setOnTouchListener(new LibraryGestureHelper(getActivity().getApplicationContext()));
+        //mList.setOnTouchListener(new LibraryGestureHelper(getActivity().getApplicationContext()));
         mList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
@@ -138,6 +147,62 @@ public class LibraryFragment extends Fragment implements LoaderManager.LoaderCal
             }
         });
         return view;
+    }
+
+    private void selectMode(boolean enabled) {
+        if (enabled) {
+            if (mAddButton.getVisibility() == View.INVISIBLE) {
+                Runnable action = new Runnable() {
+                    @Override
+                    public void run() {
+                        mAddButton.setVisibility(View.VISIBLE);
+                    }
+                };
+                mAddButton.animate()
+                        //.translationY(0)
+                        .alpha(1)
+                        .withStartAction(action)
+                        .start();
+            }
+            if (mCheckButton.getVisibility() == View.INVISIBLE) {
+                Runnable action = new Runnable() {
+                    @Override
+                    public void run() {
+                        mCheckButton.setVisibility(View.VISIBLE);
+                    }
+                };
+                mCheckButton.animate()
+                        .alpha(1)
+                        .withStartAction(action)
+                        .start();
+            }
+        } else {
+            if (mAddButton.getVisibility() == View.VISIBLE) {
+                Runnable action = new Runnable() {
+                    @Override
+                    public void run() {
+                        mAddButton.setVisibility(View.INVISIBLE);
+                    }
+                };
+                mAddButton.animate()
+                        //.translationY(100)
+                        .alpha(0)
+                        .withEndAction(action)
+                        .start();
+            }
+            if (mCheckButton.getVisibility() == View.VISIBLE) {
+                Runnable action = new Runnable() {
+                    @Override
+                    public void run() {
+                        mCheckButton.setVisibility(View.INVISIBLE);
+                    }
+                };
+                mCheckButton.animate()
+                        .alpha(0)
+                        .withEndAction(action)
+                        .start();
+            }
+        }
     }
 
     @Override
@@ -192,7 +257,7 @@ public class LibraryFragment extends Fragment implements LoaderManager.LoaderCal
 
     class LibraryAdapter extends CursorAdapter {
 
-//        Character mFirstLetter;
+        private ArrayList<String> checkedArtists = new ArrayList<>();
 
         public LibraryAdapter(Context context, Cursor c, int flags) {
             super(context, c, flags);
@@ -200,30 +265,57 @@ public class LibraryFragment extends Fragment implements LoaderManager.LoaderCal
 
         @Override
         public View newView(Context context, Cursor cursor, ViewGroup parent) {
-           // String sArtist = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.ArtistColumns.ARTIST));
-            View view;
-//            if (mFirstLetter == null) {
-//                mFirstLetter = sArtist.charAt(0);
-                view = LayoutInflater.from(context).inflate(R.layout.fragment_library_list_item, parent, false);
-//            } else if (mFirstLetter != sArtist.charAt(0)) {
-//                mFirstLetter = sArtist.charAt(0);
-//                view = LayoutInflater.from(context).inflate(R.layout.fragment_library_list_item_with_header, parent, false);
-//            } else {
-//                view = LayoutInflater.from(context).inflate(R.layout.fragment_library_list_item, parent, false);
-//            }
+            View view = LayoutInflater.from(context).inflate(R.layout.fragment_library_list_item, parent, false);
+            LibraryHolder holder = new LibraryHolder();
+            holder.checkbox = (CheckBox) view.findViewById(R.id.library_checkbox);
+            holder.artist = (TextView) view.findViewById(R.id.library_artist);
+            view.setTag(holder);
             return view;
+        }
+
+        private void setChecked(String artist, boolean checked) {
+            if (checked) {
+                if (!checkedArtists.contains(artist)) {
+                    checkedArtists.add(artist);
+                }
+            } else {
+                checkedArtists.remove(artist);
+            }
         }
 
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
-            String sArtist = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.ArtistColumns.ARTIST));
-//            TextView header = (TextView) view.findViewById(R.id.library_header);
-//            if (header != null) {
-//                Character c = sArtist.charAt(0);
-//                header.setText(c.toString());
-//            }
-            TextView artist = (TextView) view.findViewById(R.id.library_artist);
-            artist.setText(sArtist);
+            if (cursor != null) {
+                LibraryHolder holder = (LibraryHolder) view.getTag();
+                if (holder != null) {
+                    String sArtist = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.ArtistColumns.ARTIST));
+                    holder.artist.setText(sArtist);
+                    holder.checkbox.setTag(sArtist);
+                    holder.checkbox.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            CheckBox cb = (CheckBox) view;
+                            String artist = (String) cb.getTag();
+                            setChecked(artist, cb.isChecked());
+                            if (checkedArtists.size() == 0) {
+                                selectMode(false);
+                            } else {
+                                selectMode(true);
+                            }
+                        }
+                    });
+                    if (checkedArtists.contains(sArtist)) {
+                        holder.checkbox.setChecked(true);
+                    } else {
+                        holder.checkbox.setChecked(false);
+                    }
+                }
+            }
+        }
+
+        class LibraryHolder {
+            CheckBox checkbox;
+            TextView artist;
         }
     }
 }

@@ -10,7 +10,7 @@
         android:focusableInTouchMode="false"
         android:layout_marginStart="5dp"
         android:layout_width="@dimen/checkbox_size"
-        android:layout_height="@dimen/checkbox_size"/>
+        android:layout_height="match_parent"/>
     <View
         android:id="@+id/files_placeholder"
         android:layout_width="@dimen/checkbox_size"

@@ -3,6 +3,9 @@ package com.whale.xacab;
 import android.app.Fragment;
 import android.os.Bundle;
 
+/**
+ * Created for holding objects between configuration changes
+ */
 public class HolderFragment extends Fragment {
     private LastFmWrapper lastFm;
 

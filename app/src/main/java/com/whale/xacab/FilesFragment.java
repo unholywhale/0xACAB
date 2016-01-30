@@ -422,7 +422,7 @@ public class FilesFragment extends Fragment {
                 };
                 mCheckButton.animate()
                         .alpha(0)
-                        .withStartAction(action)
+                        .withEndAction(action)
                         .start();
             }
         }
