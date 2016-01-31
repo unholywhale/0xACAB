@@ -382,7 +382,7 @@ public class MainActivity extends Activity implements SelectionListener {
     }
 
     private void setupQueue() {
-        populateQueueData();
+        invalidateQueue();
         if (mCurrentQueuePosition != -1) {
             currentSong = mQueueData.get(mCurrentQueuePosition);
         }
@@ -734,7 +734,7 @@ public class MainActivity extends Activity implements SelectionListener {
 
     @Override
     public void addBulk(AudioListModel[] items, boolean addNext) {
-        AddToQueueBulkTask task = new AddToQueueBulkTask(addNext);
+        AddToQueueBulkTask task = new AddToQueueBulkTask(addNext, mQueueData.size());
         task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, items);
     }
 
@@ -1027,6 +1027,7 @@ public class MainActivity extends Activity implements SelectionListener {
 
     @Override
     public void openLibrary(boolean librarySwitch) {
+        mReorderMode = false;
         if (librarySwitch) {
             isLibrary = !isLibrary;
         }
@@ -1212,6 +1213,7 @@ public class MainActivity extends Activity implements SelectionListener {
     private class AddToQueueBulkTask extends AsyncTask<AudioListModel[], Void, Void> {
 
         private int current;
+        private int queueSize;
         private int insert;
         private boolean addNext = false;
 
@@ -1219,8 +1221,9 @@ public class MainActivity extends Activity implements SelectionListener {
             this.current = mCurrentQueuePosition;
         }
 
-        public AddToQueueBulkTask(boolean addNext) {
+        public AddToQueueBulkTask(boolean addNext, int queueSize) {
             this.current = mCurrentQueuePosition;
+            this.queueSize = queueSize;
             this.addNext = addNext;
         }
 
@@ -1232,7 +1235,7 @@ public class MainActivity extends Activity implements SelectionListener {
                 ArrayList<ContentValues> contentValuesList = new ArrayList<>();
                 ContentValues cv;
                 String[] columns = AudioListModel.getColumns();
-                Integer insertPosition = current + 1;
+                Integer insertPosition = current;
                 String where = QueueDB.KEY_SORT + " > " + insertPosition.toString();
                 Cursor cursor = getContentResolver().query(QueueProvider.CONTENT_URI, columns, where, null, QueueDB.KEY_SORT);
                 while (cursor.moveToNext()) {
@@ -1261,8 +1264,9 @@ public class MainActivity extends Activity implements SelectionListener {
                     if (items[i].getSort() != -1) {
                         values.put(QueueDB.KEY_SORT, items[i].getSort());
                     } else {
-                        values.put(QueueDB.KEY_SORT, mQueueData.size() + i + 1);
+                        values.put(QueueDB.KEY_SORT, queueSize);
                     }
+                    queueSize++;
                     getContentResolver().insert(QueueProvider.CONTENT_URI, values);
                 }
             }

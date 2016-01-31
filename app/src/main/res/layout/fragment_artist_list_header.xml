@@ -19,7 +19,7 @@
         android:layout_marginStart="5dp"/>
     <CheckBox
         android:id="@+id/artist_header_checkbox"
-        android:layout_width="@dimen/checkbox_size_double"
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_centerVertical="true"
         android:layout_marginStart="5dp"/>

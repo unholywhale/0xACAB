@@ -205,32 +205,32 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
     }
 
     private void invalidateOptions() {
-        if (prevView != null) {
-            ImageView prevInfo = (ImageView) prevView.findViewById(R.id.queue_info);
-            ImageView prevDelete = (ImageView) prevView.findViewById(R.id.queue_delete);
-            TextView prevDuration = (TextView) prevView.findViewById(R.id.queue_duration);
-
-            prevDuration.setVisibility(View.VISIBLE);
-            prevInfo.setVisibility(View.INVISIBLE);
-            prevDelete.setVisibility(View.INVISIBLE);
-            prevView = null;
-            isOptionsVisible = false;
-        }
+//        if (prevView != null) {
+//            ImageView prevInfo = (ImageView) prevView.findViewById(R.id.queue_info);
+//            ImageView prevDelete = (ImageView) prevView.findViewById(R.id.queue_delete);
+//            TextView prevDuration = (TextView) prevView.findViewById(R.id.queue_duration);
+//
+//            prevDuration.setVisibility(View.VISIBLE);
+//            prevInfo.setVisibility(View.INVISIBLE);
+//            prevDelete.setVisibility(View.INVISIBLE);
+//            prevView = null;
+//            isOptionsVisible = false;
+//        }
     }
 
     private void toggleOptions(View view) {
-        if (isOptionsVisible) {
-            invalidateOptions();
-        }
-        isOptionsVisible = true;
-        prevView = view;
-        ImageView info = (ImageView) view.findViewById(R.id.queue_info);
-        ImageView delete = (ImageView) view.findViewById(R.id.queue_delete);
-        TextView duration = (TextView) view.findViewById(R.id.queue_duration);
-
-        duration.setVisibility(View.INVISIBLE);
-        info.setVisibility(View.VISIBLE);
-        delete.setVisibility(View.VISIBLE);
+//        if (isOptionsVisible) {
+//            invalidateOptions();
+//        }
+//        isOptionsVisible = true;
+//        prevView = view;
+//        ImageView info = (ImageView) view.findViewById(R.id.queue_info);
+//        ImageView delete = (ImageView) view.findViewById(R.id.queue_delete);
+//        TextView duration = (TextView) view.findViewById(R.id.queue_duration);
+//
+//        duration.setVisibility(View.INVISIBLE);
+//        info.setVisibility(View.VISIBLE);
+//        delete.setVisibility(View.VISIBLE);
     }
 
     public QueueAdapter getAdapter() {
@@ -353,8 +353,8 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
                 for (ContentValues v : values) {
                     long sort = v.getAsLong(QueueDB.KEY_SORT);
                     v.remove(QueueDB.KEY_SORT);
-                    if (sort - 1 == from) {
-                        v.put(QueueDB.KEY_SORT, to + 1);
+                    if (sort  == from) {
+                        v.put(QueueDB.KEY_SORT, to);
                     } else {
                         v.put(QueueDB.KEY_SORT, sort - inc);
                     }
@@ -464,13 +464,22 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
                 } else if (isDragging) {
                     holder.checked.setVisibility(View.INVISIBLE);
                     holder.checked.setChecked(false);
-                    holder.number.setVisibility(View.INVISIBLE);
-                    holder.playing.setVisibility(View.INVISIBLE);
+                    //holder.number.setVisibility(View.INVISIBLE);
+                    //holder.playing.setVisibility(View.INVISIBLE);
+                    holder.duration.setVisibility(View.INVISIBLE);
                     holder.drag.setVisibility(View.VISIBLE);
+                    if (cursor.getPosition() == (mListener.getCurrentQueuePosition())) {
+                        holder.playing.setVisibility(View.VISIBLE);
+                        holder.number.setVisibility(View.INVISIBLE);
+                    } else {
+                        holder.playing.setVisibility(View.INVISIBLE);
+                        holder.number.setVisibility(View.VISIBLE);
+                    }
                 } else {
                     holder.drag.setVisibility(View.INVISIBLE);
                     holder.checked.setVisibility(View.INVISIBLE);
                     holder.checked.setChecked(false);
+                    holder.duration.setVisibility(View.VISIBLE);
                     if (cursor.getPosition() == (mListener.getCurrentQueuePosition())) {
                         holder.playing.setVisibility(View.VISIBLE);
                         holder.number.setVisibility(View.INVISIBLE);
