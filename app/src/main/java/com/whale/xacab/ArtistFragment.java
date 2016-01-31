@@ -25,6 +25,8 @@ import android.view.animation.AnimationSet;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -46,6 +48,9 @@ public class ArtistFragment extends Fragment {
     private String mArtistName;
     private ArrayList<AudioListModel> audioList = new ArrayList<>();
     private LayoutInflater mInflater;
+    private Button mAddButton;
+    private ImageButton mAddNextButton;
+    private ImageButton mCheckButton;
     private ImageButton mBack;
     private ListView mList;
     private AudioListAdapter mAdapter;
@@ -259,6 +264,88 @@ public class ArtistFragment extends Fragment {
         mListener.onArtistItemSelected(audioList.get(position), MainActivity.ADD_FIRST);
     }
 
+    public void selectMode(boolean enabled) {
+        if (enabled) {
+            if (mAddButton.getVisibility() == View.INVISIBLE) {
+                Runnable action = new Runnable() {
+                    @Override
+                    public void run() {
+                        mAddButton.setVisibility(View.VISIBLE);
+                    }
+                };
+                mAddButton.animate()
+                        //.translationY(0)
+                        .alpha(1)
+                        .withStartAction(action)
+                        .start();
+            }
+            if (mAddNextButton.getVisibility() == View.INVISIBLE) {
+                Runnable action = new Runnable() {
+                    @Override
+                    public void run() {
+                        mAddNextButton.setVisibility(View.VISIBLE);
+                    }
+                };
+                mAddNextButton.animate()
+                        //.translationY(0)
+                        .alpha(1)
+                        .withStartAction(action)
+                        .start();
+            }
+            if (mCheckButton.getVisibility() == View.INVISIBLE) {
+                Runnable action = new Runnable() {
+                    @Override
+                    public void run() {
+                        mCheckButton.setVisibility(View.VISIBLE);
+                    }
+                };
+                mCheckButton.animate()
+                        .alpha(1)
+                        .withStartAction(action)
+                        .start();
+            }
+        } else {
+            if (mAddButton.getVisibility() == View.VISIBLE) {
+                Runnable action = new Runnable() {
+                    @Override
+                    public void run() {
+                        mAddButton.setVisibility(View.INVISIBLE);
+                    }
+                };
+                mAddButton.animate()
+                        //.translationY(100)
+                        .alpha(0)
+                        .withEndAction(action)
+                        .start();
+            }
+            if (mAddNextButton.getVisibility() == View.VISIBLE) {
+                Runnable action = new Runnable() {
+                    @Override
+                    public void run() {
+                        mAddNextButton.setVisibility(View.INVISIBLE);
+                    }
+                };
+                mAddNextButton.animate()
+                        //.translationY(100)
+                        .alpha(0)
+                        .withEndAction(action)
+                        .start();
+            }
+            if (mCheckButton.getVisibility() == View.VISIBLE) {
+                Runnable action = new Runnable() {
+                    @Override
+                    public void run() {
+                        mCheckButton.setVisibility(View.INVISIBLE);
+                    }
+                };
+                mCheckButton.animate()
+                        .alpha(0)
+                        .withEndAction(action)
+                        .start();
+            }
+        }
+    }
+
     @Override
     public void onStop() {
         mListener.setFragmentTitle(MainActivity.APP_TITLE);
@@ -320,10 +407,51 @@ public class ArtistFragment extends Fragment {
 
     }
 
+    private void addItems() {
+        addItems(false);
+    }
+
+    private void addItems(boolean addNext) {
+        ArrayList<Integer> checked = mAdapter.getChecked();
+        ArrayList<AudioListModel> items = new ArrayList<>();
+        for (Integer num : checked) {
+            if (!audioList.get(num).isAlbum) {
+                items.add(audioList.get(num));
+            }
+        }
+        AudioListModel[] result = items.toArray(new AudioListModel[items.size()]);
+        mListener.addBulk(result, addNext);
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mInflater = inflater;
         View view = mInflater.inflate(R.layout.fragment_artist, null);
+        mAddButton = (Button) view.findViewById(R.id.artist_add);
+        mAddButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                addItems();
+                mAdapter.uncheckAll();
+                selectMode(false);
+            }
+        });
+        mAddNextButton = (ImageButton) view.findViewById(R.id.artist_add_next);
+        mAddNextButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                addItems(true);
+                mAdapter.uncheckAll();
+                selectMode(false);
+            }
+        });
+        mCheckButton = (ImageButton) view.findViewById(R.id.artist_check_all);
+        mCheckButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mAdapter.checkAll();
+            }
+        });
         mBack = (ImageButton) view.findViewById(R.id.artist_back);
         mBack.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -333,20 +461,20 @@ public class ArtistFragment extends Fragment {
         });
         mAdapter = new AudioListAdapter(getActivity(), R.layout.fragment_artist_list_item, R.layout.fragment_artist_list_header, audioList);
         mList = (ListView) view.findViewById(R.id.artist_list);
-        final ArtistGestureListener gestureListener = new ArtistGestureListener(this, mList);
-        final GestureDetector gestureDetector = new GestureDetector(getActivity().getApplicationContext(), gestureListener);
-        mList.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View view, MotionEvent motionEvent) {
-                return gestureDetector.onTouchEvent(motionEvent);
-            }
-        });
-        mList.setOnItemClickListener(new ListView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                addLast(position);
-            }
-        });
+//        final ArtistGestureListener gestureListener = new ArtistGestureListener(this, mList);
+//        final GestureDetector gestureDetector = new GestureDetector(getActivity().getApplicationContext(), gestureListener);
+//        mList.setOnTouchListener(new View.OnTouchListener() {
+//            @Override
+//            public boolean onTouch(View view, MotionEvent motionEvent) {
+//                return gestureDetector.onTouchEvent(motionEvent);
+//            }
+//        });
+//        mList.setOnItemClickListener(new ListView.OnItemClickListener() {
+//            @Override
+//            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+//                addLast(position);
+//            }
+//        });
         mList.setAdapter(mAdapter);
         return view;
     }
@@ -375,11 +503,16 @@ public class ArtistFragment extends Fragment {
     }
 
 
-    static class AudioListAdapter extends ArrayAdapter<AudioListModel> {
+    private class AudioListAdapter extends ArrayAdapter<AudioListModel> {
 
         Context context;
         int layoutItemResourceId, layoutHeaderResourceId;
         ArrayList<AudioListModel> rows = null;
+        ArrayList<Integer> checked = new ArrayList<>();
+
+        public ArrayList<Integer> getChecked() {
+            return checked;
+        }
 
         public AudioListAdapter(Context context, int layoutItemResourceId, int layoutHeaderResourceId, ArrayList<AudioListModel> rows) {
             super(context, layoutItemResourceId, rows);
@@ -389,16 +522,68 @@ public class ArtistFragment extends Fragment {
             this.rows = rows;
         }
 
-        private AudioListHolder getHeaderHolder(View row) {
+        private void setChecked(Integer position, boolean isChecked) {
+            if (isChecked) {
+                if (!checked.contains(position)) {
+                    checked.add(position);
+                }
+                selectMode(true);
+            } else {
+                checked.remove(position);
+            }
+        }
+
+        private AudioListHolder getHeaderHolder(View row, Integer position) {
             AudioListHolder holder = new AudioListHolder();
+            holder.checkbox = (CheckBox) row.findViewById(R.id.artist_header_checkbox);
+            holder.checkbox.setTag(position);
+            holder.checkbox.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    CheckBox cb = (CheckBox) view;
+                    Integer pos = (Integer) cb.getTag();
+                    long albumId = rows.get(pos).getAlbumId();
+                    setChecked(pos, cb.isChecked());
+                    boolean start = true;
+                    for (int i = 0; i < rows.size(); i++) {
+                        if (rows.get(i).getAlbumId() != albumId) {
+                            if (!start) {
+                                break;
+                            }
+                        } else {
+                            if (!rows.get(i).isAlbum) {
+                                start = false;
+                                setChecked(i, cb.isChecked());
+                            }
+                        }
+                    }
+                    if (checked.size() == 0) {
+                        selectMode(false);
+                    }
+                    notifyDataSetChanged();
+                }
+            });
             holder.headerText = (TextView) row.findViewById(R.id.artist_header_text);
             holder.headerSeparator = row.findViewById(R.id.artist_header_separator);
             holder.isHeader = true;
             return holder;
         }
 
-        private AudioListHolder getItemHolder(View row) {
+        private AudioListHolder getItemHolder(View row, Integer position) {
             AudioListHolder holder = new AudioListHolder();
+            holder.checkbox = (CheckBox) row.findViewById(R.id.artist_checkbox);
+            holder.checkbox.setTag(position);
+            holder.checkbox.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    CheckBox cb = (CheckBox) view;
+                    Integer pos = (Integer) cb.getTag();
+                    setChecked(pos, cb.isChecked());
+                    if (checked.size() == 0) {
+                        selectMode(false);
+                    }
+                }
+            });
             holder.title = (TextView) row.findViewById(R.id.track_title);
             holder.trackDuration = (TextView) row.findViewById(R.id.track_duration);
             holder.trackNumber = (TextView) row.findViewById(R.id.track_number);
@@ -418,26 +603,31 @@ public class ArtistFragment extends Fragment {
             if (row == null) {
                 if (audioItem.isAlbum) {
                     row = inflater.inflate(layoutHeaderResourceId, parent, false);
-                    holder = getHeaderHolder(row);
+                    holder = getHeaderHolder(row, position);
                 } else {
                     row = inflater.inflate(layoutItemResourceId, parent, false);
-                    holder = getItemHolder(row);
+                    holder = getItemHolder(row, position);
                 }
                 row.setTag(holder);
             } else {
                 holder = (AudioListHolder) row.getTag();
+                // getView() provides us with a previous recycled view. Make sure it's the correct one, otherwise reinflate
                 if (holder.isHeader && !audioItem.isAlbum) {
                     row = inflater.inflate(layoutItemResourceId, parent, false);
-                    holder = getItemHolder(row);
+                    holder = getItemHolder(row, position);
                     row.setTag(holder);
                 } else if (!holder.isHeader && audioItem.isAlbum) {
                     row = inflater.inflate(layoutHeaderResourceId, parent, false);
-                    holder = getHeaderHolder(row);
+                    holder = getHeaderHolder(row, position);
                     row.setTag(holder);
                 }
             }
-
-            if (audioItem.isAlbum) {
+            if (checked.contains(position)) {
+                holder.checkbox.setChecked(true);
+            } else {
+                holder.checkbox.setChecked(false);
+            }
+            if (holder.isHeader) {
                 if (audioItem.getYear() != 0) {
                     holder.headerText.setText(audioItem.getAlbum() + " - " + String.valueOf(audioItem.getYear()));
                 } else {
@@ -459,7 +649,33 @@ public class ArtistFragment extends Fragment {
             return row;
         }
 
-        static class AudioListHolder {
+        @Override
+        public int getCount() {
+            if (rows != null) {
+                return rows.size();
+            } else {
+                return 0;
+            }
+        }
+
+        public void checkAll() {
+            if (checked.size() == rows.size()) {
+                uncheckAll();
+            } else {
+                checked.clear();
+                for (int i = 0; i < rows.size(); i++) {
+                    checked.add(i);
+                }
+                notifyDataSetChanged();
+            }
+        }
+
+        public void uncheckAll() {
+            checked.clear();
+            notifyDataSetChanged();
+        }
+
+        class AudioListHolder {
             Boolean isHeader;
             TextView headerText;
             View headerSeparator;
@@ -467,6 +683,7 @@ public class ArtistFragment extends Fragment {
             View dividerDuration;
             TextView trackDuration;
             TextView trackNumber;
+            CheckBox checkbox;
         }
     }
 

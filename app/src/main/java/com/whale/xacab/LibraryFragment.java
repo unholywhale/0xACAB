@@ -35,6 +35,7 @@ public class LibraryFragment extends Fragment implements LoaderManager.LoaderCal
     private SelectionListener mListener;
     private LibraryAdapter mAdapter;
     private Button mAddButton;
+    private ImageButton mAddNextButton;
     private ImageButton mCheckButton;
     private ImageButton mBack;
     private ListView mList;
@@ -140,6 +141,15 @@ public class LibraryFragment extends Fragment implements LoaderManager.LoaderCal
                 mAdapter.uncheckAll();
             }
         });
+        mAddNextButton = (ImageButton) view.findViewById(R.id.library_add_next);
+        mAddNextButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                addItems(true);
+                selectMode(false);
+                mAdapter.uncheckAll();
+            }
+        });
         mCheckButton = (ImageButton) view.findViewById(R.id.library_check_all);
         mCheckButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -166,6 +176,10 @@ public class LibraryFragment extends Fragment implements LoaderManager.LoaderCal
     }
 
     private void addItems() {
+        addItems(false);
+    }
+
+    private void addItems(boolean addNext) {
         ArrayList<AudioListModel> items = new ArrayList<>();
         ArrayList<String> checked = mAdapter.getCheckedArtists();
         String[] columns = new String[] {
@@ -198,7 +212,7 @@ public class LibraryFragment extends Fragment implements LoaderManager.LoaderCal
             items.add(getItem(cursor));
         }
         AudioListModel[] itemsArray = items.toArray(new AudioListModel[items.size()]);
-        mListener.addBulk(itemsArray);
+        mListener.addBulk(itemsArray, addNext);
     }
 
     private AudioListModel getItem(Cursor cursor) {
@@ -230,6 +244,19 @@ public class LibraryFragment extends Fragment implements LoaderManager.LoaderCal
                         .withStartAction(action)
                         .start();
             }
+            if (mAddNextButton.getVisibility() == View.INVISIBLE) {
+                Runnable action = new Runnable() {
+                    @Override
+                    public void run() {
+                        mAddNextButton.setVisibility(View.VISIBLE);
+                    }
+                };
+                mAddNextButton.animate()
+                        //.translationY(0)
+                        .alpha(1)
+                        .withStartAction(action)
+                        .start();
+            }
             if (mCheckButton.getVisibility() == View.INVISIBLE) {
                 Runnable action = new Runnable() {
                     @Override
@@ -251,6 +278,19 @@ public class LibraryFragment extends Fragment implements LoaderManager.LoaderCal
                     }
                 };
                 mAddButton.animate()
+                        //.translationY(100)
+                        .alpha(0)
+                        .withEndAction(action)
+                        .start();
+            }
+            if (mAddNextButton.getVisibility() == View.VISIBLE) {
+                Runnable action = new Runnable() {
+                    @Override
+                    public void run() {
+                        mAddNextButton.setVisibility(View.INVISIBLE);
+                    }
+                };
+                mAddNextButton.animate()
                         //.translationY(100)
                         .alpha(0)
                         .withEndAction(action)

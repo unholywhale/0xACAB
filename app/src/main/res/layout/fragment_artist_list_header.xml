@@ -1,7 +1,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/artist_list_header_layout"
     android:layout_width="match_parent"
-    android:layout_height="45dp"
+    android:layout_height="50dp"
     android:clickable="false">
 
     <View
@@ -10,15 +10,28 @@
         android:layout_width="match_parent"
         android:layout_height="2dp"
         android:background="@color/header_color"/>
+    <View
+        android:id="@+id/artist_header_placeholder"
+        android:layout_width="@dimen/checkbox_size"
+        android:layout_height="@dimen/checkbox_size"
+        android:layout_alignParentStart="true"
+        android:layout_centerVertical="true"
+        android:layout_marginStart="5dp"/>
+    <CheckBox
+        android:id="@+id/artist_header_checkbox"
+        android:layout_width="@dimen/checkbox_size_double"
+        android:layout_height="match_parent"
+        android:layout_centerVertical="true"
+        android:layout_marginStart="5dp"/>
     <TextView
         android:id="@+id/artist_header_text"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_above="@id/artist_header_separator"
+        android:layout_toEndOf="@id/artist_header_placeholder"
         android:textSize="14sp"
         android:textStyle="normal"
         android:textColor="@color/header_color"
-        android:paddingStart="8dp"
-        android:layout_alignParentStart="true"
+        android:paddingStart="5dp"
         android:gravity="center_vertical|start"/>
 </RelativeLayout>

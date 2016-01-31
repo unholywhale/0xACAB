@@ -9,7 +9,18 @@ public class AudioListModel {
 
     private int duration, year, number, sort;
 
-    private long albumId, trackId;
+    private long albumId;
+    private long trackId;
+
+    public long getDbId() {
+        return dbId;
+    }
+
+    public void setDbId(long dbId) {
+        this.dbId = dbId;
+    }
+
+    private long dbId;
 
     private Bitmap albumArt;
     public boolean isAlbum;

@@ -241,6 +241,7 @@ public class QueueFragment extends Fragment implements LoaderManager.LoaderCallb
     public void onStart() {
         mListener.setQueueMenu();
         mListener.checkEmpty();
+        mListener.invalidateQueue();
         mListener.setFragmentTitle(R.string.queue_header);
         super.onStart();
     }

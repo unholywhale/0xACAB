@@ -44,6 +44,7 @@ public class FilesFragment extends Fragment {
     private SelectionListener mListener;
     private String mCurrentPath;
     private Button mAddButton;
+    private ImageButton mAddNextButton;
     private ImageButton mCheckButton;
     private ImageButton mBack;
     private ListView mList;
@@ -237,6 +238,13 @@ public class FilesFragment extends Fragment {
                 addItems();
             }
         });
+        mAddNextButton = (ImageButton) view.findViewById(R.id.files_add_next);
+        mAddNextButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                addItems(true);
+            }
+        });
         mCheckButton = (ImageButton) view.findViewById(R.id.files_check_all);
         mCheckButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -356,10 +364,14 @@ public class FilesFragment extends Fragment {
         nextCounter = 0;
     }
 
-    public void addItems() {
+    private void addItems() {
+        addItems(false);
+    }
+
+    private void addItems(boolean addNext) {
         Integer counter = 0;
-        AddFilesTask addFilesTask = new AddFilesTask(getActivity(), mFiles, getAdapter().getChecked());
-        addFilesTask.execute();
+        AddFilesTask addFilesTask = new AddFilesTask(getActivity(), mFiles, getAdapter().getChecked(), addNext);
+        addFilesTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 //        FileHandler fileHandler = new FileHandler();
 //        for (Integer i : getAdapter().getChecked()) {
 //            fileHandler.addResult(mFiles.get(i));
@@ -387,6 +399,19 @@ public class FilesFragment extends Fragment {
                         .withStartAction(action)
                         .start();
             }
+            if (mAddNextButton.getVisibility() == View.INVISIBLE) {
+                Runnable action = new Runnable() {
+                    @Override
+                    public void run() {
+                        mAddNextButton.setVisibility(View.VISIBLE);
+                    }
+                };
+                mAddNextButton.animate()
+                        //.translationY(0)
+                        .alpha(1)
+                        .withStartAction(action)
+                        .start();
+            }
             if (mCheckButton.getVisibility() == View.INVISIBLE) {
                 Runnable action = new Runnable() {
                     @Override
@@ -408,6 +433,19 @@ public class FilesFragment extends Fragment {
                     }
                 };
                 mAddButton.animate()
+                        //.translationY(100)
+                        .alpha(0)
+                        .withEndAction(action)
+                        .start();
+            }
+            if (mAddNextButton.getVisibility() == View.VISIBLE) {
+                Runnable action = new Runnable() {
+                    @Override
+                    public void run() {
+                        mAddNextButton.setVisibility(View.INVISIBLE);
+                    }
+                };
+                mAddNextButton.animate()
                         //.translationY(100)
                         .alpha(0)
                         .withEndAction(action)
@@ -648,12 +686,14 @@ public class FilesFragment extends Fragment {
         private ArrayList<AudioListModel> result = new ArrayList<>();
         private ProgressDialog progressDialog;
         private Integer filesCount = 0;
+        private boolean addNext;
         private int queueSize;
 
-        public AddFilesTask(Activity activity, ArrayList<File> files, ArrayList<Integer> checked) {
+        public AddFilesTask(Activity activity, ArrayList<File> files, ArrayList<Integer> checked, boolean addNext) {
             this.activity = activity;
             this.files = files;
             this.checked = checked;
+            this.addNext = addNext;
         }
 
         private void getFileCount(File file) {
@@ -699,7 +739,7 @@ public class FilesFragment extends Fragment {
             super.onPostExecute(aVoid);
             progressDialog.dismiss();
             AudioListModel[] items = result.toArray(new AudioListModel[result.size()]);
-            mListener.addBulk(items);
+            mListener.addBulk(items, addNext);
             selectMode(false);
             getAdapter().uncheckAll();
             mListener.setSelectMode(false);
@@ -743,7 +783,6 @@ public class FilesFragment extends Fragment {
 
         @Override
         protected Void doInBackground(Void... voids) {
-            queueSize = mListener.getQueueSize();
             for (int i = 0; i < checked.size(); i++) {
                 int checkedPosition = checked.get(i);
                 addResult(files.get(checkedPosition));

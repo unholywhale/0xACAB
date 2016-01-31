@@ -707,32 +707,18 @@ public class MainActivity extends Activity implements SelectionListener {
 
     @Override
     public void onArtistItemSelected(AudioListModel item, int mode, int counter) {
-//        String msgText;
-//        if (item.isAlbum) {
-//            msgText = "Album \"" + item.getAlbum() + "\" by \"" + item.getArtist() + "\"";
-//        } else {
-//            msgText = "\"" + item.getTitle() + "\" by \"" + item.getArtist() + "\"";
-//        }
         if (mode == ADD_LAST) {
             new AddToQueueTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, item);
-//            msgText += " added last";
-//            Toast.makeText(this, msgText, Toast.LENGTH_SHORT).show();
         } else if (mode == ADD_NEXT) {
             if (mCurrentQueuePosition == -1) {
                 new AddToQueueTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, item);
-//                msgText += " added last";
-//                Toast.makeText(this, msgText, Toast.LENGTH_SHORT).show();
             } else {
                 AddToQueueInsertTask task = new AddToQueueInsertTask(counter);
                 task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, item);
-//                msgText += " added next";
-  //              Toast.makeText(this, msgText, Toast.LENGTH_SHORT).show();
             }
         } else if (mode == ADD_FIRST) {
             AddToQueueInsertTask task = new AddToQueueInsertTask(0, 0);
             task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, item);
-//            msgText += " added first";
-    //        Toast.makeText(this, msgText, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -743,7 +729,13 @@ public class MainActivity extends Activity implements SelectionListener {
 
     @Override
     public void addBulk(AudioListModel[] items) {
-        new AddToQueueBulkTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, items);
+        addBulk(items, false);
+    }
+
+    @Override
+    public void addBulk(AudioListModel[] items, boolean addNext) {
+        AddToQueueBulkTask task = new AddToQueueBulkTask(addNext);
+        task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, items);
     }
 
     private void clearQueue() {
@@ -877,9 +869,9 @@ public class MainActivity extends Activity implements SelectionListener {
     public void setFilesMenu() {
         setMenuItemVisibility(R.id.action_reorder, false);
         setMenuItemVisibility(R.id.action_clear_queue, false);
-        setMenuItemVisibility(R.id.action_select, true);
-        setMenuItemEnabled(R.id.action_select, true);
-        setMenuItemIcon(R.id.action_select, R.drawable.ic_action_select);
+        setMenuItemVisibility(R.id.action_select, false);
+        setMenuItemEnabled(R.id.action_select, false);
+        //setMenuItemIcon(R.id.action_select, R.drawable.ic_action_select);
         setMenuItemVisibility(R.id.action_switch, true);
         setMenuItemIcon(R.id.action_switch, R.drawable.ic_library_icon);
 //        setMenuItemVisibility(R.id.action_library_switch, true);
@@ -1219,11 +1211,42 @@ public class MainActivity extends Activity implements SelectionListener {
 
     private class AddToQueueBulkTask extends AsyncTask<AudioListModel[], Void, Void> {
 
+        private int current;
+        private int insert;
+        private boolean addNext = false;
+
+        public AddToQueueBulkTask() {
+            this.current = mCurrentQueuePosition;
+        }
+
+        public AddToQueueBulkTask(boolean addNext) {
+            this.current = mCurrentQueuePosition;
+            this.addNext = addNext;
+        }
 
         @Override
         protected Void doInBackground(AudioListModel[]... audioListModels) {
             AudioListModel[] items = audioListModels[0];
             ContentValues values = new ContentValues();
+            if (addNext) {
+                ArrayList<ContentValues> contentValuesList = new ArrayList<>();
+                ContentValues cv;
+                String[] columns = AudioListModel.getColumns();
+                Integer insertPosition = current + 1;
+                String where = QueueDB.KEY_SORT + " > " + insertPosition.toString();
+                Cursor cursor = getContentResolver().query(QueueProvider.CONTENT_URI, columns, where, null, QueueDB.KEY_SORT);
+                while (cursor.moveToNext()) {
+//                String title = cursor.getString(cursor.getColumnIndexOrThrow(QueueDB.KEY_TITLE));
+//                int sort = cursor.getInt(cursor.getColumnIndexOrThrow(QueueDB.KEY_SORT));
+                    cv = new ContentValues();
+                    DatabaseUtils.cursorRowToContentValues(cursor, cv);
+                    contentValuesList.add(cv);
+                }
+                changeSortNumber(contentValuesList, items.length);
+                for (int i = 0; i < items.length; i++) {
+                    items[i].setSort(insertPosition + i + 1);
+                }
+            }
             for (int i = 0; i < items.length; i++) {
                 if (items[i] != null) {
                     values.put(QueueDB.KEY_ARTIST, items[i].getArtist());
@@ -1251,6 +1274,19 @@ public class MainActivity extends Activity implements SelectionListener {
                 }
             });
             return null;
+        }
+
+        private void changeSortNumber(ArrayList<ContentValues> contentValuesList, int offset) {
+            for (ContentValues el : contentValuesList) {
+                Integer i = el.getAsInteger(QueueDB.KEY_SORT) + offset;
+                //i++;
+                el.remove(QueueDB.KEY_SORT);
+                el.put(QueueDB.KEY_SORT, i);
+                Long id = el.getAsLong(QueueDB.KEY_ID);
+                String selection = QueueDB.KEY_ID + "=?";
+                String[] selectionArgs = {id.toString()};
+                getContentResolver().update(QueueProvider.CONTENT_URI, el, selection, selectionArgs);
+            }
         }
     }
 
