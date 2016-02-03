@@ -43,6 +43,7 @@ import java.util.List;
 
 public class ArtistFragment extends Fragment {
 
+    public static final String ARTIST_NAME = "ARTIST_NAME";
     private int nextCounter = 0;
     private SelectionListener mListener;
     private String mArtistName;
@@ -359,9 +360,18 @@ public class ArtistFragment extends Fragment {
     }
 
     @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putString(ARTIST_NAME, mArtistName);
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        if (savedInstanceState != null) {
+            mArtistName = savedInstanceState.getString(ARTIST_NAME);
+        }
         if (mArtistName == null) {
             return;
             //mArtistName = "Squarepusher"; // default artist for testing
@@ -672,6 +682,7 @@ public class ArtistFragment extends Fragment {
 
         public void uncheckAll() {
             checked.clear();
+            selectMode(false);
             notifyDataSetChanged();
         }
 

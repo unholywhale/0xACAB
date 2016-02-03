@@ -30,8 +30,10 @@ import android.widget.TextView;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -48,6 +50,7 @@ public class FilesFragment extends Fragment {
     private ImageButton mCheckButton;
     private ImageButton mBack;
     private ListView mList;
+    private HashMap<String, Integer> mDirPositions;
     private ArrayList<File> mFiles = new ArrayList<>();
 
     private FilesAdapter mAdapter;
@@ -273,8 +276,13 @@ public class FilesFragment extends Fragment {
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
                 File file = mFiles.get(position);
                 if (file.isDirectory()) {
+                    mDirPositions.put(mCurrentPath, mList.getFirstVisiblePosition());
                     try {
-                        mCurrentPath = (new File(mCurrentPath)).getCanonicalPath() + "/" + file.getName();
+                        if (file.getName().equals("..")) {
+                            mCurrentPath = (new File(mCurrentPath)).getParent();
+                        } else {
+                            mCurrentPath = file.getCanonicalPath();
+                        }
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -283,6 +291,10 @@ public class FilesFragment extends Fragment {
                     selectMode(false);
                     mAdapter.notifyDataSetChanged();
                     mAdapter.setCheckboxes();
+                    Integer selection = mDirPositions.get(mCurrentPath); // new path
+                    if (selection != null) {
+                        mList.setSelectionFromTop(selection, 0);
+                    }
                 } else {
 //                    selectMode(true);
 //                    mAdapter.setChecked(view);
@@ -300,7 +312,7 @@ public class FilesFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        setRetainInstance(true);
         String path = mListener.getLastDir();
         if (path == null) {
             path = Environment.getExternalStorageDirectory().toString();
@@ -308,6 +320,9 @@ public class FilesFragment extends Fragment {
         }
         if (mCurrentPath == null) {
             mCurrentPath = path;
+        }
+        if (mDirPositions == null) {
+            mDirPositions = new HashMap<>();
         }
         Log.d("files", "Path " + path);
         populateFiles(mCurrentPath);
@@ -336,14 +351,32 @@ public class FilesFragment extends Fragment {
         if (!path.equals(Environment.getExternalStorageDirectory().toString())) {
             mFiles.add(new File("..", ".."));
         }
+
+        Comparator<File> fileComparator = new Comparator<File>() {
+            @Override
+            public int compare(File file, File t1) {
+                if (file.isDirectory() && !t1.isDirectory()) {
+                    return -1;
+                } else if (!file.isDirectory() && t1.isDirectory()) {
+                    return 1;
+                } else {
+                    return file.getName().toLowerCase().compareTo(t1.getName().toLowerCase());
+                }
+            }
+        };
         File file[] = f.listFiles(new FileFilter() {
             @Override
             public boolean accept(File file) {
-                return file.isDirectory() || file.getName().toLowerCase().endsWith(".mp3");
+                return file.isDirectory()
+                        || file.getName().toLowerCase().endsWith(".mp3")
+                        || file.getName().toLowerCase().endsWith(".flac")
+                        || file.getName().toLowerCase().endsWith(".ogg")
+                        || file.getName().toLowerCase().endsWith(".aac");
             }
         });
         Collections.addAll(mFiles, file);
-        Collections.sort(mFiles);
+        Collections.sort(mFiles, fileComparator);
+
     }
 
     @Override

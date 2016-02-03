@@ -7,6 +7,7 @@ import android.app.FragmentTransaction;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -734,7 +735,7 @@ public class MainActivity extends Activity implements SelectionListener {
 
     @Override
     public void addBulk(AudioListModel[] items, boolean addNext) {
-        AddToQueueBulkTask task = new AddToQueueBulkTask(addNext, mQueueData.size());
+        AddToQueueBulkTask task = new AddToQueueBulkTask(this, addNext, mQueueData.size(), items.length);
         task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, items);
     }
 
@@ -1210,21 +1211,51 @@ public class MainActivity extends Activity implements SelectionListener {
         }
     }
 
-    private class AddToQueueBulkTask extends AsyncTask<AudioListModel[], Void, Void> {
+    private class AddToQueueBulkTask extends AsyncTask<AudioListModel[], Boolean, Void> {
 
         private int current;
         private int queueSize;
+        private int itemsSize;
         private int insert;
+        private Context context;
         private boolean addNext = false;
+        private ProgressDialog progressDialog;
 
         public AddToQueueBulkTask() {
             this.current = mCurrentQueuePosition;
         }
 
-        public AddToQueueBulkTask(boolean addNext, int queueSize) {
+        public AddToQueueBulkTask(Context context, boolean addNext, int queueSize, int itemsSize) {
+            this.context = context;
             this.current = mCurrentQueuePosition;
             this.queueSize = queueSize;
             this.addNext = addNext;
+            this.itemsSize = itemsSize;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressDialog = new ProgressDialog(context);
+            progressDialog.setMax(itemsSize);
+            progressDialog.setMessage("Loading...");
+            progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+            progressDialog.setIndeterminate(false);
+            progressDialog.setCancelable(true);
+            progressDialog.show();
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            progressDialog.dismiss();
+        }
+
+        @Override
+        protected void onProgressUpdate(Boolean... values) {
+            super.onProgressUpdate(values);
+            progressDialog.incrementProgressBy(1);
+
         }
 
         @Override
@@ -1232,6 +1263,7 @@ public class MainActivity extends Activity implements SelectionListener {
             AudioListModel[] items = audioListModels[0];
             ContentValues values = new ContentValues();
             if (addNext) {
+
                 ArrayList<ContentValues> contentValuesList = new ArrayList<>();
                 ContentValues cv;
                 String[] columns = AudioListModel.getColumns();
@@ -1268,6 +1300,7 @@ public class MainActivity extends Activity implements SelectionListener {
                     }
                     queueSize++;
                     getContentResolver().insert(QueueProvider.CONTENT_URI, values);
+                    publishProgress(false);
                 }
             }
             invalidateQueue();
