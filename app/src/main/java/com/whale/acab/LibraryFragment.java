@@ -152,6 +152,7 @@ public class LibraryFragment extends Fragment implements LoaderManager.LoaderCal
             @Override
             public void onClick(View view) {
                 mAdapter.checkAll();
+
             }
         });
         mList = (ListView) view.findViewById(R.id.library_list);
@@ -254,18 +255,18 @@ public class LibraryFragment extends Fragment implements LoaderManager.LoaderCal
                         .withStartAction(action)
                         .start();
             }
-            if (mCheckButton.getVisibility() == View.INVISIBLE) {
-                Runnable action = new Runnable() {
-                    @Override
-                    public void run() {
-                        mCheckButton.setVisibility(View.VISIBLE);
-                    }
-                };
-                mCheckButton.animate()
-                        .alpha(1)
-                        .withStartAction(action)
-                        .start();
-            }
+//            if (mCheckButton.getVisibility() == View.INVISIBLE) {
+//                Runnable action = new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        mCheckButton.setVisibility(View.VISIBLE);
+//                    }
+//                };
+//                mCheckButton.animate()
+//                        .alpha(1)
+//                        .withStartAction(action)
+//                        .start();
+//            }
         } else {
             if (mAddButton.getVisibility() == View.VISIBLE) {
                 Runnable action = new Runnable() {
@@ -293,18 +294,18 @@ public class LibraryFragment extends Fragment implements LoaderManager.LoaderCal
                         .withEndAction(action)
                         .start();
             }
-            if (mCheckButton.getVisibility() == View.VISIBLE) {
-                Runnable action = new Runnable() {
-                    @Override
-                    public void run() {
-                        mCheckButton.setVisibility(View.INVISIBLE);
-                    }
-                };
-                mCheckButton.animate()
-                        .alpha(0)
-                        .withEndAction(action)
-                        .start();
-            }
+//            if (mCheckButton.getVisibility() == View.VISIBLE) {
+//                Runnable action = new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        mCheckButton.setVisibility(View.INVISIBLE);
+//                    }
+//                };
+//                mCheckButton.animate()
+//                        .alpha(0)
+//                        .withEndAction(action)
+//                        .start();
+//            }
         }
     }
 
@@ -401,12 +402,14 @@ public class LibraryFragment extends Fragment implements LoaderManager.LoaderCal
                     checkedArtists.add(holder.artist.getText().toString());
                 }
                 notifyDataSetChanged();
+                selectMode(true);
             }
         }
 
         private void uncheckAll() {
             checkedArtists.clear();
             notifyDataSetChanged();
+            selectMode(false);
         }
 
         @Override

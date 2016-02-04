@@ -42,7 +42,6 @@ import java.util.HashMap;
 import java.util.Random;
 
 
-
 public class MainActivity extends Activity implements SelectionListener {
 
     public final static String APP_TITLE = "0xACAB";
@@ -67,14 +66,14 @@ public class MainActivity extends Activity implements SelectionListener {
     public static final String DEFAULT_MODE = "defaultMode";
     public static final String MODE_LIBRARY = "library";
     public static final String MODE_FILES = "files";
-    private static final String IS_SHUFFLING = "IS_SHUFFLED";
-    private static final String IS_REPEATING = "IS_REPEATING";
-    private static final String IS_PLAYING = "IS_PLAYING";
     public static final String LAST_DIR = "lastDir";
     public static final int ADD_NEXT = 0;
     public static final int ADD_LAST = 1;
     public static final int ADD_FIRST = 2;
     public static final String INTENT_GET_POSITION = "GET_DURATION";
+    private static final String IS_SHUFFLING = "IS_SHUFFLED";
+    private static final String IS_REPEATING = "IS_REPEATING";
+    private static final String IS_PLAYING = "IS_PLAYING";
     public static String songStatus = MusicService.SONG_STOPPED;
     public QueueDB db;
     public boolean isPlaying = false;
@@ -133,7 +132,7 @@ public class MainActivity extends Activity implements SelectionListener {
                     mLastFm.pause();
                     //mAudioManager.abandonAudioFocus(afChangeListener);
                     changePlayStatus(MusicService.SONG_STOPPED);
-                } else if (receiveValue.endsWith(MusicService.SONG_POSITION)){
+                } else if (receiveValue.endsWith(MusicService.SONG_POSITION)) {
                     int position = intent.getIntExtra(MusicService.SONG_POSITION, -1);
                     int step = currentSong.getDuration() / 200;
                     if (position != -1) {
@@ -1088,7 +1087,6 @@ public class MainActivity extends Activity implements SelectionListener {
     }
 
 
-
     private class AddToQueueInsertTask extends AsyncTask<AudioListModel, Void, Void> {
 
         private int counter;
@@ -1282,19 +1280,19 @@ public class MainActivity extends Activity implements SelectionListener {
                     items[i].setSort(insertPosition + i + 1);
                 }
             }
-            for (int i = 0; i < items.length; i++) {
-                if (items[i] != null) {
-                    values.put(QueueDB.KEY_ARTIST, items[i].getArtist());
-                    values.put(QueueDB.KEY_ALBUM, items[i].getAlbum());
-                    values.put(QueueDB.KEY_TITLE, items[i].getTitle());
-                    values.put(QueueDB.KEY_DATA, items[i].getData());
-                    values.put(QueueDB.KEY_DURATION, items[i].getDuration());
-                    values.put(QueueDB.KEY_NUMBER, items[i].getNumber());
-                    values.put(QueueDB.KEY_YEAR, items[i].getYear());
-                    values.put(QueueDB.KEY_ALBUM_ID, items[i].getAlbumId());
-                    values.put(QueueDB.KEY_TRACK_ID, items[i].getTrackId());
-                    if (items[i].getSort() != -1) {
-                        values.put(QueueDB.KEY_SORT, items[i].getSort());
+            for (AudioListModel item : items) {
+                if (item != null) {
+                    values.put(QueueDB.KEY_ARTIST, item.getArtist());
+                    values.put(QueueDB.KEY_ALBUM, item.getAlbum());
+                    values.put(QueueDB.KEY_TITLE, item.getTitle());
+                    values.put(QueueDB.KEY_DATA, item.getData());
+                    values.put(QueueDB.KEY_DURATION, item.getDuration());
+                    values.put(QueueDB.KEY_NUMBER, item.getNumber());
+                    values.put(QueueDB.KEY_YEAR, item.getYear());
+                    values.put(QueueDB.KEY_ALBUM_ID, item.getAlbumId());
+                    values.put(QueueDB.KEY_TRACK_ID, item.getTrackId());
+                    if (item.getSort() != -1) {
+                        values.put(QueueDB.KEY_SORT, item.getSort());
                     } else {
                         values.put(QueueDB.KEY_SORT, queueSize);
                     }

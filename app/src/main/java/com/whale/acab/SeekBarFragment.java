@@ -32,6 +32,7 @@ public class SeekBarFragment extends Fragment {
     private ProgressRefresh mProgressRefresh;
 
     public void startTasks(int duration, int position, int step, String artist, String title) {
+        mActivity = (MainActivity) getActivity();
         mCurrentDuration = duration;
         mProgress = position;
         mStep = step;

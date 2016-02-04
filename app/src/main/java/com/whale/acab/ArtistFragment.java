@@ -279,18 +279,18 @@ public class ArtistFragment extends Fragment {
                         .withStartAction(action)
                         .start();
             }
-            if (mCheckButton.getVisibility() == View.INVISIBLE) {
-                Runnable action = new Runnable() {
-                    @Override
-                    public void run() {
-                        mCheckButton.setVisibility(View.VISIBLE);
-                    }
-                };
-                mCheckButton.animate()
-                        .alpha(1)
-                        .withStartAction(action)
-                        .start();
-            }
+//            if (mCheckButton.getVisibility() == View.INVISIBLE) {
+//                Runnable action = new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        mCheckButton.setVisibility(View.VISIBLE);
+//                    }
+//                };
+//                mCheckButton.animate()
+//                        .alpha(1)
+//                        .withStartAction(action)
+//                        .start();
+//            }
         } else {
             if (mAddButton.getVisibility() == View.VISIBLE) {
                 Runnable action = new Runnable() {
@@ -318,18 +318,18 @@ public class ArtistFragment extends Fragment {
                         .withEndAction(action)
                         .start();
             }
-            if (mCheckButton.getVisibility() == View.VISIBLE) {
-                Runnable action = new Runnable() {
-                    @Override
-                    public void run() {
-                        mCheckButton.setVisibility(View.INVISIBLE);
-                    }
-                };
-                mCheckButton.animate()
-                        .alpha(0)
-                        .withEndAction(action)
-                        .start();
-            }
+//            if (mCheckButton.getVisibility() == View.VISIBLE) {
+//                Runnable action = new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        mCheckButton.setVisibility(View.INVISIBLE);
+//                    }
+//                };
+//                mCheckButton.animate()
+//                        .alpha(0)
+//                        .withEndAction(action)
+//                        .start();
+//            }
         }
     }
 
@@ -391,7 +391,7 @@ public class ArtistFragment extends Fragment {
 
             Bitmap bitmap = null;
             if (!currentAlbum.equals(album)) {
-                AudioListModel albumAudioItem = new AudioListModel(artist, album, year, albumId, bitmap);
+                AudioListModel albumAudioItem = new AudioListModel(artist, album, year, albumId, null);
                 audioList.add(albumAudioItem);
                 currentAlbum = album;
                 trackNumber = 0;
@@ -663,6 +663,7 @@ public class ArtistFragment extends Fragment {
                     checked.add(i);
                 }
                 notifyDataSetChanged();
+                selectMode(true);
             }
         }
 

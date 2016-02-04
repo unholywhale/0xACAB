@@ -439,18 +439,18 @@ public class FilesFragment extends Fragment {
                         .withStartAction(action)
                         .start();
             }
-            if (mCheckButton.getVisibility() == View.INVISIBLE) {
-                Runnable action = new Runnable() {
-                    @Override
-                    public void run() {
-                        mCheckButton.setVisibility(View.VISIBLE);
-                    }
-                };
-                mCheckButton.animate()
-                        .alpha(1)
-                        .withStartAction(action)
-                        .start();
-            }
+//            if (mCheckButton.getVisibility() == View.INVISIBLE) {
+//                Runnable action = new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        mCheckButton.setVisibility(View.VISIBLE);
+//                    }
+//                };
+//                mCheckButton.animate()
+//                        .alpha(1)
+//                        .withStartAction(action)
+//                        .start();
+//            }
         } else {
             if (mAddButton.getVisibility() == View.VISIBLE) {
                 Runnable action = new Runnable() {
@@ -478,18 +478,18 @@ public class FilesFragment extends Fragment {
                         .withEndAction(action)
                         .start();
             }
-            if (mCheckButton.getVisibility() == View.VISIBLE) {
-                Runnable action = new Runnable() {
-                    @Override
-                    public void run() {
-                        mCheckButton.setVisibility(View.INVISIBLE);
-                    }
-                };
-                mCheckButton.animate()
-                        .alpha(0)
-                        .withEndAction(action)
-                        .start();
-            }
+//            if (mCheckButton.getVisibility() == View.VISIBLE) {
+//                Runnable action = new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        mCheckButton.setVisibility(View.INVISIBLE);
+//                    }
+//                };
+//                mCheckButton.animate()
+//                        .alpha(0)
+//                        .withEndAction(action)
+//                        .start();
+//            }
         }
     }
 
@@ -671,6 +671,7 @@ public class FilesFragment extends Fragment {
                 }
             }
             this.notifyDataSetChanged();
+            selectMode(checked);
         }
 
         private void uncheckAll() {
