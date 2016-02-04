@@ -4,7 +4,7 @@ android {
     compileSdkVersion 22
     buildToolsVersion '22.0.1'
     defaultConfig {
-        applicationId 'com.whale.xacab'
+        applicationId 'com.whale.acab'
         minSdkVersion 21
         targetSdkVersion 22
         versionCode 1

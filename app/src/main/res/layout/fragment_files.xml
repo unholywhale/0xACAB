@@ -9,6 +9,7 @@
         android:visibility="invisible"/>
     <ListView
         android:id="@+id/files_list"
+        android:listSelector="@android:color/transparent"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"/>
     <Button

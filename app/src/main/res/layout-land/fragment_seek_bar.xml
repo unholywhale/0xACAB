@@ -2,7 +2,7 @@
                 xmlns:tools="http://schemas.android.com/tools"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                tools:context="com.whale.xacab.SeekBarFragment">
+                tools:context="com.whale.acab.SeekBarFragment">
 
     <TextView
         android:id="@+id/player_info"

@@ -1,5 +1,5 @@
 <resources xmlns:xliff="http://schemas.android.com/apk/res/android">
-    <string name="app_name">0xACAB</string>
+    <string name="app_name">ACAB Player</string>
     <string name="action_settings">Settings</string>
     <string name="library_header">Library</string>
     <string name="queue_header">Queue</string>
