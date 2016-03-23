@@ -11,6 +11,7 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -599,6 +600,8 @@ public class ArtistFragment extends Fragment {
             if (row == null) {
                 if (audioItem.isAlbum) {
                     row = inflater.inflate(layoutHeaderResourceId, parent, false);
+                    Log.d("ALBUM", audioItem.getAlbum());
+                    Log.d("POSITION", String.valueOf(position));
                     holder = getHeaderHolder(row, position);
                 } else {
                     row = inflater.inflate(layoutItemResourceId, parent, false);
@@ -607,15 +610,26 @@ public class ArtistFragment extends Fragment {
                 row.setTag(holder);
             } else {
                 holder = (AudioListHolder) row.getTag();
+                if (holder.isHeader) {
+                    if (audioItem.isAlbum) {
+                        holder.checkbox.setTag(position);
+                    } else {
+                        row = inflater.inflate(layoutItemResourceId, parent, false);
+                        holder = getItemHolder(row, position);
+                        row.setTag(holder);
+                    }
+                } else {
+                    if (audioItem.isAlbum) {
+                        row = inflater.inflate(layoutHeaderResourceId, parent, false);
+                        holder = getHeaderHolder(row, position);
+                        row.setTag(holder);
+                    } else {
+                        holder.checkbox.setTag(position);
+                    }
+                }
                 // getView() provides us with a previous recycled view. Make sure it's the correct one, otherwise reinflate
                 if (holder.isHeader && !audioItem.isAlbum) {
-                    row = inflater.inflate(layoutItemResourceId, parent, false);
-                    holder = getItemHolder(row, position);
-                    row.setTag(holder);
                 } else if (!holder.isHeader && audioItem.isAlbum) {
-                    row = inflater.inflate(layoutHeaderResourceId, parent, false);
-                    holder = getHeaderHolder(row, position);
-                    row.setTag(holder);
                 }
             }
             if (checked.contains(position)) {

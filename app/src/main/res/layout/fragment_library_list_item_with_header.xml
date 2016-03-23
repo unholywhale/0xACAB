@@ -28,7 +28,9 @@
             android:layout_centerVertical="true"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:ellipsize="end" />
+            android:ellipsize="end"
+            android:paddingLeft="16dp"
+            android:paddingRight="72dp"/>
         <ImageView
             android:id="@+id/library_artists_action"
             android:layout_width="48dp"
@@ -36,7 +38,7 @@
             android:src="@drawable/ic_action_options"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            />
+            android:layout_alignParentRight="true"/>
     </RelativeLayout>
     <!--<TextView
         android:id="@+id/library_num_albums"

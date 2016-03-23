@@ -52,13 +52,15 @@
             android:src="@mipmap/ic_last_fm_logo"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:layout_alignParentStart="true"/>
+            android:layout_alignParentStart="true"
+            android:layout_alignParentLeft="true"/>
         <EditText
             android:id="@+id/last_fm_user"
             android:hint="Last.fm user"
             android:layout_toEndOf="@id/last_fm_icon"
             android:layout_width="200dp"
-            android:layout_height="50dp"/>
+            android:layout_height="50dp"
+            android:layout_toRightOf="@id/last_fm_icon"/>
         <EditText
             android:id="@+id/last_fm_password"
             android:hint="Last.fm password"
@@ -66,7 +68,8 @@
             android:layout_width="200dp"
             android:layout_height="50dp"
             android:layout_toEndOf="@id/last_fm_icon"
-            android:layout_below="@id/last_fm_user"/>
+            android:layout_below="@id/last_fm_user"
+            android:layout_toRightOf="@id/last_fm_icon"/>
         <Button
             android:id="@+id/last_fm_login"
             android:text="Login"
@@ -74,6 +77,7 @@
             android:layout_height="50dp"
             android:layout_centerHorizontal="true"
             android:layout_toEndOf="@id/last_fm_icon"
-            android:layout_below="@id/last_fm_password"/>
+            android:layout_below="@id/last_fm_password"
+            android:layout_toRightOf="@id/last_fm_icon"/>
     </RelativeLayout>
 </android.support.v4.widget.DrawerLayout>

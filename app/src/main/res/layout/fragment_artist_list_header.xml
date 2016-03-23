@@ -16,13 +16,16 @@
         android:layout_height="@dimen/checkbox_size"
         android:layout_alignParentStart="true"
         android:layout_centerVertical="true"
-        android:layout_marginStart="5dp"/>
+        android:layout_marginStart="5dp"
+        android:layout_alignParentLeft="true"
+        android:layout_marginLeft="5dp"/>
     <CheckBox
         android:id="@+id/artist_header_checkbox"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_centerVertical="true"
-        android:layout_marginStart="5dp"/>
+        android:layout_marginStart="5dp"
+        android:layout_marginLeft="5dp"/>
     <TextView
         android:id="@+id/artist_header_text"
         android:layout_width="wrap_content"
@@ -33,5 +36,7 @@
         android:textStyle="normal"
         android:textColor="@color/header_color"
         android:paddingStart="5dp"
-        android:gravity="center_vertical|start"/>
+        android:gravity="center_vertical|start"
+        android:layout_toRightOf="@id/artist_header_placeholder"
+        android:paddingLeft="5dp"/>
 </RelativeLayout>

@@ -18,5 +18,7 @@
         android:textColor="@color/header_color"
         android:paddingStart="8dp"
         android:layout_alignParentStart="true"
-        android:gravity="bottom|start"/>
+        android:gravity="bottom|start"
+        android:paddingLeft="8dp"
+        android:layout_alignParentLeft="true"/>
 </RelativeLayout>

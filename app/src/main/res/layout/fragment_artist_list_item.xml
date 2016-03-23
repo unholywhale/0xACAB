@@ -14,13 +14,16 @@
         android:layout_height="@dimen/checkbox_size"
         android:layout_alignParentStart="true"
         android:layout_centerVertical="true"
-        android:layout_marginStart="5dp"/>
+        android:layout_marginStart="5dp"
+        android:layout_alignParentLeft="true"
+        android:layout_marginLeft="5dp"/>
     <CheckBox
         android:id="@+id/artist_checkbox"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_centerVertical="true"
-        android:layout_marginStart="5dp"/>
+        android:layout_marginStart="5dp"
+        android:layout_marginLeft="5dp"/>
     <TextView
         android:id="@+id/track_number"
         android:textColor="@color/text_dark_color"
@@ -29,7 +32,9 @@
         android:layout_centerVertical="true"
         android:gravity="center"
         android:paddingEnd="5dp"
-        android:layout_toEndOf="@id/artist_placeholder"/>
+        android:layout_toEndOf="@id/artist_placeholder"
+        android:paddingRight="5dp"
+        android:layout_toRightOf="@id/artist_placeholder"/>
     <TextView
         android:id="@+id/track_title"
         android:textColor="@color/text_light_color"
@@ -38,7 +43,9 @@
         android:layout_toEndOf="@id/track_number"
         android:layout_marginEnd="32dp"
         android:ellipsize="end"
-        android:layout_centerVertical="true"/>
+        android:layout_centerVertical="true"
+        android:layout_toRightOf="@id/track_number"
+        android:layout_marginRight="32dp"/>
     <TextView
         android:id="@+id/track_duration"
         android:textColor="@color/text_middle_color"
@@ -47,13 +54,16 @@
         android:layout_height="wrap_content"
         android:layout_centerVertical="true"
         android:gravity="center"
-        android:layout_alignParentEnd="true"/>
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"/>
     <View
         android:id="@+id/divider_duration"
         style="@style/VerticalDivider"
         android:layout_centerVertical="true"
         android:layout_toStartOf="@id/track_duration"
-        android:layout_marginEnd="2dp"/>
+        android:layout_marginEnd="2dp"
+        android:layout_toLeftOf="@id/track_duration"
+        android:layout_marginRight="2dp"/>
     <ImageView
         android:id="@+id/artist_left_indicator"
         android:layout_width="wrap_content"
@@ -63,7 +73,9 @@
         android:paddingStart="5dp"
         android:layout_alignParentStart="true"
         android:layout_centerVertical="true"
-        android:visibility="visible"/>
+        android:visibility="visible"
+        android:paddingLeft="5dp"
+        android:layout_alignParentLeft="true"/>
     <ImageView
         android:id="@+id/artist_right_indicator"
         android:layout_width="wrap_content"
@@ -73,6 +85,8 @@
         android:paddingEnd="5dp"
         android:layout_alignParentEnd="true"
         android:layout_centerVertical="true"
-        android:visibility="visible"/>
+        android:visibility="visible"
+        android:paddingRight="5dp"
+        android:layout_alignParentRight="true"/>
 </RelativeLayout>
 

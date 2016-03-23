@@ -11,11 +11,26 @@
         <item name="android:navigationBarColor">@color/background_color</item>
     </style>-->
 
-    <style name="LightBlue" parent="@android:style/Theme.Material">
-        <item name="android:colorAccent">@color/header_color</item>
+    <style name="LightBlue" parent="@android:style/Theme.Holo">
         <item name="android:colorBackground">@color/background_color</item>
-        <item name="android:navigationBarColor">@color/background_color</item>
-        <item name="android:colorPrimary">@color/action_bar_color</item>
+        <item name="android:actionBarStyle">@style/ActionBarStyle</item>
+        <item name="android:colorForeground">@color/background_color</item>
+        <item name="android:textColorPrimary">@color/text_middle_color</item>
+    </style>
+    <style name="ActionBarStyle"
+           parent="android:Widget.Holo.ActionBar.Solid">
+        <item name="android:background">@color/action_bar_color</item>
     </style>
 
+    <style name="HorizontalDivider">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">1dp</item>
+        <item name="android:background">?android:attr/listDivider</item>
+    </style>
+    <style name="VerticalDivider">
+        <item name="android:layout_width">1dp</item>
+        <item name="android:layout_height">30dp</item>
+        <item name="android:layout_gravity">center_vertical</item>
+        <item name="android:background">?android:attr/listDivider</item>
+    </style>
 </resources>

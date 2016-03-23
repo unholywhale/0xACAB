@@ -22,15 +22,18 @@ import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.media.session.MediaSession;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.ActionBarDrawerToggle;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -399,8 +402,10 @@ public class MainActivity extends Activity implements SelectionListener {
     }
 
     private void setNotifications() {
-        mSession = new MediaSession(this, "SESSION");
-        mSession.setActive(true);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            mSession = new MediaSession(this, "SESSION");
+            mSession.setActive(true);
+        }
         mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
     }
 
@@ -787,31 +792,42 @@ public class MainActivity extends Activity implements SelectionListener {
         PendingIntent pendingPrevIntent = PendingIntent.getBroadcast(this, 0, prevIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         PendingIntent pendingPlayIntent = PendingIntent.getBroadcast(this, 0, playIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        Notification notification = new Notification.Builder(getApplicationContext())
-                .setVisibility(Notification.VISIBILITY_PUBLIC)
-                .setSmallIcon(R.drawable.ic_stat_player)
-                .setContentIntent(pendingContentIntent)
-                .addAction(R.drawable.ic_action_previous, "Previous", pendingPrevIntent)
-                .addAction(isPlaying ? R.drawable.ic_action_pause : R.drawable.ic_action_play, "Play", pendingPlayIntent)
-                .addAction(R.drawable.ic_action_next, "Next", pendingNextIntent)
-                .setStyle(new Notification.MediaStyle()
-                        .setShowActionsInCompactView(0, 1, 2)
-                        .setMediaSession(mSession.getSessionToken()))
-                .setContentTitle(currentSong.getTitle())
-                .setContentText(currentSong.getArtist())
-                .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher))
-                .build();
+        Notification notification = null;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            notification = new Notification.Builder(getApplicationContext())
+                    .setVisibility(Notification.VISIBILITY_PUBLIC)
+                    .setSmallIcon(R.drawable.ic_stat_player)
+                    .setContentIntent(pendingContentIntent)
+                    .addAction(R.drawable.ic_action_previous, "Previous", pendingPrevIntent)
+                    .addAction(isPlaying ? R.drawable.ic_action_pause : R.drawable.ic_action_play, "Play", pendingPlayIntent)
+                    .addAction(R.drawable.ic_action_next, "Next", pendingNextIntent)
+                    .setStyle(new Notification.MediaStyle()
+                            .setShowActionsInCompactView(0, 1, 2)
+                            .setMediaSession(mSession.getSessionToken()))
+                    .setContentTitle(currentSong.getTitle())
+                    .setContentText(currentSong.getArtist())
+                    .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher))
+                    .build();
+        } else {
+            notification = new NotificationCompat.Builder(getApplicationContext())
+                    .setSmallIcon(R.drawable.ic_stat_player)
+                    .setContentIntent(pendingContentIntent)
+                    .setTicker(mQueueData.get(mCurrentQueuePosition).getTitle())
+                    .build();
+        }
         mNotificationManager.notify(1, notification);
     }
 
     @Override
     public void onQueueItemSelected(int position) {
-        mCurrentQueuePosition = position;
-        currentSong = mQueueData.get(position);
-        musicServiceIntent.removeExtra(INTENT_GET_POSITION);
-        musicServiceIntent.putExtra(INTENT_EXTRA, currentSong.getData());
-        startService(musicServiceIntent);
-        getContentResolver().notifyChange(QueueProvider.CONTENT_URI, null);
+        if (position >= 0) {
+            mCurrentQueuePosition = position;
+            currentSong = mQueueData.get(position);
+            musicServiceIntent.removeExtra(INTENT_GET_POSITION);
+            musicServiceIntent.putExtra(INTENT_EXTRA, currentSong.getData());
+            startService(musicServiceIntent);
+            getContentResolver().notifyChange(QueueProvider.CONTENT_URI, null);
+        }
     }
 
 

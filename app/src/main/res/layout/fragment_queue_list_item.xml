@@ -14,6 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="5dp"
+        android:layout_marginLeft="5dp"
         android:layout_centerVertical="true"
         android:visibility="invisible"/>
     <ImageView
@@ -22,6 +23,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="5dp"
+        android:layout_marginLeft="5dp"
         android:layout_centerVertical="true"/>
     <ImageView
         android:id="@+id/queue_drag"
@@ -29,9 +31,12 @@
         android:layout_width="@dimen/checkbox_size_double"
         android:layout_height="match_parent"
         android:layout_marginStart="5dp"
+        android:layout_marginLeft="5dp"
         android:paddingStart="30dp"
+        android:paddingLeft="30dp"
         android:layout_centerVertical="true"
         android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
         android:visibility="visible"
         />
     <TextView
@@ -40,6 +45,7 @@
         android:layout_height="match_parent"
         android:textSize="18sp"
         android:layout_marginStart="5dp"
+        android:layout_marginLeft="5dp"
         android:layout_centerVertical="true"
         android:gravity="center_vertical|center_horizontal"/>
     <TextView
@@ -48,12 +54,15 @@
         android:maxLines="1"
         android:textColor="@color/header_color"
         android:paddingStart="16dp"
+        android:paddingLeft="16dp"
         android:paddingEnd="72dp"
         android:paddingTop="6dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:ellipsize="end"
-        android:layout_toEndOf="@+id/queue_playing"/>
+        android:layout_toEndOf="@+id/queue_playing"
+        android:paddingRight="72dp"
+        android:layout_toRightOf="@+id/queue_playing"/>
     <TextView
         android:id="@+id/queue_artist"
         android:paddingStart="16dp"
@@ -70,7 +79,8 @@
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"/>
     <ImageView
         android:id="@+id/queue_delete"
         android:src="@drawable/ic_action_close"
@@ -78,7 +88,8 @@
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
         android:layout_centerVertical="true"
-        android:visibility="invisible"/>
+        android:visibility="invisible"
+        android:layout_alignParentRight="true"/>
     <ImageView
         android:id="@+id/queue_info"
         android:src="@drawable/ic_action_info"
@@ -86,7 +97,8 @@
         android:layout_height="wrap_content"
         android:layout_toStartOf="@id/queue_delete"
         android:layout_centerVertical="true"
-        android:visibility="invisible"/>
+        android:visibility="invisible"
+        android:layout_toLeftOf="@id/queue_delete"/>
     <TextView
         android:id="@+id/queue_data"
         android:layout_width="wrap_content"

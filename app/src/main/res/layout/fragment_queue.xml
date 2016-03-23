@@ -2,6 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 xmlns:dslv="http://schemas.android.com/apk/com.whale.xacab"
     android:layout_width="match_parent"
+    android:background="@color/background_color"
     android:layout_height="match_parent">
     <TextView
         android:id="@+id/header"
@@ -31,8 +32,9 @@
         android:layout_height="56dp"
         android:layout_marginEnd="15dp"
         android:layout_marginBottom="15dp"
-        android:layout_alignParentEnd="true"
-        android:layout_alignBottom="@id/queue_list"/>
+        android:layout_alignBottom="@id/queue_list"
+        android:layout_marginRight="15dp"
+        android:layout_alignParentRight="true"/>
     <TextView
         android:id="@+id/queue_empty"
         android:layout_width="wrap_content"

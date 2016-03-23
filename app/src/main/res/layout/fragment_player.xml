@@ -16,7 +16,9 @@
             android:layout_weight="1"
             android:layout_height="match_parent"
             android:layout_marginStart="16dp"
-            android:layout_marginEnd="128dp"/>
+            android:layout_marginEnd="128dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="128dp"/>
         <ImageView
 
             android:src="@drawable/ic_action_repeat"
@@ -24,7 +26,9 @@
             android:layout_weight="1"
             android:layout_height="match_parent"
             android:layout_marginStart="128dp"
-            android:layout_marginEnd="16dp"/>
+            android:layout_marginEnd="16dp"
+            android:layout_marginLeft="128dp"
+            android:layout_marginRight="16dp"/>
     </LinearLayout>
     <LinearLayout
         android:id="@+id/player_info_container"

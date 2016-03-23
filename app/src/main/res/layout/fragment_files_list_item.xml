@@ -10,7 +10,9 @@
         android:focusableInTouchMode="false"
         android:layout_marginStart="5dp"
         android:layout_width="@dimen/checkbox_size"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent"
+        android:layout_alignParentLeft="true"
+        android:layout_marginLeft="5dp"/>
     <View
         android:id="@+id/files_placeholder"
         android:layout_width="@dimen/checkbox_size"
@@ -18,7 +20,9 @@
         android:layout_alignParentStart="true"
         android:layout_centerVertical="true"
         android:layout_marginStart="5dp"
-        android:visibility="invisible"/>
+        android:visibility="invisible"
+        android:layout_alignParentLeft="true"
+        android:layout_marginLeft="5dp"/>
     <ImageView
         android:id="@+id/files_dir_icon"
         android:src="@drawable/ic_action_files"
@@ -26,7 +30,9 @@
         android:layout_height="wrap_content"
         android:layout_toEndOf="@id/files_placeholder"
         android:layout_centerVertical="true"
-        android:layout_marginStart="5dp"/>
+        android:layout_marginStart="5dp"
+        android:layout_toRightOf="@id/files_placeholder"
+        android:layout_marginLeft="5dp"/>
     <ImageView
         android:id="@+id/files_file_icon"
         android:src="@drawable/ic_file_icon"
@@ -34,14 +40,18 @@
         android:layout_height="wrap_content"
         android:layout_toEndOf="@id/files_placeholder"
         android:layout_centerVertical="true"
-        android:layout_marginStart="5dp"/>
+        android:layout_marginStart="5dp"
+        android:layout_toRightOf="@id/files_placeholder"
+        android:layout_marginLeft="5dp"/>
     <TextView
         android:id="@+id/files_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_toEndOf="@id/files_dir_icon"
         android:layout_centerVertical="true"
-        android:paddingStart="5dp"/>
+        android:paddingStart="5dp"
+        android:layout_toRightOf="@id/files_dir_icon"
+        android:paddingLeft="5dp"/>
     <!--<ImageView
         android:id="@+id/files_left_indicator"
         android:layout_width="wrap_content"
